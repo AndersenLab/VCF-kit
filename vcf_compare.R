@@ -1,30 +1,53 @@
 library(data.table)
+library(grid)
+library(VennDiagram)
 
+setwd("~/Documents/git/vcfcompare/")
 
-fload_vcf <- function(f) {
+load_vcf <- function(f) {
   tmp <- tempfile()
-  system(sprintf("bcftools query  -f '%%CHROM\t%%POS\t%%REF\t%%ALT\t%%TYPE[\t%%SAMPLE=%%TGT]\n' %s | gawk -f vcf_comp.awk > %s", f, tmp))
-  fread(tmp, sep="auto")  
+  cmd <- sprintf("bcftools query  -f '%%CHROM\t%%POS\t%%TYPE\t%%REF\t%%ALT[\t%%SAMPLE=%%TGT]\n' %s | gawk -f vcf_comp.awk > %s", f, tmp)
+  print(cmd)
+  system(cmd)
+  fread(tmp, sep="\t",verbose=T)
 }
 
-vcf1 <- fload_vcf("04_mmp_strains.bcf")
+# Load vcfs, set keys, and merge.
+vcf1 <- load_vcf("04_mmp_strains.bcf")
 vcf2 <- load_vcf("wgs.vcf.gz")
-jvcf <- left_join(vcf1, vcf2, by=c("CHR", "POS", "TYPE"), all=TRUE)
+setkeyv(vcf1, cols=c("CHR","POS","TYPE"))
+setkeyv(vcf2, cols=c("CHR","POS","TYPE"))
+
+jvcf <- merge(x=vcf1, y=vcf2, by=c("CHR","POS","TYPE"), all=TRUE)
+
+
+grid.newpage()
+venn.plot <- draw.pairwise.venn(area1        = sum(is.na(jvcf$REF.x)),
+                                area2        = sum(is.na(jvcf$REF.y)),
+                                cross.area   = sum(complete.cases(jvcf[,c("REF.x","REF.y"), with = F])),
+                                scaled       = F,
+                                category     = c("First", "Second"),
+                                fill         = c("blue", "red"),
+                                alpha        = 0.3,
+                                lty          = "blank",
+                                cex          = 2,
+                                cat.cex      = 2,
+                                cat.pos      = c(0, 0),
+                                cat.dist     = 0.20,
+                                cat.just     = list(c(-1, -1), c(1, 1)),
+                                ext.pos      = 30,
+                                ext.dist     = -0.05,
+                                ext.length   = 0.85,
+                                ext.line.lwd = 2,
+                                ext.line.lty = "dashed")
+grid.draw(venn.plot)
 
 
 union_samples <- union(names(vcf1)[6:length(vcf1)], names(vcf2)[6:length(vcf2)])
 intersect_samples <- intersect(names(vcf1)[6:length(vcf1)], names(vcf2)[6:length(vcf2)])
 
-union_variants_count <- length(vcf1$CHR) + (length(vcf2$CHR) - sum(is.na(jvcf$REF.y) == F))
+union_variants_count <- length(vcf1$CHR) + (length(vcf2$CHR) - sobjum(is.na(jvcf$REF.y) == F))
 
-
-# Union Samples, Union Variants
-
-# Intersect Samples, Intersect Concordance
-for (i in intersect_samples) {
-  u <- mutate(u, i.c= )
-}
-u <- mutate()
 
 # Pairwise Concordances
 p <- t(as.data.frame(sapply(combn(intersect_samples,m=2, simplify=F), function(s) {
