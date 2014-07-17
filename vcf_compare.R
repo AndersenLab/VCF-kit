@@ -13,8 +13,8 @@ load_vcf <- function(f) {
 }
 
 # Load vcfs, set keys, and merge.
-vcf1 <- load_vcf("mmp.vcf.gz")
-vcf2 <- load_vcf("12_new_caller.bcf")
+vcf1 <- load_vcf("00_all_bams.txt.vcf.gz")
+vcf2 <- load_vcf("mmp.vcf.gz")
 setkeyv(vcf1, cols=c("CHR","POS","TYPE"))
 setkeyv(vcf2, cols=c("CHR","POS","TYPE"))
 jvcf <- merge(x=vcf1, y=vcf2, by=c("CHR","POS","TYPE"), all=TRUE)
