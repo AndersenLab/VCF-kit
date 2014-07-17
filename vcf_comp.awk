@@ -5,11 +5,7 @@ function rm_genotype(s)
 function rm_samples(s)
 {
 	split(s, r, "=")
-	if (r[2] != "./.") {
 	return r[2]
-	} else {
-		return "NA"
-	}
 }
 
 NR==1{

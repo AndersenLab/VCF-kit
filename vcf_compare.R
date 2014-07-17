@@ -2,30 +2,29 @@ library(data.table)
 library(grid)
 library(VennDiagram)
 
-setwd("~/Documents/git/vcfcompare/")
+setwd("~/Documents/git/vcf-compare/")
 
 load_vcf <- function(f) {
   tmp <- tempfile()
-  cmd <- sprintf("bcftools query  -f '%%CHROM\t%%POS\t%%TYPE\t%%REF\t%%ALT[\t%%SAMPLE=%%TGT]\n' %s | gawk -f vcf_comp.awk > %s", f, tmp)
+  cmd <- sprintf("bcftools query --include '%%TYPE=\"snp\" | %%TYPE=\"indel\"' -c both -f '%%CHROM\t%%POS\t%%TYPE\t%%REF\t%%ALT[\t%%SAMPLE=%%TGT]\n' %s | gawk -f vcf_comp.awk > %s", f, tmp)
   print(cmd)
   system(cmd)
   fread(tmp, sep="\t",verbose=T)
 }
 
 # Load vcfs, set keys, and merge.
-vcf1 <- load_vcf("04_mmp_strains.bcf")
-vcf2 <- load_vcf("wgs.vcf.gz")
+vcf1 <- load_vcf("mmp.vcf.gz")
+vcf2 <- load_vcf("12_new_caller.bcf")
 setkeyv(vcf1, cols=c("CHR","POS","TYPE"))
 setkeyv(vcf2, cols=c("CHR","POS","TYPE"))
-
 jvcf <- merge(x=vcf1, y=vcf2, by=c("CHR","POS","TYPE"), all=TRUE)
 
-
+venn <- function(t="SNP") {
 grid.newpage()
-venn.plot <- draw.pairwise.venn(area1        = sum(is.na(jvcf$REF.x)),
-                                area2        = sum(is.na(jvcf$REF.y)),
-                                cross.area   = sum(complete.cases(jvcf[,c("REF.x","REF.y"), with = F])),
-                                scaled       = F,
+venn.plot <- draw.pairwise.venn(area1        = sum(complete.cases(jvcf[TYPE == t ,c("REF.x"), with = F])),
+                                area2        = sum(complete.cases(jvcf[TYPE == t,c("REF.y"), with = F])),
+                                cross.area   = sum(complete.cases(jvcf[TYPE == t,c("REF.x","REF.y"), with = F])),
+                                scaled       = T,
                                 category     = c("First", "Second"),
                                 fill         = c("blue", "red"),
                                 alpha        = 0.3,
@@ -41,13 +40,9 @@ venn.plot <- draw.pairwise.venn(area1        = sum(is.na(jvcf$REF.x)),
                                 ext.line.lwd = 2,
                                 ext.line.lty = "dashed")
 grid.draw(venn.plot)
+}
 
-
-union_samples <- union(names(vcf1)[6:length(vcf1)], names(vcf2)[6:length(vcf2)])
-intersect_samples <- intersect(names(vcf1)[6:length(vcf1)], names(vcf2)[6:length(vcf2)])
-
-union_variants_count <- length(vcf1$CHR) + (length(vcf2$CHR) - sobjum(is.na(jvcf$REF.y) == F))
-
+venn()
 
 # Pairwise Concordances
 p <- t(as.data.frame(sapply(combn(intersect_samples,m=2, simplify=F), function(s) {
@@ -72,23 +67,3 @@ p <- t(as.data.frame(sapply(intersect_samples, function(s) {
 })))
 
 
-
-    
-
-## Union Variants
-  
-
-
-j <- filter(jvcf, REF.x == REF.y)
-
-# paste(rev(str_split("C/T","/")[[1]]), collapse="/")
-
-
-# Check that REF columns align
-sum(z$REF.x == z$REF.y && z$TYPE == "snp",na.rm=TRUE)
-sum(z$REF.x != z$REF.y,na.rm=TRUE)
-sum(z$REF.x == z$ALT.y,na.rm=TRUE)
-sum(z$REF.x != z$ALT.y,na.rm=TRUE)
-
-sum(jvcf$ED3049.x==jvcf$ED3049.y, na.rm=TRUE)
-(subset(jvcf, ED3049.x != ED3049.y, select = c("ED3049.x", "ED3049.y")))
