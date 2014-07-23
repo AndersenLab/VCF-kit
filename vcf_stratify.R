@@ -1,9 +1,32 @@
 library(parallel)
-source("helper_fcns.R")
+library(stringr)
+library(ggplot2)
+library(dplyr)
+
+#=======#
+# Input #
+#=======#
+
+args<-commandArgs(TRUE)
+results_dir <- args[1]
+f1 <- args[2]
+f2 <- args[3]
+clean_names <- gsub("(.bcf|.vcf|.vcf.gz|.gz)","", c(f1, f2))
+query <- args[4]
+dir.create(results_dir)
+
 
 #===========================#
 # Data Generation Functions #
 #===========================#
+
+import_table <- function(t_name, f) { 
+  # This function can import data from bcftools stats function
+  t <- read.csv2(pipe(sprintf("egrep '^(# )%s[^,]|^%s' %s", t_name, t_name, f)), as.is=T, sep='\t',header=T, check.names=FALSE)
+  names(t) <- lapply(names(t), function(x) make.names(gsub("\\[[1-9]+\\]","",x)))
+  # Remove first column and return table.
+  t[,c(-1)]
+}
 
 get_pair_stats <- function(f1, f2, label="", lab_val, f1_loc=NA) {
   # This function retrieves comparison data for
@@ -74,20 +97,16 @@ filter_stats <- function(f1, f2, q_string) {
   list("SN"=SN, "GCsS"=GCsS, "query"= q)
 }
 
-#===========================#
-# Plotting Functions        #
-#===========================#
-
-args<-commandArgs(TRUE)
-path <- args[1]
-f1 <- args[2]
-f2 <- args[3]
-#query <- "%QUAL>100,250,300,350"
-query <- args[4]
+#=================#
+# Get Data        #
+#=================#
 
 f <- filter_stats(f1, f2, query)
+save(list = ls(all = TRUE), file= paste0(results_dir, "data.Rdata"))
 
-clean_names <- gsub("(.bcf|.vcf|.vcf.gz|.gz)","", c(f1, f2))
+#==================#
+# Plot Data        #
+#==================#
 
 # Plot total number of SNPs
 ggplot(f$SN[f$SN$id == 0 | f$SN$id == 2 ,]) +
@@ -103,14 +122,15 @@ ggplot(f$GCsS) +
   geom_line( aes(x=lab_val, y=isec_concordance, group=sample, color=sample)) + 
   geom_point( aes(x=lab_val, y=isec_concordance, group=sample, color=sample)) +
   stat_summary(fun.y=mean, mapping = aes(x=lab_val, y = isec_concordance), geom="line", size = 2) +
-  labs(title=sprintf("Intersect Concordance: %s - %s", clean_names[1], clean_names[2]), x=sprintf("%s %s", q$filter, q$direction ), y="SNPs")
+  labs(title=sprintf("Intersect Concordance: %s - %s", clean_names[1], clean_names[2]), x=sprintf("%s %s", f$query$filter, f$query$direction ), y="SNPs")
 
 ggsave(filename = paste0(results_dir,sprintf("Intersect Concordance by %s.png", gsub("%","",f$query$filter))), plot=last_plot())
 
+# Plot Intersection Concordance
 ggplot(f$GCsS) +
   geom_line( aes(x=lab_val, y=abs_concordance, group=sample, color=sample)) + 
   geom_point( aes(x=lab_val, y=abs_concordance, group=sample, color=sample)) +
   stat_summary(fun.y=mean, mapping = aes(x=lab_val, y = abs_concordance), geom="line", size = 2) +
-  labs(title=sprintf("Union Concordance: %s - %s",clean_names[1], clean_names[2]) , x=sprintf("%s %s", q$filter, q$direction ), y="SNPs")
+  labs(title=sprintf("Union Concordance: %s - %s",clean_names[1], clean_names[2]) , x=sprintf("%s %s", f$query$filter, f$query$direction  ), y="SNPs")
 
 ggsave(filename = paste0(results_dir,sprintf("Union Concordance by %s.png", gsub("%","",f$query$filter))), plot=last_plot())
