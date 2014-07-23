@@ -1,5 +1,4 @@
 library(parallel)
-setwd("~/Documents/git/vcfcompare/")
 source("helper_fcns.R")
 
 #===========================#
@@ -79,19 +78,25 @@ filter_stats <- function(f1, f2, q_string) {
 # Plotting Functions        #
 #===========================#
 
-
-f1 <- "04_mmp_strains.bcf"
-f2 <- "andersen08_radseq.ws220.bcf"
-query <- "DP<800,1000,2000,3000,4000,5000,10000,15000,20000"
+args<-commandArgs(TRUE)
+path <- args[1]
+f1 <- args[2]
+f2 <- args[3]
+#query <- "%QUAL>100,250,300,350"
+query <- args[4]
 
 f <- filter_stats(f1, f2, query)
+
+clean_names <- gsub("(.bcf|.vcf|.vcf.gz|.gz)","", c(f1, f2))
 
 # Plot total number of SNPs
 ggplot(f$SN[f$SN$id == 0 | f$SN$id == 2 ,]) +
   geom_line( aes(x=lab_val, y=SNP_Total, group=id, color=file)) + 
-  labs(title="Great", x=sprintf("%s %s", f$query$filter, f$query$direction ), y="SNPs")
+  geom_point( aes(x=lab_val, y=SNP_Total, group=id, color=file)) + 
+  labs(title=sprintf("Total SNPs: %s - %s", clean_names[1], clean_names[2]), x=sprintf("%s %s", f$query$filter, f$query$direction ), y="SNPs") +
+  scale_y_continuous(limits=c(0,max(f$SN$SNP_Total)+(0.1*max(f$SN$SNP_Total))))
 
-clean_names <- gsub("(.bcf|.vcf|.vcf.gz|.gz)","", c(f1, f2))
+ggsave(filename = paste0(results_dir,sprintf("Number of SNPs by %s.png", gsub("%","",f$query$filter))), plot=last_plot())
 
 # Plot Union Concordance
 ggplot(f$GCsS) +
@@ -100,10 +105,12 @@ ggplot(f$GCsS) +
   stat_summary(fun.y=mean, mapping = aes(x=lab_val, y = isec_concordance), geom="line", size = 2) +
   labs(title=sprintf("Intersect Concordance: %s - %s", clean_names[1], clean_names[2]), x=sprintf("%s %s", q$filter, q$direction ), y="SNPs")
 
+ggsave(filename = paste0(results_dir,sprintf("Intersect Concordance by %s.png", gsub("%","",f$query$filter))), plot=last_plot())
+
 ggplot(f$GCsS) +
   geom_line( aes(x=lab_val, y=abs_concordance, group=sample, color=sample)) + 
   geom_point( aes(x=lab_val, y=abs_concordance, group=sample, color=sample)) +
   stat_summary(fun.y=mean, mapping = aes(x=lab_val, y = abs_concordance), geom="line", size = 2) +
-  labs(title="Union Concordance", x=sprintf("%s %s", q$filter, q$direction ), y="SNPs")
+  labs(title=sprintf("Union Concordance: %s - %s",clean_names[1], clean_names[2]) , x=sprintf("%s %s", q$filter, q$direction ), y="SNPs")
 
-
+ggsave(filename = paste0(results_dir,sprintf("Union Concordance by %s.png", gsub("%","",f$query$filter))), plot=last_plot())
