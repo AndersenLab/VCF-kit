@@ -1,4 +1,4 @@
-vcf-compare
+vcf-toolbox
 ===========
 
-A set of scripts for comparing vcf calls
+An R Package for plotting and comparing vcf data.
