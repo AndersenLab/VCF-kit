@@ -1,0 +1,9 @@
+Package: VCF Toolbox
+Title: What the package does (short line)
+Version: 0.1
+URL: http://www.danielecook.com
+Authors: "Daniel E. Cook"
+Description: What the package does (paragraph)
+Depends: R (>= 3.0.3)
+License: MIT
+LazyData: true

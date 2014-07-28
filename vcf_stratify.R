@@ -58,7 +58,7 @@ get_pair_stats <- function(f1, f2, label="", lab_val, f1_loc=NA) {
   GCsS <- mutate(GCsS, matches =  RR.Hom.matches + RA.Het.matches + AA.Hom.matches) %.%
     mutate(mismatches =  RR.Hom.mismatches + RA.Het.mismatches + X.10.AA.Hom.mismatches) %.%
     mutate(isec_concordance = matches/(matches+mismatches)) %.%
-    mutate(abs_concordance = (matches) / (sum(SN$SNPs)))
+    mutate(abs_concordance = matches)
   
   # Clean ids
   SN$file <- ids[SN$id+1]

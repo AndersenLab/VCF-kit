@@ -1,68 +1,109 @@
-library(data.table)
-library(grid)
-library(stringr)
-library(VennDiagram)
+library(parallel)
+setwd("~/Documents/git/vcfcompare/")
+source("helper_fcns.R")
 
-setwd("~/Documents/git/vcf-compare/")
+#===========================#
+# Data Generation Functions #
+#===========================#
 
-load_vcf <- function(f) {
+get_pair_stats <- function(f1, f2, label="", lab_val, f1_loc=NA) {
+  # This function retrieves comparison data for
+  # each VCF.
   tmp <- tempfile()
-  cmd <- sprintf("bcftools query --include '%%TYPE=\"snp\" | %%TYPE=\"indel\"' -c both -f '%%CHROM\t%%POS\t%%TYPE\t%%REF\t%%ALT[\t%%SAMPLE=%%TGT]\n' %s | gawk -f vcf_comp.awk > %s", f, tmp)
-  print(cmd)
-  system(cmd)
-  fread(tmp, sep="\t",verbose=T)
+  if (is.na(f1_loc)) {
+    f1_loc <- f1
+  }
+  system(sprintf('bcftools stats -s - %s %s > %s', f1_loc, f2, tmp))
+  SN  <- import_table("SN", tmp)
+  GCsS <- import_table("GCsS", tmp)
+  
+  # Set up names.
+  ids <- gsub("(.bcf|.vcf|.vcf.gz|.gz)","",list("0"=f1,"1"=f2,"2"=sprintf("%s__%s", f1,f2)))
+    
+  # Fix SN Group, ID
+  SN <- reshape(SN, direction="wide", timevar=c("key"), ids=c("id"))
+  names(SN) <- make.names(gsub("(number.of.|value.|:)","",names(SN)))
+  
+  # Create SNP_Total, Indel_Total Columns
+  SN$SNP_Total[SN$id == 0] <- SN[SN$id == 0,"SNPs"] + SN[SN$id == 2,"SNPs"]  
+  SN$SNP_Total[SN$id == 1] <- SN[SN$id == 1,"SNPs"] + SN[SN$id == 2,"SNPs"] 
+  SN$SNP_Total[SN$id == 2] <- SN[SN$id == 2,"SNPs"] # Intersection!
+  SN$Indel_Total[SN$id == 0] <- SN[SN$id == 0,"indels"] + SN[SN$id == 2,"indels"]  
+  SN$Indel_Total[SN$id == 1] <- SN[SN$id == 1,"indels"] + SN[SN$id == 2,"indels"] 
+  SN$Indel_Total[SN$id == 2] <- SN[SN$id == 2,"indels"]
+  
+
+  GCsS <- mutate(GCsS, matches =  RR.Hom.matches + RA.Het.matches + AA.Hom.matches) %.%
+  mutate(mismatches =  RR.Hom.mismatches + RA.Het.mismatches + X.10.AA.Hom.mismatches) %.%
+  mutate(isec_concordance = matches/(matches+mismatches)) %.%
+  mutate(abs_concordance = (matches) / (sum(SN$SNPs)))
+  
+  # Clean ids
+  SN$file <- ids[SN$id+1]
+  
+  
+  # Add group label
+  SN$label <- label
+  GCsS$label <- label
+  SN$lab_val <- as.numeric(lab_val)
+  GCsS$lab_val <- as.numeric(lab_val)
+  
+  list("SN"=SN, "GCsS"=GCsS)
 }
 
-f1 <- "00_all_bams.txt.vcf.gz"
-f2 <- "mmp.vcf.gz"
-
-# Load vcfs, set keys, and merge.
-vcf1 <- load_vcf(f1)
-vcf2 <- load_vcf(f2)
-setkeyv(vcf1, cols=c("CHR","POS","TYPE"))
-setkeyv(vcf2, cols=c("CHR","POS","TYPE"))
-jvcf <- merge(x=vcf1, y=vcf2, by=c("CHR","POS","TYPE"), all=TRUE)
-
-venn <- function(t="SNP") {
-grid.newpage()
-venn.plot <- draw.pairwise.venn(area1        = sum(complete.cases(jvcf[TYPE == t ,c("REF.x"), with = F])),
-                                area2        = sum(complete.cases(jvcf[TYPE == t,c("REF.y"), with = F])),
-                                cross.area   = sum(complete.cases(jvcf[TYPE == t,c("REF.x","REF.y"), with = F])),
-                                scaled       = F,
-                                category     = str_replace_all(c(f1, f2), c("(.vcf|.gz|.txt|.bcf)"),""),
-                                fill         = c("blue", "red"),
-                                alpha        = 0.3,
-                                lty          = "blank",
-                                cex          = 2,
-                                cat.cex      = 1.5,
-                                cat.pos      = c(0, 0),
-                                cat.dist     = 0.05,
-                               # cat.just     = list(c(-1, -1), c(1, 1)),
-                                ext.pos      = 20,
-                                ext.dist     = -0.05,
-                                ext.length   = 0.85,
-                                ext.line.lwd = 5,
-                                ext.line.lty = "dashed")
-grid.draw(venn.plot)
+parse_query <- function(q_string) {
+  # Parses the query String
+  direction <- str_extract(q_string,"(>|<|=)")
+  items <- unlist(str_split(q_string,"(>|<|=)"))
+  filter <- items[1]
+  values <- unlist(str_split(items[2],","))
+  list(direction=direction,filter=filter,values=values)
 }
-venn()
+
+filter_stats <- function(f1, f2, q_string) {
+  q <- parse_query(q_string)
+  r <- mclapply(q$values, mc.cores=detectCores(), function(x) { 
+      tmp <- tempfile()
+      system(sprintf('bcftools filter -O b --include "%s%s%s" %s > %s', q$filter, q$direction, x, f1, tmp))
+      system(sprintf('bcftools index %s', tmp))
+      get_pair_stats(f1, f2, "f1_loc"=tmp,  sprintf("%s%s%s", q$filter, q$direction, x), x)
+  })
+  
+  # Bind data frames together.
+  SN <- do.call(rbind.data.frame,sapply(r, function(x) { x["SN"] }))
+  GCsS <- do.call(rbind.data.frame,sapply(r, function(x) { x["GCsS"] }))
+  list("SN"=SN, "GCsS"=GCsS, "query"= q)
+}
+
+#===========================#
+# Plotting Functions        #
+#===========================#
 
 
-samples <- names(jvcf)[!names(jvcf) %in% c("CHR", "POS","TYPE", "REF.x","REF.y","ALT.x","ALT.y")]
-isec_set <- filter(jvcf, !is.na(REF.x) & !is.na(REF.y) & TYPE == "SNP")
+f1 <- "04_mmp_strains.bcf"
+f2 <- "andersen08_radseq.ws220.bcf"
+query <- "DP<800,1000,2000,3000,4000,5000,10000,15000,20000"
 
-# Pairwise Concordances
+f <- filter_stats(f1, f2, query)
 
+# Plot total number of SNPs
+ggplot(f$SN[f$SN$id == 0 | f$SN$id == 2 ,]) +
+  geom_line( aes(x=lab_val, y=SNP_Total, group=id, color=file)) + 
+  labs(title="Great", x=sprintf("%s %s", f$query$filter, f$query$direction ), y="SNPs")
 
-p <- t(as.data.frame(sapply(combn(samples,m=2, simplify=F)[0:2000], function(s) {
-  u <- select(isec_set, starts_with(s[1]),starts_with(s[2]))
-  match <-  nrow(filter(u, (u[[1]] == u[[2]]) ))
-  no_match <- nrow(filter(u, u[[1]] != u[[2]]))
-  intersect_concordance <- (match)/nrow(isec_set)
-  union_concordance <- (match)/nrow(jvcf)
-  list(s1=s[1], s2=s[2], match=match,no_match=no_match,intersect_concordance=intersect_concordance,union_concordance=union_concordance)
-})))
+clean_names <- gsub("(.bcf|.vcf|.vcf.gz|.gz)","", c(f1, f2))
 
+# Plot Union Concordance
+ggplot(f$GCsS) +
+  geom_line( aes(x=lab_val, y=isec_concordance, group=sample, color=sample)) + 
+  geom_point( aes(x=lab_val, y=isec_concordance, group=sample, color=sample)) +
+  stat_summary(fun.y=mean, mapping = aes(x=lab_val, y = isec_concordance), geom="line", size = 2) +
+  labs(title=sprintf("Intersect Concordance: %s - %s", clean_names[1], clean_names[2]), x=sprintf("%s %s", q$filter, q$direction ), y="SNPs")
 
-
-
+ggplot(f$GCsS) +
+  geom_line( aes(x=lab_val, y=abs_concordance, group=sample, color=sample)) + 
+  geom_point( aes(x=lab_val, y=abs_concordance, group=sample, color=sample)) +
+  stat_summary(fun.y=mean, mapping = aes(x=lab_val, y = abs_concordance), geom="line", size = 2) +
+  labs(title="Union Concordance", x=sprintf("%s %s", q$filter, q$direction ), y="SNPs")
+  
+  
