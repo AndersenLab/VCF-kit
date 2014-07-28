@@ -117,7 +117,7 @@ ggplot(f$SN[f$SN$id == 0 | f$SN$id == 2 ,]) +
 
 ggsave(filename = paste0(results_dir,sprintf("Number of SNPs by %s.png", gsub("%","",f$query$filter))), plot=last_plot())
 
-# Plot Union Concordance
+# Plot Intersection Concordance
 ggplot(f$GCsS) +
   geom_line( aes(x=lab_val, y=isec_concordance, group=sample, color=sample)) + 
   geom_point( aes(x=lab_val, y=isec_concordance, group=sample, color=sample)) +
@@ -126,7 +126,7 @@ ggplot(f$GCsS) +
 
 ggsave(filename = paste0(results_dir,sprintf("Intersect Concordance by %s.png", gsub("%","",f$query$filter))), plot=last_plot())
 
-# Plot Intersection Concordance
+# Plot Union Concordance
 ggplot(f$GCsS) +
   geom_line( aes(x=lab_val, y=abs_concordance, group=sample, color=sample)) + 
   geom_point( aes(x=lab_val, y=abs_concordance, group=sample, color=sample)) +
