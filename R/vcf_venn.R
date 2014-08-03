@@ -1,16 +1,18 @@
 library(stringr)
-
 #=======#
 # Input #
 #=======#
 
 args<-commandArgs(TRUE)
-results_dir <- args[1]
 f1 <- args[2]
 f2 <- args[3]
 clean_names <- gsub("(.bcf|.vcf|.vcf.gz|.gz)","", c(f1, f2))
 query <- args[4]
-dir.create(results_dir)
+
+setwd("./")
+
+f1 <- "../00_ALL_m.filter.lcr.bcf" 
+f2 <- "../00_ALL_c.filter.lcr.filtered.bcf"
 
 #===========================#
 # Data Generation Functions #
@@ -55,7 +57,7 @@ f <- get_pair_stats(f1, f2)
 #==================#
 # Plot Data        #
 #==================#
-
+png(sprintf("%s-%s.png", clean_names))
 grid.newpage()
   venn.plot <- draw.pairwise.venn(area1        = f[f$id==0,"SNP_Total"],
                                   area2        = f[f$id==1,"SNP_Total"],
@@ -75,3 +77,4 @@ grid.newpage()
                                   ext.line.lwd = 2,
                                   ext.line.lty = "dashed")
 grid.draw(venn.plot)
+dev.off()
