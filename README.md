@@ -18,9 +18,6 @@ A package for graphing, QC, and comparing variant data from VCF files. Makes hea
 #### Single Variable
 
 - [ ] plot <x> (float/int (histogram), categorical [bar])
-- [ ] --title (Set plot title)
-- [ ] --include= (allow use to use a custom filter).
-- [ ] --keep-data (save data)
 
 #### Multiple Variables
 
@@ -29,17 +26,17 @@ A package for graphing, QC, and comparing variant data from VCF files. Makes hea
 #### Genome Distribution
 
 - [ ] plot genome <y> ; Plots a variable across the genome.
-- [ ] --bin-size (for binning); add warnings for large operations.
+- [ ] __--bin-size__ (for binning); add warnings for large operations.
 
 #### Quality Control
 
 - [ ] TSTV Ratio
-- [ ] --facet (by...variable)
+- [ ] __--facet__ (by...variable)
 
 #### Compare
 
 - [ ] plot compare
-- [ ] --qc-tstv; compare tstv ratios
+- [ ] __--qc-tstv__ - compare tstv ratios
 
 
 #### Special
