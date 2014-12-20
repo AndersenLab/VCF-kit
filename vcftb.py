@@ -23,6 +23,8 @@ Options:
 from docopt import docopt
 from vcf import vcf
 from utils import *
+from plots import *
+
 
 if __name__ == '__main__':
     args = docopt(__doc__, version='Naval Fate 2.0')
@@ -35,10 +37,17 @@ if __name__ == '__main__':
     elif args["plot"] == True:
       if args["<y>"] is None:
         # Single Variable Plot
-        v.query(args["<x>"])
+        filename, r = v.query(args["<x>"])
+
+        if r["number"] == 1 and r["type"] == "Integer":
+          # Plot histogram
+          Rcode = histogram.format(**locals())
+          with open(filename + ".R","w") as R:
+            R.write(Rcode)
+          
       else:
         # Two Variable Plot
-        print "Two Variable Plot"
+        r = v.query(args["<x>"], args["<y>"])
 
     elif args["QC"] == True:
       print("List Variables")
@@ -49,3 +58,5 @@ if __name__ == '__main__':
     elif args["report"] == True:
       print("Generate summary report")
       
+  # Run R script to generate plots
+  

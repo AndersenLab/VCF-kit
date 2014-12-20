@@ -6,6 +6,7 @@ A package for graphing, QC, and comparing variant data from VCF files. Makes hea
 ### To Do
 
 - [X] List available variables (INFO/General)
+- [ ] Create/manage files within a created directory [create folder for vcf]
 
 #### Common Options
 

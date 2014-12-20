@@ -1,7 +1,10 @@
-from subprocess import PIPE, Popen
+from subprocess import PIPE, Popen, call
 from collections import OrderedDict
 from tabulate import tabulate as tb
 from ast import literal_eval
+from datetime import datetime
+from utils import *
+import shlex
 import re
 import sys
 import csv
@@ -15,34 +18,12 @@ standard_set = [OrderedDict([("id","CHROM"), ("desc", "Chromosome"), ("type", "C
     OrderedDict([("id","ALT"), ("desc", "Alternate Allele"), ("type", "Categorical")]),
     OrderedDict([("id","QUAL"), ("desc", "Variant Quality"), ("type", "Float")]),
     OrderedDict([("id","FILTER"), ("desc", "Filter"), ("type", "Categorical")])]
-
-
-class bcolors:
-    BOLD = "\033[1m"
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-
-def error(text):
-    """ Reports an error to the user and exits """
-    print("")
-    print(bcolors.FAIL + "VCF-Toolbox Error " + bcolors.ENDC + text)
-    print("")
-    sys.exit(0)
-
-def command(command):
-  comm, err = Popen(command, stdout=PIPE, stderr=PIPE).communicate()
-  if err != "":
-    raise Exception(bcolors.WARNING + "BCFtools Error " + bcolors.ENDC + self.error)
-  else:
-    return comm.strip()    
-
-
-def bc(text, color):
-    return getattr(bcolors,color) + text + bcolors.ENDC
-
+standard_set_types = {"CHROM":"Categorical",
+                      "POS":"Integer",
+                      "REF":"Categorical",
+                      "ALT":"Categorical",
+                      "QUAL":"Float",
+                      "FILTER":"Categorical"}
 
 
 
@@ -107,8 +88,14 @@ class vcf:
     print("""Variables have been prefixed with "INFO/" or "FORMAT/", \nhowever these prefixes are not necessary if the variable \nis unique within both groups.
         """)
 
-  def format_var_name(self, var):
-    """ Returns proper specification of variable """
+
+  def format_var_for_query(self, var):
+    """ Returns proper specification of variable,
+    variable name for plotting, and split variables
+    as needed.
+    """
+    if var == None:
+        return {"query": None, "df": None , "type": None}
     var = var.replace("%", "")
     search_var = var.replace("FORMAT/", "").replace("INFO/","")
     if search_var not in self.complete_var_list:
@@ -118,24 +105,73 @@ class vcf:
     elif var.startswith("INFO/") and var.replace("INFO/", "") not in self.info_set.keys():
         error("%s not found in INFO variables" % var)
     elif var in standard_set_names:
-        return "%" + var
+        return {"query":"%" + var, "df": var, "type": standard_set_types[var]}
     else:
-        if var.startswith("INFO/"):
-            return "%" + var
-        elif var in self.info_set.keys():
-            return "%INFO/" + var
+        if var.startswith("INFO/") or var in self.info_set.keys():
+            var_info = self.info_set[var.replace("INFO/","")]
+            var_number = int(var_info["number"])
+            if var_number > 1:
+                var_data_rep =  ','.join([var + "." + str(v) for v in range(0,int(var_number))])
+            else:
+                var_data_rep = var
+            if var.startswith("INFO/"):
+                query_string = "%" + var
+            else:
+                query_string = "%INFO/" + var
+            return {"query": query_string, "df": var_data_rep , "type": var_info["type"], "number": var_number}
         else:
-            return "[%" + var.replace("FORMAT/","") + "]"
+            var_info = self.format_set[var.replace("FORMAT/","")]
+            var_number = int(var_info["number"])
+            if var_number > 1:
+                var_data_rep =  ','.join([var + "." + str(v) for v in range(0,int(var_number))])
+            else:
+                var_data_rep = var
+            query_string = "[%" + var.replace("FORMAT/","") + "]"
+            return {"query": query_string, "df": var_data_rep , "type": var_info["type"], "number": var_number}
   
-  def get_variable_type(self, var):
-    pass
+  def format_header(self, *vars):
+    vars = list(vars)
+    for k,v in enumerate(vars):
+        vars[k] = v.replace("/", ".").replace("%","")
+    return ",".join(vars) + "\n"
+
+  def format_data_file_name(self,filename, x,y = None):
+    filename = replace_all(filename,["bcf", "vcf","gz"], "").strip(".")
+    if y == None:
+        y = ""
+    x, y  = replace_all(x, ["%","[","]"], ""), replace_all(y, ["%","[","]"], "")
+    x, y  = x.replace("/", "-"), y.replace("/", "-")
+    if y != "":
+        y = "." + y
+    return "{filename}.{x}{y}".format(**locals())
 
   def query(self, x, y=None, region=None, include=None):
-    x = self.format_var_name(x)
-    q = ["bcftools","query","-f",'\"%s\\n\"' % x, self.filename]
-    print q
-    print " ".join(q)
-    
+    x = self.format_var_for_query(x)
+    y = self.format_var_for_query(y)
+
+    # Get dataframe rep to create header.
+    if y["df"] == None:
+        header = self.format_header(x["df"])
+    else:
+        header = self.format_header(x["df"],y["df"])
+
+    if y["query"] == None:
+        variables = x["query"]
+    else:
+        variables = x["query"] + "," + y["query"]
+
+    q = shlex.split("bcftools query -f \"{variables}\\n\" {filename}".format(variables=variables, filename=self.filename))
+    filename = self.format_data_file_name(self.filename, x["query"],y["query"])
+    remove_file(filename)
+    with open(filename + ".txt","w+") as out:
+        out.write(header)
+        Popen(q, stdout=out)
+
+
+    if y["query"] == None:
+        return filename, x
+    else:
+        return filename, x, y
 
   def _parse_stats(lines):
     stats = {}
