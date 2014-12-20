@@ -107,15 +107,6 @@ class vcf:
     print("""Variables have been prefixed with "INFO/" or "FORMAT/", \nhowever these prefixes are not necessary if the variable \nis unique within both groups.
         """)
 
-  def resolve_variable(self, var):
-    """ Finds variable in INFO or FORMAT Fields """
-    if var.startswith("INFO/"):
-        return "%" + var
-    elif var in self.info_set.keys():
-        return "%INFO/" + var
-    else:
-        return "[%" + var.replace("FORMAT/","") + "]"
-
   def format_var_name(self, var):
     """ Returns proper specification of variable """
     var = var.replace("%", "")
@@ -129,7 +120,12 @@ class vcf:
     elif var in standard_set_names:
         return "%" + var
     else:
-        return self.resolve_variable(var)
+        if var.startswith("INFO/"):
+            return "%" + var
+        elif var in self.info_set.keys():
+            return "%INFO/" + var
+        else:
+            return "[%" + var.replace("FORMAT/","") + "]"
   
   def get_variable_type(self, var):
     pass
