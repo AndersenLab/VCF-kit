@@ -5,7 +5,7 @@ Usage:
   vcftb.py listvars <vcf>          
   vcftb.py plot <vcf> <x> [<y>]      [options]
   vcftb.py QC <vcf> <x> [<y>]        [options]
-  vcftb.py compare <vcf>...          [options]
+  vcftb.py compare <vcflist>...          [options]
   vcftb.py report <vcf>              [options]
   vcftb.py -h | --help
   vcftb.py --version
@@ -17,6 +17,7 @@ Options:
   --region=<region>           Restrict analysis to a particular region.
   --include=<filter-expr>     Use a custom filtering string with bcftools.
   --facet=<facet-var>         Facet analysis on a categorical variable.
+  --split-format              When plotting genotype FORMAT fields, facet by sample.
 
 """
 from docopt import docopt
@@ -25,17 +26,16 @@ from utils import *
 
 if __name__ == '__main__':
     args = docopt(__doc__, version='Naval Fate 2.0')
-    print(args)
+    #print(args)
 
-    v = vcf("JU1440.dp.bcf")
+    v = vcf(args["<vcf>"])
 
     if args["listvars"] == True:
       v.list_vars()
-
     elif args["plot"] == True:
       if args["<y>"] is None:
         # Single Variable Plot
-        print "Single Variable Plot"
+        v.query(args["<x>"])
       else:
         # Two Variable Plot
         print "Two Variable Plot"
