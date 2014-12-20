@@ -26,7 +26,7 @@ def bcftools_version():
 	if err is not "":
 		return version.split("\n")[0]
 
-def makedir(dirname):
+def make_dir(dirname):
   if not os.path.exists(dirname):
     os.mkdir(dirname)
 

@@ -21,14 +21,18 @@ Options:
 
 """
 from docopt import docopt
+from subprocess import call
 from vcf import vcf
 from utils import *
 from plots import *
 
 
+def parse_common_opts(args):
+  pass
+
 if __name__ == '__main__':
     args = docopt(__doc__, version='Naval Fate 2.0')
-    #print(args)
+    print(args)
 
     v = vcf(args["<vcf>"])
 
@@ -38,12 +42,19 @@ if __name__ == '__main__':
       if args["<y>"] is None:
         # Single Variable Plot
         filename, r = v.query(args["<x>"])
-
-        if r["number"] == 1 and r["type"] == "Integer":
+        if args["<x>"] == "POS":
+          # Facet by Chromosome Automatically
+          print("")
+          print(bc("Plotting Position BY Chromosome","BOLD"))
+          print("")
+        elif r["number"] == 1 and r["type"] == "Integer":
           # Plot histogram
+          var1 = r["df"]
           Rcode = histogram.format(**locals())
           with open(filename + ".R","w") as R:
             R.write(Rcode)
+          call(["Rscript",filename + ".R"])
+
           
       else:
         # Two Variable Plot
@@ -59,4 +70,3 @@ if __name__ == '__main__':
       print("Generate summary report")
       
   # Run R script to generate plots
-  

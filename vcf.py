@@ -105,7 +105,7 @@ class vcf:
     elif var.startswith("INFO/") and var.replace("INFO/", "") not in self.info_set.keys():
         error("%s not found in INFO variables" % var)
     elif var in standard_set_names:
-        return {"query":"%" + var, "df": var, "type": standard_set_types[var]}
+        return {"query":"%" + var, "df": var, "type": standard_set_types[var], "number": 1}
     else:
         if var.startswith("INFO/") or var in self.info_set.keys():
             var_info = self.info_set[var.replace("INFO/","")]
@@ -114,6 +114,7 @@ class vcf:
                 var_data_rep =  ','.join([var + "." + str(v) for v in range(0,int(var_number))])
             else:
                 var_data_rep = var
+            var_data_rep = var_data_rep.replace("/", ".").replace("%","")
             if var.startswith("INFO/"):
                 query_string = "%" + var
             else:
@@ -126,15 +127,10 @@ class vcf:
                 var_data_rep =  ','.join([var + "." + str(v) for v in range(0,int(var_number))])
             else:
                 var_data_rep = var
+            var_data_rep = var_data_rep.replace("/", ".").replace("%","")
             query_string = "[%" + var.replace("FORMAT/","") + "]"
             return {"query": query_string, "df": var_data_rep , "type": var_info["type"], "number": var_number}
   
-  def format_header(self, *vars):
-    vars = list(vars)
-    for k,v in enumerate(vars):
-        vars[k] = v.replace("/", ".").replace("%","")
-    return ",".join(vars) + "\n"
-
   def format_data_file_name(self,filename, x,y = None):
     filename = replace_all(filename,["bcf", "vcf","gz"], "").strip(".")
     if y == None:
@@ -146,14 +142,18 @@ class vcf:
     return "{filename}.{x}{y}".format(**locals())
 
   def query(self, x, y=None, region=None, include=None):
+    # Create analysis directory
+    analysis_dir = replace_all(self.filename,["bcf", "vcf","gz"], "").strip(".")
+    make_dir(analysis_dir)
+
     x = self.format_var_for_query(x)
     y = self.format_var_for_query(y)
 
     # Get dataframe rep to create header.
     if y["df"] == None:
-        header = self.format_header(x["df"])
+        header = x["df"] + "\n"
     else:
-        header = self.format_header(x["df"],y["df"])
+        header = x["df"] + "," + y["df"] + "\n"
 
     if y["query"] == None:
         variables = x["query"]
@@ -161,17 +161,16 @@ class vcf:
         variables = x["query"] + "," + y["query"]
 
     q = shlex.split("bcftools query -f \"{variables}\\n\" {filename}".format(variables=variables, filename=self.filename))
-    filename = self.format_data_file_name(self.filename, x["query"],y["query"])
-    remove_file(filename)
-    with open(filename + ".txt","w+") as out:
+    filename_pre = analysis_dir + "/" + self.format_data_file_name(self.filename, x["query"],y["query"])
+    remove_file(filename_pre)
+    with open(filename_pre + ".txt","w+") as out:
         out.write(header)
         Popen(q, stdout=out)
 
-
     if y["query"] == None:
-        return filename, x
+        return filename_pre, x
     else:
-        return filename, x, y
+        return filename_pre, x, y
 
   def _parse_stats(lines):
     stats = {}
