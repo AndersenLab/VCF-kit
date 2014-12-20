@@ -27,8 +27,12 @@ from utils import *
 from plots import *
 
 
-def parse_common_opts(args):
-  pass
+class opts:
+  """ Defines options that can be overridden """
+  functions = ""
+  binwidth = ""
+  add = ""
+
 
 if __name__ == '__main__':
     args = docopt(__doc__, version='Naval Fate 2.0')
@@ -47,8 +51,11 @@ if __name__ == '__main__':
           print("")
           print(bc("Plotting Position; Automatically facetting by Chromosome","BOLD"))
           print("")
-          facet = " + \n  facet_grid(.~CHROM, scales='free_x')"
-        
+          # Setup Plot for chromosome.
+          opts.add += " + \n  facet_grid(.~CHROM, scales='free_x')"
+          opts.add += " + \n scale_x_continuous(labels = genetic_scale) "
+          opts.functions += genetic_scale
+
         if r["number"] == 1 and r["type"] == "Integer":
           # Plot histogram
           var1 = r["df"]

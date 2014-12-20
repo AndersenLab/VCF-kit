@@ -12,6 +12,7 @@ A package for graphing, QC, and comparing variant data from VCF files. Makes hea
 
 - [ ] __--title__ - Set plot options.
 - [ ] __--include__ - Use a custom filter.
+- [ ] __--exclude__ - Filter Out Variants.
 - [ ] __--region__ - Restrict analysis to a particular region
 - [ ] __--samples__ - Restrict analysis to particular sample(s)
 - [ ] __--facet__ - Facet by filter or categorical variable.
@@ -22,22 +23,20 @@ A package for graphing, QC, and comparing variant data from VCF files. Makes hea
 	- [X] Integer
 	- [ ] Float
 	- [ ] Categorical
-	- [X] (POS) plot
-		- [ ] Genetic Labels (Mb, Kb, etc; Commas)
+    - [X] plot variant density across genome
+		- [X] Genetic Labels (Mb, Kb, etc; Commas)
+		- [X] bin-width
 	- [ ] Multi-value fields
 
 #### Multiple Variables
 
 - [ ] plot <x> <y> (scatter plot | bar plot[freq x category])
-
-#### Genome Distribution
-
-- [ ] plot genome <y> ; Plots a variable across the genome.
-- [ ] __--bin-size__ (for binning); add warnings for large operations.
+	- [ ] - Plot variable across genome (avg; binned)
 
 #### Quality Control
 
 - [ ] TSTV Ratio
+	- [ ] - Binned; Across genome; By sample?
 - [ ] __--facet__ (by...variable)
 
 #### Compare
