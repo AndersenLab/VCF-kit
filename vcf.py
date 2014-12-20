@@ -155,10 +155,16 @@ class vcf:
     else:
         header = x["df"] + "," + y["df"] + "\n"
 
+    # Set up Query Variables
     if y["query"] == None:
         variables = x["query"]
     else:
         variables = x["query"] + "," + y["query"]
+
+    # If position is being queried, add chromosome
+    if variables.find("%POS") == 0:
+        header = "CHROM," + header
+        variables = "%CHROM," + variables
 
     q = shlex.split("bcftools query -f \"{variables}\\n\" {filename}".format(variables=variables, filename=self.filename))
     filename_pre = analysis_dir + "/" + self.format_data_file_name(self.filename, x["query"],y["query"])

@@ -6,7 +6,7 @@ A package for graphing, QC, and comparing variant data from VCF files. Makes hea
 ### To Do
 
 - [X] List available variables (INFO/General)
-- [ ] Create/manage files within a created directory [create folder for vcf]
+- [X] Create/manage files within a created directory [create folder for vcf]
 
 #### Common Options
 
@@ -14,11 +14,17 @@ A package for graphing, QC, and comparing variant data from VCF files. Makes hea
 - [ ] __--include__ - Use a custom filter.
 - [ ] __--region__ - Restrict analysis to a particular region
 - [ ] __--samples__ - Restrict analysis to particular sample(s)
-- [ ] __--facet__ - Facet by filter or variable.
+- [ ] __--facet__ - Facet by filter or categorical variable.
 
 #### Single Variable
 
 - [ ] plot <x> (float/int (histogram), categorical [bar])
+	- [X] Integer
+	- [ ] Float
+	- [ ] Categorical
+	- [X] (POS) plot
+		- [ ] Genetic Labels (Mb, Kb, etc; Commas)
+	- [ ] Multi-value fields
 
 #### Multiple Variables
 

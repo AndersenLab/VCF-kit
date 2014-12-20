@@ -45,9 +45,11 @@ if __name__ == '__main__':
         if args["<x>"] == "POS":
           # Facet by Chromosome Automatically
           print("")
-          print(bc("Plotting Position BY Chromosome","BOLD"))
+          print(bc("Plotting Position; Automatically facetting by Chromosome","BOLD"))
           print("")
-        elif r["number"] == 1 and r["type"] == "Integer":
+          facet = " + \n  facet_grid(.~CHROM, scales='free_x')"
+        
+        if r["number"] == 1 and r["type"] == "Integer":
           # Plot histogram
           var1 = r["df"]
           Rcode = histogram.format(**locals())
