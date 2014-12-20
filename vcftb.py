@@ -20,14 +20,17 @@ Options:
 
 """
 from docopt import docopt
-
+from vcf import vcf
+from utils import *
 
 if __name__ == '__main__':
     args = docopt(__doc__, version='Naval Fate 2.0')
     print(args)
 
+    v = vcf("JU1440.dp.bcf")
+
     if args["listvars"] == True:
-      print("List Variables")
+      v.list_vars()
 
     elif args["plot"] == True:
       if args["<y>"] is None:

@@ -5,7 +5,7 @@ A package for graphing, QC, and comparing variant data from VCF files. Makes hea
 
 ### To Do
 
-- [ ] List available variables (INFO/General)
+- [X] List available variables (INFO/General)
 
 #### Common Options
 
