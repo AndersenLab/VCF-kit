@@ -7,10 +7,13 @@ A package for graphing, QC, and comparing variant data from VCF files. Makes hea
 
 - [X] List available variables (INFO/General)
 - [X] Create/manage files within a created directory [create folder for vcf]
+- [ ] Create single script for generating plots; append to it date/time, plot title, etc.
 
 #### Common Options
 
 - [ ] __--title__ - Set plot options.
+- [ ] __--logx - Put x variable on log scale.
+- [ ] __--logy - Put y variable on log scale.
 - [ ] __--include__ - Use a custom filter.
 - [ ] __--exclude__ - Filter Out Variants.
 - [ ] __--region__ - Restrict analysis to a particular region

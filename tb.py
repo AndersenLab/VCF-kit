@@ -2,13 +2,13 @@
 """VCF-Toolbox.
 
 Usage:
-  vcftb.py listvars <vcf>          
-  vcftb.py plot <vcf> <x> [<y>]      [options]
-  vcftb.py QC <vcf> <x> [<y>]        [options]
-  vcftb.py compare <vcflist>...          [options]
-  vcftb.py report <vcf>              [options]
-  vcftb.py -h | --help
-  vcftb.py --version
+  tb.py listvars <vcf>          
+  tb.py plot <vcf> <x> [<y>]      [options]
+  tb.py QC <vcf> <x> [<y>]        [options]
+  tb.py compare <vcflist>...          [options]
+  tb.py report <vcf>              [options]
+  tb.py -h | --help
+  tb.py --version
 
 Options:
   -h --help                   Show this screen.
@@ -44,7 +44,11 @@ if __name__ == '__main__':
       v.list_vars()
     elif args["plot"] == True:
       if args["<y>"] is None:
-        # Single Variable Plot
+
+        #======================#
+        # Single Variable Plot #
+        #======================#
+
         filename, r = v.query(args["<x>"])
         if args["<x>"] == "POS":
           # Facet by Chromosome Automatically
@@ -55,9 +59,9 @@ if __name__ == '__main__':
           opts.add += " + \n  facet_grid(.~CHROM, scales='free_x')"
           opts.add += " + \n scale_x_continuous(labels = genetic_scale) "
           opts.functions += genetic_scale
-
-        if r["number"] == 1 and r["type"] == "Integer":
-          # Plot histogram
+        print r
+        if r["number"] == 1 and r["type"] in ["Integer","Float"]:
+          print(bc("Creating Histogram of %s" % r["df"],"BOLD"))
           var1 = r["df"]
           Rcode = histogram.format(**locals())
           with open(filename + ".R","w") as R:
@@ -66,7 +70,11 @@ if __name__ == '__main__':
 
           
       else:
-        # Two Variable Plot
+
+        #======================#
+        # Two Variable Plot    #
+        #======================#
+
         r = v.query(args["<x>"], args["<y>"])
 
     elif args["QC"] == True:
