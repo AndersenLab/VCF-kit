@@ -9,21 +9,21 @@ import re
 import sys
 import csv
 
-_vcf_variable_types = {"Integer" : "Integer", "String": "Categorical", "Float" : "Float", "Flag": "Bool"}
 
 standard_set_names = ["CHROM", "POS", "REF", "ALT", "QUAL", "FILTER"]
-standard_set = [OrderedDict([("id","CHROM"), ("desc", "Chromosome"), ("type", "Categorical")]),
+standard_set = [OrderedDict([("id","CHROM"), ("desc", "Chromosome"), ("type", "String")]),
     OrderedDict([("id","POS"), ("desc", "Position"), ("type", "Integer")]),
-    OrderedDict([("id","REF"), ("desc", "Reference Allele"), ("type", "Categorical")]),
-    OrderedDict([("id","ALT"), ("desc", "Alternate Allele"), ("type", "Categorical")]),
+    OrderedDict([("id","REF"), ("desc", "Reference Allele"), ("type", "String")]),
+    OrderedDict([("id","ALT"), ("desc", "Alternate Allele"), ("type", "String")]),
     OrderedDict([("id","QUAL"), ("desc", "Variant Quality"), ("type", "Float")]),
-    OrderedDict([("id","FILTER"), ("desc", "Filter"), ("type", "Categorical")])]
-standard_set_types = {"CHROM":"Categorical",
+    OrderedDict([("id","FILTER"), ("desc", "Filter"), ("type", "String")])]
+
+standard_set_types = {"CHROM":"String",
                       "POS":"Integer",
-                      "REF":"Categorical",
-                      "ALT":"Categorical",
+                      "REF":"String",
+                      "ALT":"String",
                       "QUAL":"Float",
-                      "FILTER":"Categorical"}
+                      "FILTER":"String"}
 
 
 
@@ -70,9 +70,9 @@ class vcf:
       self.info_format_variables = self.info_set.keys() + self.format_set.keys()
       self.complete_var_list = standard_set_names + self.info_format_variables
 
+
   def list_vars(self):
     # Resolve Variable Specification Issues
-
     print("")
     print(bc("STANDARD","BOLD"))
     print tb(standard_set, headers="keys", tablefmt="grid")
@@ -128,17 +128,18 @@ class vcf:
             else:
                 var_data_rep = var
             var_data_rep = var_data_rep.replace("/", ".").replace("%","")
-            query_string = "[%" + var.replace("FORMAT/","") + "]"
+            query_string = "[%" + var.replace("FORMAT/","") + "\n]"
             return {"query": query_string, "df": var_data_rep , "type": var_info["type"], "number": var_number}
   
   def format_data_file_name(self,filename, x,y = None):
     filename = replace_all(filename,["bcf", "vcf","gz"], "").strip(".")
     if y == None:
         y = ""
-    x, y  = replace_all(x, ["%","[","]"], ""), replace_all(y, ["%","[","]"], "")
+    x, y  = replace_all(x, ["%","[","\n]","]"], ""), replace_all(y, ["%","[","\n","]"], "")
     x, y  = x.replace("/", "-"), y.replace("/", "-")
     if y != "":
         y = "." + y
+    print "{filename}.{x}{y}".format(**locals())
     return "{filename}.{x}{y}".format(**locals())
 
   def query(self, x, y=None, region=None, include=None):
@@ -157,21 +158,23 @@ class vcf:
 
     # Set up Query Variables
     if y["query"] == None:
-        variables = x["query"]
+        variables = x["query"] + "\n"
     else:
-        variables = x["query"] + "," + y["query"]
+        variables = x["query"] + "," + y["query"] + "\n"
 
     # If position is being queried, add chromosome
     if variables.find("%POS") == 0:
         header = "CHROM," + header
         variables = "%CHROM," + variables
 
-    q = shlex.split("bcftools query -f \"{variables}\\n\" {filename}".format(variables=variables, filename=self.filename))
+    q = shlex.split("bcftools query -f \"{variables}\" {filename}".format(variables=variables, filename=self.filename))
     filename_pre = analysis_dir + "/" + self.format_data_file_name(self.filename, x["query"],y["query"])
     remove_file(filename_pre)
     with open(filename_pre + ".txt","w+") as out:
         out.write(header)
-        Popen(q, stdout=out)
+        for line in Popen(q, stdout=PIPE).stdout:
+            if line.strip() != "":
+                out.write(line)
 
     if y["query"] == None:
         return filename_pre, x

@@ -58,13 +58,18 @@ if __name__ == '__main__':
           opts.add += " + \n facet_grid(.~CHROM, scales='free_x')"
           opts.add += " + \n scale_x_continuous(labels = genetic_scale) "
           opts.functions += genetic_scale
-        print r
         if r["number"] == 1 and r["type"] in ["Integer","Float"]:
           print(bc("Creating Histogram of %s" % r["df"],"BOLD"))
           var1 = r["df"]
           Rcode = histogram.format(**locals())
-        elif r["number"] == 1 and r["type"] in ["Integer","Float"]:
-          pass
+        elif r["number"] == 1 and r["type"] in ["String"]:
+          print(bc("Creating Bar Chart of %s" % r["df"],"BOLD"))
+          var1 = r["df"]
+          Rcode = barchart.format(**locals())
+        
+        with open(filename + ".R","w") as R:
+          R.write(Rcode)
+        call(["Rscript",filename + ".R"])
 
           
       else:
@@ -74,10 +79,7 @@ if __name__ == '__main__':
         #======================#
 
         r = v.query(args["<x>"], args["<y>"])
-      
-      with open(filename + ".R","w") as R:
-        R.write(Rcode)
-      call(["Rscript",filename + ".R"])
+
 
     elif args["QC"] == True:
       print("List Variables")
