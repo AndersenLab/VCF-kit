@@ -57,14 +57,14 @@ A package for graphing, QC, and comparing variant data from VCF files. Makes hea
 
 - [ ] plot individual variable
 	- [X] Numeric
-	- [ ] Categorical
+	- [X] String
     - [X] plot variant density across genome
 		- [X] Genetic Labels (Mb, Kb, etc; Commas)
 		- [X] bin-width
 	- [ ] Multi-value fields
 		- [ ] Reshaping
 - [ ] Plot multiple variables
-	- [ ] Numeric x Categorical
+	- [ ] Numeric x String
 	- [ ] Numeric x Numeric (Scatterplot)
 		- [ ] Labels (e.g. color by filter, another variable, tstv ratio)
 	- [ ] Plot along chromosomal coordinates (e.g. DP by CHROM:POS)

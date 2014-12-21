@@ -32,7 +32,6 @@ class vcf:
       # Start by storing basic information about the vcf/bcf and checking that an index exists.
       self.filename = filename
       self.header = command(["bcftools","view","-h",filename])
-      
       # Samples
       self.samples = command(["bcftools","query","-l",filename]).split("\n")
 

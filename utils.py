@@ -13,7 +13,7 @@ class bcolors:
 def command(command):
   comm, err = Popen(command, stdout=PIPE, stderr=PIPE).communicate()
   if err != "":
-    raise Exception(bcolors.WARNING + "BCFtools Error " + bcolors.ENDC + self.error)
+    raise Exception(bcolors.WARNING + "BCFtools Error " + bcolors.ENDC + err)
   else:
     return comm.strip()
 
@@ -56,13 +56,6 @@ def replace_all(text, find, replace):
     for i in find:
         text = text.replace(i, replace)
     return text
-
-def command(command):
-  comm, err = Popen(command, stdout=PIPE, stderr=PIPE).communicate()
-  if err != "":
-    raise Exception(bcolors.WARNING + "BCFtools Error " + bcolors.ENDC + self.error)
-  else:
-    return comm.strip()    
 
 
 def bc(text, color):
