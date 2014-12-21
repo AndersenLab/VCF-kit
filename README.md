@@ -88,10 +88,10 @@ A package for graphing, QC, and comparing variant data from VCF files. Makes hea
 
 Outputs a QC report of one or more vcfs. If two vcfs are given, will compare them (and take considerably longer to run).
 
-	- [ ] ts/tv ratio by chromosome:position; summary table
-	- [ ] ts/tv ratio by depth
-	- [ ] ts/tv ratio by quality
-	- [ ] bcftools plots
+- [ ] ts/tv ratio by chromosome:position; summary table
+- [ ] ts/tv ratio by depth
+- [ ] ts/tv ratio by quality
+- [ ] bcftools plots
 
 #### Special
 
