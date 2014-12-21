@@ -16,7 +16,7 @@ Options:
   --region=<region>           Restrict analysis to a particular region.
   --include=<filter-expr>     Use a custom filtering string with bcftools.
   --facet=<facet-var>         Facet analysis on a categorical variable.
-  --split-format              When plotting genotype FORMAT fields, facet by sample.
+  --split-sample              When plotting genotype FORMAT fields, facet by sample.
 
 """
 from docopt import docopt
@@ -55,7 +55,7 @@ if __name__ == '__main__':
           print(bc("Plotting Position; Automatically facetting by Chromosome","BOLD"))
           print("")
           # Setup Plot for chromosome.
-          opts.add += " + \n  facet_grid(.~CHROM, scales='free_x')"
+          opts.add += " + \n facet_grid(.~CHROM, scales='free_x')"
           opts.add += " + \n scale_x_continuous(labels = genetic_scale) "
           opts.functions += genetic_scale
         print r
@@ -63,9 +63,8 @@ if __name__ == '__main__':
           print(bc("Creating Histogram of %s" % r["df"],"BOLD"))
           var1 = r["df"]
           Rcode = histogram.format(**locals())
-          with open(filename + ".R","w") as R:
-            R.write(Rcode)
-          call(["Rscript",filename + ".R"])
+        elif r["number"] == 1 and r["type"] in ["Integer","Float"]:
+          pass
 
           
       else:
@@ -75,6 +74,10 @@ if __name__ == '__main__':
         #======================#
 
         r = v.query(args["<x>"], args["<y>"])
+      
+      with open(filename + ".R","w") as R:
+        R.write(Rcode)
+      call(["Rscript",filename + ".R"])
 
     elif args["QC"] == True:
       print("List Variables")
