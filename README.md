@@ -1,7 +1,7 @@
 vcf-toolbox
 ===========
 
-A package for graphing, QC, and comparing variant data from VCF files. Makes heavy use of bcftools.
+A package for graphing, QC, and comparing variant data from VCF files. Uses bcftools.
 
 ### Planned Options
 
