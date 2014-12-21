@@ -4,9 +4,8 @@
 Usage:
   tb.py listvars <vcf>          
   tb.py plot <vcf> <x> [<y>]      [options]
-  tb.py QC <vcf> <x> [<y>]        [options]
-  tb.py compare <vcflist>...          [options]
-  tb.py report <vcf>              [options]
+  tb.py QC-Report <vcf>           [options]
+  tb.py compare <vcf>             [options]
   tb.py -h | --help
   tb.py --version
 
