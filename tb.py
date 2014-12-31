@@ -5,7 +5,7 @@ Usage:
   tb.py listvars <vcf>          
   tb.py plot <vcf> <x> [<y>]      [options]
   tb.py qc <vcf>                  [options]
-  tb.py concordance <vcf> [--vcf2=<vcf2>] [--x=<x>]
+  tb.py concordance <vcf> [--vcf2=<vcf2>] [--x=<x>] [--pairs=<pairset>]
   tb.py -h | --help
   tb.py --version
 
@@ -85,7 +85,7 @@ if __name__ == '__main__':
       print("List Variables")
 
     elif args["concordance"] == True:
-      print v.compare_vcf()
+      print v.compare_vcf(variable = args["--x"])
 
     else:
       pass

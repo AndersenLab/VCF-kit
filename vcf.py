@@ -88,7 +88,7 @@ class vcf:
         """)
 
 
-  def format_var_for_query(self, var):
+  def resolve_variable(self, var):
     """ Returns proper specification of variable,
     variable name for plotting, and split variables
     as needed.
@@ -146,8 +146,8 @@ class vcf:
     analysis_dir = replace_all(self.filename,["bcf", "vcf","gz"], "").strip(".")
     make_dir(analysis_dir)
 
-    x = self.format_var_for_query(x)
-    y = self.format_var_for_query(y)
+    x = self.resolve_variable(x)
+    y = self.resolve_variable(y)
 
     # Get dataframe rep to create header.
     if y["df"] == None:
@@ -187,10 +187,19 @@ class vcf:
       pass
 
 
-    elif vcf2 is None and variable is None:
+    elif variable is None:
+      # Simple heat map
       concordance_results = command(["bcftools", "gtcheck", "-G", "1", self.filename])
       concordance_results = [x.split("\t") for x in concordance_results.split("\n") if x.startswith("CN")]
       # Output here, simple heatmap plot.
+    else:
+      # Sample variable to determine type and range.
+      variable = self.resolve_variable(variable)["query"]
+      sample_variable = "bcftools query -f '{variable}\\n' {self.filename} | head -n 500".format(**locals())
+      var_data = sorted(map(set_type,set(command(sample_variable, shell=True).split("\n"))))
+      
+        
+        
 
   def _parse_stats(lines):
     stats = {}

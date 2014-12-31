@@ -9,13 +9,28 @@ class bcolors:
     FAIL = '\033[91m'
     ENDC = '\033[0m'
 
-def command(command):
-  comm, err = Popen(command, stdout=PIPE, stderr=PIPE).communicate()
+def command(command, shell = False):
+  comm, err = Popen(command, stdout=PIPE, stderr=PIPE, shell = shell).communicate()
   if err != "":
     raise Exception(bcolors.WARNING + "BCFtools Error " + bcolors.ENDC + err)
   else:
     return comm.strip()
 
+def boolify(s):
+    """ http://stackoverflow.com/questions/7019283/automatically-type-cast-parameters-in-python """
+    if s == 'True':
+        return True
+    if s == 'False':
+        return False
+    raise ValueError("huh?")
+
+def set_type(s):
+    for fn in (boolify, int, float):
+        try:
+            return fn(s)
+        except ValueError:
+            pass
+    return s
 
 def bcftools_version():
 	"""
