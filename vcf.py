@@ -180,6 +180,18 @@ class vcf:
     else:
         return filename_pre, x, y
 
+  def compare_vcf(self, variable = None, pairs = None, vcf2 = None):
+    """ Analyzes concordance of samples """
+    if vcf2 is not None:
+      # Merge vcfs here and sort out variable names later.
+      pass
+
+
+    elif vcf2 is None and variable is None:
+      concordance_results = command(["bcftools", "gtcheck", "-G", "1", self.filename])
+      concordance_results = [x.split("\t") for x in concordance_results.split("\n") if x.startswith("CN")]
+      # Output here, simple heatmap plot.
+
   def _parse_stats(lines):
     stats = {}
     values_lines = []

@@ -1,11 +1,10 @@
 from subprocess import PIPE, Popen
 import os, sys
 
-
 class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
+    BOLD = "\033[1m"
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
     WARNING = '\033[93m'
     FAIL = '\033[91m'
     ENDC = '\033[0m'
@@ -36,14 +35,6 @@ def remove_file(file):
         os.remove(file)
     except:
         pass
-
-class bcolors:
-    BOLD = "\033[1m"
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
 
 def error(text):
     """ Reports an error to the user and exits """

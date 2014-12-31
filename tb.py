@@ -4,8 +4,8 @@
 Usage:
   tb.py listvars <vcf>          
   tb.py plot <vcf> <x> [<y>]      [options]
-  tb.py QC-Report <vcf>           [options]
-  tb.py compare <vcf>             [options]
+  tb.py qc <vcf>                  [options]
+  tb.py concordance <vcf> [--vcf2=<vcf2>] [--x=<x>]
   tb.py -h | --help
   tb.py --version
 
@@ -81,13 +81,13 @@ if __name__ == '__main__':
         r = v.query(args["<x>"], args["<y>"])
 
 
-    elif args["QC"] == True:
+    elif args["qc"] == True:
       print("List Variables")
 
-    elif args["compare"] == True:
-      print("List Variables")
+    elif args["concordance"] == True:
+      print v.compare_vcf()
 
-    elif args["report"] == True:
-      print("Generate summary report")
+    else:
+      pass
       
   # Run R script to generate plots

@@ -44,6 +44,7 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 - [ ] __--region__ - Restrict analysis to a particular region
 - [ ] __--samples__ - Restrict analysis to particular sample(s)
 - [ ] __--facet__ - Facet by filter or categorical variable.
+- [ ] __--noplot__ - Ignore plotting, but produce plot code.
 
 #### Listing Variables
 
@@ -81,6 +82,13 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 	- [ ] Numeric x Categorical
 	- [ ] Markers for Concordance/Discordance
 	- [ ] Facetting (esp. by filters)
+
+#### Concordance Analysis
+
+	tb.py concordance [vcf]
+
+- [ ] Heatmap
+- [ ] Statify by variable.
 
 #### Quality Control
 
