@@ -18,6 +18,16 @@ def command(command, shell = False):
   else:
     return comm.strip()
 
+
+def getScriptPath():
+    return os.path.dirname(os.path.realpath(sys.argv[0]))
+
+def get_plot(plot_name):
+    path = getScriptPath()
+    base = open(path + "/R/base.R",'r').read()
+    plot = open(path + "/R/" + plot_name + ".R",'r').read()
+    return base.replace("{plot}", plot)
+
 def boolify(s):
     """ http://stackoverflow.com/questions/7019283/automatically-type-cast-parameters-in-python """
     if s == 'True':

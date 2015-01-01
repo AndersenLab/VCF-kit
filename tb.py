@@ -4,7 +4,8 @@
 Usage:
   tb.py listvars <vcf>          
   tb.py plot <vcf> <x> [<y>]      [options]
-  tb.py qc <vcf>                  [options]
+  tb.py tstv <vcf>  
+  tb.py tstv <vcf>                  
   tb.py concordance <vcf> [--vcf2=<vcf2>] [--x=<x>] [--pairs=<pairset>]
   tb.py -h | --help
   tb.py --version
@@ -13,7 +14,7 @@ Options:
   -h --help                   Show this screen.
   --version                   Show version.
   --title=<title>             Set Custom plot titles.
-  --region=<region>           Restrict analysis to a particular region [default: ]
+  --region=<region>           Restrict analysis to a particular region.
   --include=<filter-expr>     Use a custom filtering string with bcftools.
   --facet=<facet-var>         Facet analysis on a categorical variable.
   --split-sample              When plotting genotype FORMAT fields, facet by sample.
@@ -23,7 +24,6 @@ from docopt import docopt
 from subprocess import call
 from vcf import vcf
 from utils import *
-from plots import *
 
 
 class opts:
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     print(args)
 
     v = vcf(args["<vcf>"])
-    print v.contigs
+    print get_plot("histogram")
     #===============#
     # Parse Options #
     #===============#
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         args["<y>"] = args["<y>"].replace("log:", "")
 
     # Check that specified regions exist
-    if args["--region"] != "":
+    if args["--region"] is not None:
       region_check = [x.split(":") for x in args["--region"].split(",")]
       for chrom,bp_range in region_check:
         if chrom not in v.contigs.keys():
@@ -72,6 +72,11 @@ if __name__ == '__main__':
         within_upper = within_range(int(bp_range.split("-")[1]), 0, v.contigs[chrom]["length"])
         if not within_lower or not within_upper:
           error("The range (%s) falls outside of CHROM length (%s)" % (bp_range, v.contigs[chrom]["length"]))
+    else:
+      args["--region"] = ""
+
+    if args["--include"] is None:
+      args["--include"] = ""
 
     if args["listvars"] == True:
       v.list_vars()
@@ -82,7 +87,7 @@ if __name__ == '__main__':
         # Single Variable Plot #
         #======================#
 
-        analysis_dir, filename, r = v.query(args["<x>"], region = args["--region"])
+        query, analysis_dir, filename, r = v.query(args["<x>"], region = args["--region"])
         os.chdir(analysis_dir)
 
         if args["<x>"] == "POS":
@@ -97,10 +102,12 @@ if __name__ == '__main__':
         if r["number"] == 1 and r["type"] in ["Integer","Float"]:
           print(bc("Creating Histogram of %s" % r["df"],"BOLD"))
           var1 = r["df"]
+          histogram = get_plot("histogram")
           Rcode = histogram.format(**locals())
         elif r["number"] == 1 and r["type"] in ["String"]:
           print(bc("Creating Bar Chart of %s" % r["df"],"BOLD"))
           var1 = r["df"]
+          barchart = get_plot("barchart")
           Rcode = barchart.format(**locals())
         
         with open(filename + ".R","w") as R:

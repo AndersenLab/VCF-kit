@@ -24,8 +24,6 @@ standard_set_types = {"CHROM":"String",
                       "QUAL":"Float",
                       "FILTER":"String"}
 
-
-
 class vcf:
   def __init__(self, filename):
       # Start by storing basic information about the vcf/bcf and checking that an index exists.
@@ -145,7 +143,7 @@ class vcf:
         y = "." + y
     return "{filename}.{x}{y}".format(**locals())
 
-  def query(self, x, y = None, region = None, include = None):
+  def query(self, x, y = None, region = "", include = ""):
     # Create analysis directory
     
     x = self.resolve_variable(x)
@@ -172,8 +170,11 @@ class vcf:
     if region != "":
       region = "--regions " + region 
 
+    if include != "":
+      include = "--include " + include
 
-    q = shlex.split("bcftools query -f \"{variables}\" {region} {filename}".format(variables=variables, region=region, filename=self.filename))
+    query = "bcftools query -f \"{variables}\" {region} {include} {filename}".format(variables=variables, region=region, include=include, filename=self.filename)
+    q = shlex.split(query)
     filename = self.format_data_file_name(self.filename, x["query"],y["query"])
     filename_pre = self.analysis_dir + "/" + filename
     remove_file(filename_pre)
@@ -184,9 +185,9 @@ class vcf:
                 out.write(line)
 
     if y["query"] == None:
-        return self.analysis_dir, filename, x
+        return repr(query), self.analysis_dir, filename, x
     else:
-        return self.analysis_dir, filename, x, y
+        return repr(query), self.analysis_dir, filename, x, y
 
   def compare_vcf(self, variable = None, pairs = None, vcf2 = None):
     """ Analyzes concordance of samples """
