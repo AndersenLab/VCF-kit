@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""VCF-Toolbox.
+"""VCF-Toolbox 0.1
 
 Usage:
   tb.py listvars <vcf>          
@@ -85,7 +85,7 @@ if __name__ == '__main__':
       print("List Variables")
 
     elif args["concordance"] == True:
-      print v.compare_vcf(variable = args["--x"])
+      print v.compare_vcf(variable = args["--x"], pairs = args["--pairs"])
 
     else:
       pass

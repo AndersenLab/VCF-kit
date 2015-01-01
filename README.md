@@ -89,7 +89,7 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 - [ ] Dealing with 2 files (merging, etc.)
 - [ ] Parallelize
 - [ ] Heatmap
-	- [ ] Split when there are a large number of samples.
+	- [ ] Split when there are a large number of samples into smaller heatmaps.
 - [X] Binning for many observations.
 - [X] Statify by variable.
 

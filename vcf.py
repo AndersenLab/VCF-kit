@@ -1,7 +1,6 @@
 from subprocess import PIPE, Popen, call
 from collections import OrderedDict
 from tabulate import tabulate as tb
-from ast import literal_eval
 from datetime import datetime
 from utils import *
 import numpy as np
@@ -9,7 +8,6 @@ import shlex
 import re
 import sys
 import csv
-
 
 standard_set_names = ["CHROM", "POS", "REF", "ALT", "QUAL", "FILTER"]
 standard_set = [OrderedDict([("id","CHROM"), ("desc", "Chromosome"), ("type", "String")]),
@@ -43,7 +41,7 @@ class vcf:
 
       # Contigs
       self.contigs = [x.split(",") for x in re.compile(r'''^##contig=<(?P<data>.*)>''', re.M).findall(self.header)]
-      self.contigs = [{x.split("=")[0]:x.split("=")[1] for x in f} for f in self.contigs]
+      self.contigs = dict([(x.split("=")[0],x.split("=")[1]) for x in f] for f in self.contigs)
       
       # Info
       r = re.compile(r'''\#\#INFO=<
@@ -195,6 +193,9 @@ class vcf:
     if variable in ["CHROM"]:
       error("%s not allowed for variant comparisons" % variable)
 
+    if pairs is not None:
+      pairs = [tuple(x.split(",")) for x in pairs.split(":")]
+
     if vcf2 is not None:
       # Merge vcfs here and sort out variable names later.
       pass
@@ -216,13 +217,13 @@ class vcf:
       binning = False
       if len(var_data) > 100:
         # Use quantiles
-        var_data = [np.percentile(var_data, x) for x in range(0,3,1)]
+        var_data = [np.percentile(var_data, x) for x in range(0,100,1)]
         binning = True
         print bc("More than 100 different values for %s, binning by percentile" % variable["include"], "BOLD")
       with open(filename_pre + ".txt","w+") as out:
         out.write("\t".join(base_header + [variable["df"]]) + "\n")
         for i in var_data:
-          print("Current_Value: {i};\t {index}/{total}".format(i=i, index=var_data.index(i)+1, total=len(var_data)))
+          print("Comparing Genotypes at {var}={i};\t ({index}/{total})".format(var=variable["include"],i=i, index=var_data.index(i)+1, total=len(var_data)))
           if i != '':
             if type(i) == str:
               irep = i
@@ -242,10 +243,8 @@ class vcf:
             cr = command(q, shell=True)
             # Filter for concordance values
             cr = [map(set_type,x.split("\t")[1:]) + [irep] for x in cr.split("\n") if x.startswith("CN")]
-            print cr
             # Insert concordance rate
             for k,v in enumerate(cr):
-              print x
               if cr[k][1] != 0:
                  cr[k] += [1-v[0]/float(v[1])]
               else:
