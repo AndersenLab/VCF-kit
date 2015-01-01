@@ -13,7 +13,7 @@ Options:
   -h --help                   Show this screen.
   --version                   Show version.
   --title=<title>             Set Custom plot titles.
-  --region=<region>           Restrict analysis to a particular region.
+  --region=<region>           Restrict analysis to a particular region [default: ]
   --include=<filter-expr>     Use a custom filtering string with bcftools.
   --facet=<facet-var>         Facet analysis on a categorical variable.
   --split-sample              When plotting genotype FORMAT fields, facet by sample.
@@ -28,9 +28,14 @@ from plots import *
 
 class opts:
   """ Defines options that can be overridden """
+  title = ""
   functions = ""
   binwidth = ""
   add = ""
+
+  # Log
+  log_x_open = ""
+  log_x_close = ""
 
 
 if __name__ == '__main__':
@@ -38,6 +43,35 @@ if __name__ == '__main__':
     print(args)
 
     v = vcf(args["<vcf>"])
+    print v.contigs
+    #===============#
+    # Parse Options #
+    #===============#
+
+    if args["--title"] is not None:
+      opts.title = args["--title"]
+
+    # Log Transformations
+    if args["<x>"].startswith("log:"):
+      opts.log_x_open = "log10("
+      opts.log_x_close = ")"
+      args["<x>"] = args["<y>"].replace("log:", "")
+    if args["<y>"] is not None:
+      if args["<y>"].startswith("log:"):
+        opts.log_y_open = "log10("
+        opts.log_y_close = ")"
+        args["<y>"] = args["<y>"].replace("log:", "")
+
+    # Check that specified regions exist
+    if args["--region"] != "":
+      region_check = [x.split(":") for x in args["--region"].split(",")]
+      for chrom,bp_range in region_check:
+        if chrom not in v.contigs.keys():
+          error("The CHROM you specified (%s) does not exist." % chrom)
+        within_lower = within_range(int(bp_range.split("-")[0]), 0, v.contigs[chrom]["length"])
+        within_upper = within_range(int(bp_range.split("-")[1]), 0, v.contigs[chrom]["length"])
+        if not within_lower or not within_upper:
+          error("The range (%s) falls outside of CHROM length (%s)" % (bp_range, v.contigs[chrom]["length"]))
 
     if args["listvars"] == True:
       v.list_vars()
@@ -48,7 +82,9 @@ if __name__ == '__main__':
         # Single Variable Plot #
         #======================#
 
-        filename, r = v.query(args["<x>"])
+        analysis_dir, filename, r = v.query(args["<x>"], region = args["--region"])
+        os.chdir(analysis_dir)
+
         if args["<x>"] == "POS":
           # Facet by Chromosome Automatically
           print("")

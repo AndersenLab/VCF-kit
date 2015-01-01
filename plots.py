@@ -8,8 +8,8 @@ suppressMessages(library(data.table))
 df <- as.data.frame(fread("{filename}.txt"))
 
 ggplot(df) +
-  geom_histogram(aes(x=df${var1}),{opts.binwidth}) +
-  labs(x="{var1}", y="Count", title="Distribution of {var1}") +
+  geom_histogram(aes(x={opts.log_x_open}df${var1}{opts.log_x_close}),{opts.binwidth}) +
+  labs(x="{opts.log_x_open}{var1}{opts.log_x_close}", y="Count", title="{opts.title}") +
   theme(title=element_text(size=20), 
         axis.title.x = element_text(size=15),
         axis.title.y = element_text(size=15)) {opts.add}
@@ -27,7 +27,7 @@ df <- as.data.frame(fread("{filename}.txt"))
 
 ggplot(df) +
   geom_bar(aes(x=df${var1}),{opts.binwidth}) +
-  labs(x="{var1}", y="Count", title="Distribution of {var1}") +
+  labs(x="{var1}", y="Count", title="{opts.title}") +
   theme(title=element_text(size=20), 
         axis.title.x = element_text(size=15),
         axis.title.y = element_text(size=15)) {opts.add}

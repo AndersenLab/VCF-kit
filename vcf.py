@@ -41,7 +41,8 @@ class vcf:
 
       # Contigs
       self.contigs = [x.split(",") for x in re.compile(r'''^##contig=<(?P<data>.*)>''', re.M).findall(self.header)]
-      self.contigs = dict([(x.split("=")[0],x.split("=")[1]) for x in f] for f in self.contigs)
+      self.contigs = [dict([(x.split("=")[0],set_type(x.split("=")[1])) for x in f]) for f in self.contigs]
+      self.contigs = dict([(x["ID"],x) for x in self.contigs])
       
       # Info
       r = re.compile(r'''\#\#INFO=<
@@ -144,7 +145,7 @@ class vcf:
         y = "." + y
     return "{filename}.{x}{y}".format(**locals())
 
-  def query(self, x, y=None, region=None, include=None):
+  def query(self, x, y = None, region = None, include = None):
     # Create analysis directory
     
     x = self.resolve_variable(x)
@@ -167,8 +168,14 @@ class vcf:
         header = "CHROM," + header
         variables = "%CHROM," + variables
 
-    q = shlex.split("bcftools query -f \"{variables}\" {filename}".format(variables=variables, filename=self.filename))
-    filename_pre = self.analysis_dir + "/" + self.format_data_file_name(self.filename, x["query"],y["query"])
+    # Region option
+    if region != "":
+      region = "--regions " + region 
+
+
+    q = shlex.split("bcftools query -f \"{variables}\" {region} {filename}".format(variables=variables, region=region, filename=self.filename))
+    filename = self.format_data_file_name(self.filename, x["query"],y["query"])
+    filename_pre = self.analysis_dir + "/" + filename
     remove_file(filename_pre)
     with open(filename_pre + ".txt","w+") as out:
         out.write(header)
@@ -177,9 +184,9 @@ class vcf:
                 out.write(line)
 
     if y["query"] == None:
-        return filename_pre, x
+        return self.analysis_dir, filename, x
     else:
-        return filename_pre, x, y
+        return self.analysis_dir, filename, x, y
 
   def compare_vcf(self, variable = None, pairs = None, vcf2 = None):
     """ Analyzes concordance of samples """
@@ -187,14 +194,14 @@ class vcf:
     filename_pre = self.analysis_dir + "/" + self.format_data_file_name("Concordance_" + self.filename, variable )
     remove_file(filename_pre)
     #[2]Discordance  [3]Number of sites  [4]Average minimum depth  [5]Sample i [6]Sample j
-    base_header = ["Discordant_Sites", "Number_of_Sites", "Average_minimum_depth", "Sample_i", "Sample_j", "Concordance"]
+    base_header = ["Discordant_Sites", "Number_of_Sites", "Average_minimum_depth", "Sample_i", "Sample_j", "Same_Sample", "Concordance"]
 
     # Test for variables that are not allowed.
     if variable in ["CHROM"]:
       error("%s not allowed for variant comparisons" % variable)
 
     if pairs is not None:
-      pairs = [tuple(x.split(",")) for x in pairs.split(":")]
+      pairs = [tuple(sorted(x.split(","))) for x in pairs.split(":")]
 
     if vcf2 is not None:
       # Merge vcfs here and sort out variable names later.
@@ -220,8 +227,12 @@ class vcf:
         var_data = [np.percentile(var_data, x) for x in range(0,100,1)]
         binning = True
         print bc("More than 100 different values for %s, binning by percentile" % variable["include"], "BOLD")
-      with open(filename_pre + ".txt","w+") as out:
-        out.write("\t".join(base_header + [variable["df"]]) + "\n")
+      with open(filename_pre + ".txt","w+") as f:
+        # Setup file, write header.
+        fn = base_header + [variable["df"]]
+        out = csv.DictWriter(f, delimiter='\t', fieldnames=fn)
+        out.writerow(dict((fn,fn) for fn in out.fieldnames))
+
         for i in var_data:
           print("Comparing Genotypes at {var}={i};\t ({index}/{total})".format(var=variable["include"],i=i, index=var_data.index(i)+1, total=len(var_data)))
           if i != '':
@@ -242,15 +253,27 @@ class vcf:
             # cr = concordance results
             cr = command(q, shell=True)
             # Filter for concordance values
-            cr = [map(set_type,x.split("\t")[1:]) + [irep] for x in cr.split("\n") if x.startswith("CN")]
+            cr = [map(set_type,x.split("\t")[1:]) for x in cr.split("\n") if x.startswith("CN")]
             # Insert concordance rate
             for k,v in enumerate(cr):
-              if cr[k][1] != 0:
-                 cr[k] += [1-v[0]/float(v[1])]
+              cr_dict = {}
+              cr_dict["Discordant_Sites"] = v[0]
+              cr_dict["Average_minimum_depth"] = v[1]
+              cr_dict["Sample_i"] = v[2]
+              cr_dict["Sample_j"] = v[3]
+              cr_dict["Same_Sample"] = v[0]
+              cr_dict[variable["df"]] = i
+              # Insert if they are the same sample.
+              if tuple(sorted([v[3],v[4]])) in pairs:
+                cr_dict["Same_Sample"] = 1
               else:
-                 cr[k] += [0]
-              cr[k] = '\t'.join(map(str,v))
-            out.write("\n".join(cr) + "\n")
+                cr_dict["Same_Sample"] = 0
+              #Insert concordance rate.
+              if cr[k][1] != 0:
+                 cr_dict["Concordance"] = 1-v[0]/float(v[1])
+              else:
+                 cr_dict["Concordance"] = 0
+              out.writerow(cr_dict)
         
 
   def _parse_stats(lines):

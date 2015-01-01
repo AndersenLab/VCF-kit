@@ -33,13 +33,13 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 
 #### Common Options
 
-- [ ] __--title__ - Set plot options.
-- [ ] __--logx__ - Put x variable on log scale.
-- [ ] __--logy__ - Put y variable on log scale.
+- [X] __--title__ - Set plot options.
+- [X] __--logx__ - Put x variable on log scale. (prepend log:)
+- [X] __--logy__ - Put y variable on log scale. (prepend log:)
 - [ ] __--knitr__ - Create a knitr report; generate option.
 - [ ] __--include__ - Use a custom filter.
 - [ ] __--exclude__ - Filter Out Variants.
-- [ ] __--region__ - Restrict analysis to a particular region
+- [X] __--region__ - Restrict analysis to a particular region
 - [ ] __--samples__ - Restrict analysis to particular sample(s)
 - [ ] __--facet__ - Facet by filter or categorical variable.
 - [ ] __--noplot__ - Ignore plotting, but produce plot code.
@@ -62,11 +62,14 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 		- [X] bin-width
 	- [ ] Multi-value fields
 		- [ ] Reshaping
+	- [ ] Options
 - [ ] Plot multiple variables
 	- [ ] Numeric x String
 	- [ ] Numeric x Numeric (Scatterplot)
 		- [ ] Labels (e.g. color by filter, another variable, tstv ratio)
+	- [ ] Multi-value fields.
 	- [ ] Plot along chromosomal coordinates (e.g. DP by CHROM:POS)
+	- [ ] Options
 
 
 #### Compare Variant Sets (e.g. diff callers)
@@ -85,7 +88,7 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 	tb.py concordance [vcf]
 
 - [X] Single Variable x Rate of Discordance (data is produced)
-- [ ] Marking Pairs
+- [X] Marking Pairs
 - [ ] Dealing with 2 files (merging, etc.)
 - [ ] Parallelize
 - [ ] Heatmap

@@ -68,3 +68,6 @@ def replace_all(text, find, replace):
 
 def bc(text, color):
     return getattr(bcolors,color) + text + bcolors.ENDC
+
+def within_range(x,lower,upper):
+    return all([x >= lower, x <= upper])
