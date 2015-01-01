@@ -12,7 +12,9 @@ class bcolors:
 def command(command, shell = False):
   comm, err = Popen(command, stdout=PIPE, stderr=PIPE, shell = shell).communicate()
   if err != "":
-    raise Exception(bcolors.WARNING + "BCFtools Error " + bcolors.ENDC + err)
+    if type(command) == list:
+        command = " ".join(command)
+    raise Exception(bcolors.BOLD + "\n" + command + bcolors.ENDC +  "\n" + bcolors.WARNING + "BCFtools Error " + bcolors.ENDC + err)
   else:
     return comm.strip()
 

@@ -5,12 +5,11 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 
 ### Planned Options
 
-
 	Usage:
 	  tb.py listvars <vcf>          
 	  tb.py plot <vcf> <x> [<y>]      [options]
-	  tb.py QC-Report <vcf>           [options]
-	  tb.py compare <vcf>             [options]
+	  tb.py qc <vcf>                  [options]
+	  tb.py concordance <vcf> [--vcf2=<vcf2>] [--x=<x>] [--pairs=<pairset>]
 	  tb.py -h | --help
 	  tb.py --version
 
@@ -21,8 +20,7 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 	  --region=<region>           Restrict analysis to a particular region.
 	  --include=<filter-expr>     Use a custom filtering string with bcftools.
 	  --facet=<facet-var>         Facet analysis on a categorical variable.
-	  --split-format              When plotting genotype FORMAT fields, facet by sample.
-
+	  --split-sample              When plotting genotype FORMAT fields, facet by sample.
 
 
 ## Version 1.0 To Do List
@@ -75,8 +73,7 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 
 	tb.py compare <x> [<y>] <vcf>
 
-- [ ] Single Variable x Rate of Discordance
-- [ ] POS --> Genomic Location and Rate of discordance
+- [ ] POS --> Genomic Location and Rate of discordance (e.g. CHROM)
 - [ ] Compare Two Variables
 	- [ ] Numeric x Numeric
 	- [ ] Numeric x Categorical
@@ -87,8 +84,14 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 
 	tb.py concordance [vcf]
 
+- [X] Single Variable x Rate of Discordance (data is produced)
+- [ ] Marking Pairs
+- [ ] Dealing with 2 files (merging, etc.)
+- [ ] Parallelize
 - [ ] Heatmap
-- [ ] Statify by variable.
+	- [ ] Split when there are a large number of samples.
+- [X] Binning for many observations.
+- [X] Statify by variable.
 
 #### Quality Control
 
@@ -97,8 +100,7 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 Outputs a QC report of one or more vcfs. If two vcfs are given, will compare them (and take considerably longer to run).
 
 - [ ] ts/tv ratio by chromosome:position; summary table
-- [ ] ts/tv ratio by depth
-- [ ] ts/tv ratio by quality
+- [ ] ts/tv ratio by tag
 - [ ] bcftools plots
 
 #### Special

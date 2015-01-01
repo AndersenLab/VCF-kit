@@ -4,6 +4,7 @@ from tabulate import tabulate as tb
 from ast import literal_eval
 from datetime import datetime
 from utils import *
+import numpy as np
 import shlex
 import re
 import sys
@@ -31,6 +32,8 @@ class vcf:
   def __init__(self, filename):
       # Start by storing basic information about the vcf/bcf and checking that an index exists.
       self.filename = filename
+      self.analysis_dir = replace_all(self.filename,[".bcf", ".vcf",".gz"], "").strip(".")
+      make_dir(self.analysis_dir)
       self.header = command(["bcftools","view","-h",filename])
       # Samples
       self.samples = command(["bcftools","query","-l",filename]).split("\n")
@@ -104,8 +107,9 @@ class vcf:
     elif var.startswith("INFO/") and var.replace("INFO/", "") not in self.info_set.keys():
         error("%s not found in INFO variables" % var)
     elif var in standard_set_names:
-        return {"query":"%" + var, "df": var, "type": standard_set_types[var], "number": 1}
+        return {"query":"%" + var, "include": var.replace("INFO/", ""), "df": var, "type": standard_set_types[var], "number": 1}
     else:
+        include_rep = var # Used with --include
         if var.startswith("INFO/") or var in self.info_set.keys():
             var_info = self.info_set[var.replace("INFO/","")]
             var_number = int(var_info["number"])
@@ -118,7 +122,7 @@ class vcf:
                 query_string = "%" + var
             else:
                 query_string = "%INFO/" + var
-            return {"query": query_string, "df": var_data_rep , "type": var_info["type"], "number": var_number}
+            return {"query": query_string, "include": include_rep,"df": var_data_rep , "type": var_info["type"], "number": var_number}
         else:
             var_info = self.format_set[var.replace("FORMAT/","")]
             var_number = int(var_info["number"])
@@ -127,25 +131,24 @@ class vcf:
             else:
                 var_data_rep = var
             var_data_rep = var_data_rep.replace("/", ".").replace("%","")
-            query_string = "[%" + var.replace("FORMAT/","") + "\n]"
-            return {"query": query_string, "df": var_data_rep , "type": var_info["type"], "number": var_number}
+            query_string = "[%" + var.replace("FORMAT/","") + "\\n]"
+            return {"query": query_string, "include": include_rep, "df": var_data_rep , "type": var_info["type"], "number": var_number}
   
-  def format_data_file_name(self,filename, x,y = None):
+  def format_data_file_name(self,filename, x = None,y = None):
     filename = replace_all(filename,["bcf", "vcf","gz"], "").strip(".")
+    if x == None:
+        x = ""
     if y == None:
         y = ""
     x, y  = replace_all(x, ["%","[","\n]","]"], ""), replace_all(y, ["%","[","\n","]"], "")
     x, y  = x.replace("/", "-"), y.replace("/", "-")
     if y != "":
         y = "." + y
-    print "{filename}.{x}{y}".format(**locals())
     return "{filename}.{x}{y}".format(**locals())
 
   def query(self, x, y=None, region=None, include=None):
     # Create analysis directory
-    analysis_dir = replace_all(self.filename,["bcf", "vcf","gz"], "").strip(".")
-    make_dir(analysis_dir)
-
+    
     x = self.resolve_variable(x)
     y = self.resolve_variable(y)
 
@@ -167,7 +170,7 @@ class vcf:
         variables = "%CHROM," + variables
 
     q = shlex.split("bcftools query -f \"{variables}\" {filename}".format(variables=variables, filename=self.filename))
-    filename_pre = analysis_dir + "/" + self.format_data_file_name(self.filename, x["query"],y["query"])
+    filename_pre = self.analysis_dir + "/" + self.format_data_file_name(self.filename, x["query"],y["query"])
     remove_file(filename_pre)
     with open(filename_pre + ".txt","w+") as out:
         out.write(header)
@@ -182,23 +185,73 @@ class vcf:
 
   def compare_vcf(self, variable = None, pairs = None, vcf2 = None):
     """ Analyzes concordance of samples """
+
+    filename_pre = self.analysis_dir + "/" + self.format_data_file_name("Concordance_" + self.filename, variable )
+    remove_file(filename_pre)
+    #[2]Discordance  [3]Number of sites  [4]Average minimum depth  [5]Sample i [6]Sample j
+    base_header = ["Discordant_Sites", "Number_of_Sites", "Average_minimum_depth", "Sample_i", "Sample_j", "Concordance"]
+
+    # Test for variables that are not allowed.
+    if variable in ["CHROM"]:
+      error("%s not allowed for variant comparisons" % variable)
+
     if vcf2 is not None:
       # Merge vcfs here and sort out variable names later.
       pass
 
-
     elif variable is None:
       # Simple heat map
       concordance_results = command(["bcftools", "gtcheck", "-G", "1", self.filename])
-      concordance_results = [x.split("\t") for x in concordance_results.split("\n") if x.startswith("CN")]
+      # [(1.0 - x[0]*1.0/x[1])] Concordance is added as the last column
+      concordance_results = [x.split("\t")[1:] + [1.0 - float(x[1])/float(x[2])] for x in concordance_results.split("\n") if x.startswith("CN")]
       # Output here, simple heatmap plot.
     else:
-      # Sample variable to determine type and range.
-      variable = self.resolve_variable(variable)["query"]
-      sample_variable = "bcftools query -f '{variable}\\n' {self.filename} | head -n 500".format(**locals())
-      var_data = sorted(map(set_type,set(command(sample_variable, shell=True).split("\n"))))
-      
-        
+      #
+      # Assess concordance across a variable.
+      #
+      variable = self.resolve_variable(variable)
+      q = "bcftools query -f '{variable}\\n' {filename}".format(variable=variable["query"], filename=self.filename)
+      var_data = sorted(map(set_type,set(np.array(command(q, shell=True).strip().split("\n")))))
+      # Bin data as needed
+      binning = False
+      if len(var_data) > 100:
+        # Use quantiles
+        var_data = [np.percentile(var_data, x) for x in range(0,3,1)]
+        binning = True
+        print bc("More than 100 different values for %s, binning by percentile" % variable["include"], "BOLD")
+      with open(filename_pre + ".txt","w+") as out:
+        out.write("\t".join(base_header + [variable["df"]]) + "\n")
+        for i in var_data:
+          print("Current_Value: {i};\t {index}/{total}".format(i=i, index=var_data.index(i)+1, total=len(var_data)))
+          if i != '':
+            if type(i) == str:
+              irep = i
+              i = '"' + i + '"'
+            else:
+              irep = i
+            if binning == True:
+              if var_data.index(i) == 0:
+                lower_bound = 0
+              else:
+                lower_bound = var_data[var_data.index(i) - 1]
+              include_string = "{variable}>={lower_bound} && {variable}<{upper_bound}".format(variable=variable["include"], lower_bound = lower_bound, upper_bound = i)
+            else:
+              include_string = "{variable}=={i}".format(variable=variable["include"], i=i)
+            q = "bcftools view --include '{include_string}' {filename} | bcftools gtcheck -G 1 - ".format(include_string=include_string, filename=self.filename)
+            # cr = concordance results
+            cr = command(q, shell=True)
+            # Filter for concordance values
+            cr = [map(set_type,x.split("\t")[1:]) + [irep] for x in cr.split("\n") if x.startswith("CN")]
+            print cr
+            # Insert concordance rate
+            for k,v in enumerate(cr):
+              print x
+              if cr[k][1] != 0:
+                 cr[k] += [1-v[0]/float(v[1])]
+              else:
+                 cr[k] += [0]
+              cr[k] = '\t'.join(map(str,v))
+            out.write("\n".join(cr) + "\n")
         
 
   def _parse_stats(lines):
