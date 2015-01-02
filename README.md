@@ -57,8 +57,6 @@ Lists variables available for use in plotting within a vcf file. Outputs tables 
 	+-----------+--------------------------------------------------+---------+
 	| FORMAT/GL | Likelihoods for RR,RA,AA genotypes (R=ref,A=alt) | Float   |
 	+-----------+--------------------------------------------------+---------+
-	| FORMAT/DP | # high-quality bases                             | Integer |
-	+-----------+--------------------------------------------------+---------+
 
 #### Plotting Variables
 
@@ -102,7 +100,7 @@ Lists variables available for use in plotting within a vcf file. Outputs tables 
 
 	tb.py tstv <vcf> --x=<x>
 
-Output a report on tstv or examine tstv across a given variable.
+Examine ts/tv by sample,  ratio or examine tstv across a given variable.
 
 - [X] Stratify tstv across variable
 - [X] ts/tv ratio by chromosome:position; summary table
@@ -112,6 +110,15 @@ Output a report on tstv or examine tstv across a given variable.
 	- [X] plot categorical (by sample)
 	- [X] plot numeric (by sample) and aggregate
 
+__Examples__
+
+	tb.py tstv <vcf>
+
+If no variable is specified, 
+
+	tb.py tstv <vcf> --x=CHROM
+
+![ts/tv by chromosome](https://raw.githubusercontent.com/AndersenLab/vcf-toolbox/img/TSTV_CHROM.png)
 #### Quality Control
 
 	tb.py QC <vcflist>...

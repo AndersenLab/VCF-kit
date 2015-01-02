@@ -48,7 +48,7 @@ class vcf:
   def __init__(self, filename):
       # Start by storing basic information about the vcf/bcf and checking that an index exists.
       self.filename = filename
-      self.analysis_dir = replace_all_at_end(self.filename,[".bcf", ".vcf",".gz"], "").strip(".")
+      self.analysis_dir = replace_all_at_end(self.filename,[".bcf", ".gz", ".vcf"], "").strip(".")
       make_dir(self.analysis_dir)
       self.header = command(["bcftools","view","-h",filename])
       # Samples
@@ -221,7 +221,6 @@ class vcf:
       query = r"bcftools query --include 'INDEL=0' -f '%REF[\t%TGT]\tALL\n' {filename}".format(filename = self.filename, var=1)
       var_set = self.samples + ["VAR"]
       info_var = True
-      print query
     elif variable["group"] in ["STANDARD","INFO"]:
       query = r"bcftools query --include 'INDEL=0' -f '%REF[\t%TGT]\t{var}\n' {filename}".format(filename = self.filename, var=variable["query"])
       info_var = True
