@@ -95,8 +95,8 @@ Output a report on tstv or examine tstv across a given variable.
 - [X] Stratify tstv across variable
 - [X] ts/tv ratio by chromosome:position; summary table
 - [ ] Use bcftools to calculate ts and tv when not stratifying by variable (speed up)
-- [ ] Plots
-	- [ ] plot aggregate (all)
+- [X] Plots
+	- [X] plot aggregate (all)
 	- [X] plot categorical (by sample)
 	- [X] plot numeric (by sample) and aggregate
 
