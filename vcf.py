@@ -114,7 +114,7 @@ class vcf:
     as needed.
     """
     if var == None:
-        return {"query" : None, "df" : None , "type" : None, "group" : None}
+        return {"query" : None, "df" : "VAR", "type" : None, "group" : None}
     var = var.replace("%", "")
     search_var = var.replace("FORMAT/", "").replace("INFO/","")
     if search_var not in self.complete_var_list:
@@ -148,7 +148,7 @@ class vcf:
             else:
                 var_data_rep = var
             var_data_rep = var_data_rep.replace("/", ".").replace("%","")
-            query_string = "[%" + var.replace("FORMAT/","") + "\\n]"
+            query_string = "[%" + var.replace("FORMAT/","") + "]"
             return {"query": query_string, "include": include_rep, "df": var_data_rep , "type": var_info["type"], "number": var_number, "group" : "FORMAT"}
   
   def format_data_file_name(self,filename, x = None,y = None):
@@ -210,41 +210,53 @@ class vcf:
         return repr(query), self.analysis_dir, filename, x, y
 
   def tstv(self, variable = None):
-    """ Analyze tstv ratios over a given variable and across all samples. """
+    """ 
+      Analyze tstv ratios over a given variable and across all samples. 
+    """
     variable = self.resolve_variable(variable)
-    filename_pre = self.analysis_dir + "/" + self.format_data_file_name("tstv_" + self.filename, variable["df"])
+    filename_pre = self.analysis_dir + "/" + self.format_data_file_name("TSTV_" + self.filename, variable["df"])
 
     if variable["group"] == None:
-      query = r"bcftools query --include 'INDEL=0' -f '%REF[\t%TGT]\tALL\n' --regions chrIII:1-1000000 {filename}".format(filename = self.filename, var=1)
+      query = r"bcftools query --include 'INDEL=0' -f '%REF[\t%TGT]\tALL\n' {filename}".format(filename = self.filename, var=1)
       var_set = self.samples + ["VAR"]
       info_var = True
+      print query
     elif variable["group"] in ["STANDARD","INFO"]:
-      query = r"bcftools query -f '%REF\t%ALT[\t%GT]\n' {filename}".format(filename = self.filename, var=1)
+      query = r"bcftools query --include 'INDEL=0' -f '%REF[\t%TGT]\t{var}\n' {filename}".format(filename = self.filename, var=variable["query"])
       info_var = True
     else:
-      query = """bcftools query -f '%REF\t%ALT\t' """
+      query = r"bcftools query --include 'INDEL=0' -f '%REF[\t%TGT][\t{var}]\n' {filename}".format(filename = self.filename, var=variable["query"])
+      info_var = False
 
     tstv_set = {}
-
     q = shlex.split(query)
     for line in Popen(q, stdout=PIPE, stderr=PIPE).stdout:
-      
       line = line.strip().replace("/","").split("\t")
       REF = line[0]
       line = line[1:] # I
-      
       # For info variables
-      if info_var == True:
-        val = line[-1]
-        for k,sample in enumerate(self.samples):
-          if val not in tstv_set:
-            tstv_set[val] = {}
-            for sample in self.samples:
-              tstv_set[val][sample] = [0,0]
-          tstv_set[val][sample] = calc_tstv(REF, line[k], tstv_set[val][sample])
+      sample_n_offset = len(self.samples)
+      for k,sample in enumerate(self.samples):
+        if info_var == True:
+          val = set_type(line[-1])
+        else:
+          val = set_type(line[k+len(self.samples)])
+        if val not in tstv_set:
+          tstv_set[val] = {}
+        if sample not in tstv_set[val]:
+          tstv_set[val][sample] = [0,0]
+        if len(line[k].strip(".")) == 2:
+            tstv_set[val][sample] = calc_tstv(REF, line[k], tstv_set[val][sample])
+    header = ["Sample", "nTransitions", "nTransversions", variable["df"]]
+
+    with open(filename_pre + ".txt","w+") as out:
+        out.write('\t'.join(header) + "\n")
+        for val, sample_set in tstv_set.items():
+          for sample, tstv in sample_set.items():
+            out_line = '\t'.join(map(str,[sample, tstv[0], tstv[1], val]))
+            out.write(out_line + "\n")
 
 
-    print pp(tstv_set)
 
 
   def compare_vcf(self, variable = None, pairs = None, vcf2 = None):
