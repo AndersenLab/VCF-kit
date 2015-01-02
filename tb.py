@@ -135,13 +135,13 @@ if __name__ == '__main__':
       
       if variable["type"] == None:
         variable["df"] = "Sample"
-      aes = "x=" + variable["df"] + ",y=tstv_ratio, fill=" + variable["df"]
       xlab = variable["df"]
       ylab = "ts/tv ratio"
       opts.functions += precision_axis
       opts.add += " + \n scale_y_continuous(labels = precision_axis) "
       if variable["type"] == None:
         # Plot if tstv not stratified across a variable.
+        aes = "x=" + variable["df"] + ",y=tstv_ratio"
         opts.geom = "stat='identity'"
         Rcode = get_plot("barchart").format(**locals())
         print("")
@@ -149,7 +149,7 @@ if __name__ == '__main__':
         print("")
       elif variable["type"] in ["Integer", "Float"]:
         # Scatter plot (Numeric)
-        aes += ",color=Sample"
+        aes = "x=" + variable["df"] + ",y=tstv_ratio, fill=" + variable["df"] + ",color=Sample"
         # Filter out sparse data.
         opts.filters += "df <- filter(df, nTransitions + nTransversions > 10)"
         opts.add += " + \n stat_smooth(aes(x={var}, y=tstv_ratio))".format(var=variable["df"])
@@ -160,6 +160,7 @@ if __name__ == '__main__':
 
       elif variable["type"] in ["String"]:
         # Box Plot (categorical)
+        aes = "x=" + variable["df"] + ",y=tstv_ratio, fill=" + variable["df"]
         opts.add += " + \n geom_jitter(aes(" + aes + "))"
         Rcode = get_plot("boxplot").format(**locals())
         print("")
