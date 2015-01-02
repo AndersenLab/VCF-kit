@@ -7,9 +7,10 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 
 	Usage:
 	  tb.py listvars <vcf>          
-	  tb.py plot <vcf> <x> [<y>]      [options]
-	  tb.py qc <vcf>                  [options]
+	  tb.py plot <vcf> <x> [<y>]      [options]               
 	  tb.py concordance <vcf> [--vcf2=<vcf2>] [--x=<x>] [--pairs=<pairset>]
+	  tb.py qc <vcf>   
+	  tb.py tstv <vcf> [--x=<x>]
 	  tb.py -h | --help
 	  tb.py --version
 
@@ -22,14 +23,13 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 	  --facet=<facet-var>         Facet analysis on a categorical variable.
 	  --split-sample              When plotting genotype FORMAT fields, facet by sample.
 
-
 ## Version 1.0 To Do List
 
 #### General
 
 - [X] List available variables (INFO/General)
 - [X] Create/manage files within a created directory [create folder for vcf]
-- [ ] Create single script for generating plots; append to it date/time, plot title, etc.
+- [X] Create single script for generating plots; append to it date/time, plot title, etc.
 
 #### Common Options
 
@@ -37,8 +37,7 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 - [X] __--logx__ - Put x variable on log scale. (prepend log:)
 - [X] __--logy__ - Put y variable on log scale. (prepend log:)
 - [ ] __--knitr__ - Create a knitr report; generate option.
-- [ ] __--include__ - Use a custom filter.
-- [ ] __--exclude__ - Filter Out Variants.
+- [X] __--include__ - Use a custom filter.
 - [X] __--region__ - Restrict analysis to a particular region
 - [ ] __--samples__ - Restrict analysis to particular sample(s)
 - [ ] __--facet__ - Facet by filter or categorical variable.
@@ -72,17 +71,6 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 	- [ ] Options
 
 
-#### Compare Variant Sets (e.g. diff callers)
-
-	tb.py compare <x> [<y>] <vcf>
-
-- [ ] POS --> Genomic Location and Rate of discordance (e.g. CHROM)
-- [ ] Compare Two Variables
-	- [ ] Numeric x Numeric
-	- [ ] Numeric x Categorical
-	- [ ] Markers for Concordance/Discordance
-	- [ ] Facetting (esp. by filters)
-
 #### Concordance Analysis
 
 	tb.py concordance <vcf>
@@ -91,8 +79,10 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 - [X] Marking Pairs
 - [ ] Dealing with 2 files (merging, etc.)
 - [ ] Parallelize
-- [ ] Heatmap
+- [ ] Plots
+	- [ ] Heatmap (when run without variable)
 	- [ ] Split when there are a large number of samples into smaller heatmaps.
+	- [ ] Concordance  across variable.
 - [X] Binning for many observations.
 - [X] Statify by variable.
 
@@ -102,11 +92,11 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 
 Output a report on tstv or examine tstv across a given variable.
 
-- [ ] Stratify tstv across variable
-- [ ] tstv report
-	- [ ] ts/tv ratio by chromosome:position; summary table
-- [ ] ts/tv ratio by 
-
+- [X] Stratify tstv across variable
+- [X] ts/tv ratio by chromosome:position; summary table
+- [ ] Plots
+	- [ ] plot factor (by sample)
+	- [ ] plot categorical (by sample)
 
 #### Quality Control
 
