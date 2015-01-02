@@ -9,6 +9,8 @@ suppressMessages(library(data.table))
 
 df <- as.data.frame(fread("{filename}.txt"))
 
+{opts.filters}
+
 {plot}
 
 ggsave("{filename}.png", width=18, height=12)
