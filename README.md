@@ -110,17 +110,28 @@ Examine ts/tv by sample,  ratio or examine tstv across a given variable.
 	- [X] plot categorical (by sample)
 	- [X] plot numeric (by sample) and aggregate
 
-__Examples__
+#### Examples
+
+__Plot ts/tv by Sample__
 
 	tb.py tstv <vcf>
 
-If no variable is specified, tstv is shown by sample.
+If no variable is specified, ts/tv is shown by sample.
 
 ![ts/tv by sample](https://raw.githubusercontent.com/AndersenLab/vcf-toolbox/img/TSTV_SAMPLE.png)
+
+__Plot ts/tv by Chromosome__
 
 	tb.py tstv <vcf> --x=CHROM
 
 ![ts/tv by chromosome](https://raw.githubusercontent.com/AndersenLab/vcf-toolbox/img/TSTV_CHROM.png)
+
+__Plot ts/tv by depth of coverage (FORMAT/DP)__
+
+	tb.py tstv <vcf> --x=FORMAT/DP
+
+![ts/tv by chromosome](https://raw.githubusercontent.com/AndersenLab/vcf-toolbox/img/TSTV_FORMAT_DP.png)
+
 #### Quality Control
 
 	tb.py QC <vcflist>...
