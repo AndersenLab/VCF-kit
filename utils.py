@@ -75,6 +75,12 @@ def replace_all(text, find, replace):
         text = text.replace(i, replace)
     return text
 
+def replace_all_at_end(text, find, replace):
+    for i in find:
+        if text.endswith(i):
+            text = text.replace(i, replace)
+    return text
+
 
 def bc(text, color):
     return getattr(bcolors,color) + text + bcolors.ENDC

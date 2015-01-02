@@ -85,7 +85,7 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 
 #### Concordance Analysis
 
-	tb.py concordance [vcf]
+	tb.py concordance <vcf>
 
 - [X] Single Variable x Rate of Discordance (data is produced)
 - [X] Marking Pairs
@@ -96,15 +96,23 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 - [X] Binning for many observations.
 - [X] Statify by variable.
 
+#### tstv analysis
+
+	tb.py tstv <vcf> --x=<x>
+
+Output a report on tstv or examine tstv across a given variable.
+
+- [ ] Stratify tstv across variable
+- [ ] tstv report
+	- [ ] ts/tv ratio by chromosome:position; summary table
+- [ ] ts/tv ratio by 
+
+
 #### Quality Control
 
 	tb.py QC <vcflist>...
 
 Outputs a QC report of one or more vcfs. If two vcfs are given, will compare them (and take considerably longer to run).
-
-- [ ] ts/tv ratio by chromosome:position; summary table
-- [ ] ts/tv ratio by tag
-- [ ] bcftools plots
 
 #### Special
 
@@ -118,3 +126,4 @@ Odds and Ends
 
 * Plot on z axis?
 * Multiple vcf comparison (Merge first?)
+* Bokeh?

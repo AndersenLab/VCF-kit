@@ -3,6 +3,8 @@ from collections import OrderedDict
 from tabulate import tabulate as tb
 from datetime import datetime
 from utils import *
+from pprint import pprint as pp
+import operator
 import numpy as np
 import shlex
 import re
@@ -23,6 +25,24 @@ standard_set_types = {"CHROM":"String",
                       "ALT":"String",
                       "QUAL":"Float",
                       "FILTER":"String"}
+
+tt = {    
+    'AG': [1,0],   # Transition
+    'CT': [1,0],   # Transition
+    'AC': [0,1],   # Transversion
+    'GT': [0,1],   # Transversion
+    'AT': [0,1],   # Transversion
+    'CG': [0,1],   # Transversion
+}
+
+def calc_tstv(REF, gt, tstv_count):
+  if REF == ''.join(set(gt)):
+    return tstv_count
+  else:
+    gt = ''.join(set(gt)).replace(REF, "")
+    tt_key = ''.join(sorted([REF,gt]))
+    return map(operator.add, tt[tt_key], tstv_count)
+
 
 class vcf:
   def __init__(self, filename):
@@ -94,7 +114,7 @@ class vcf:
     as needed.
     """
     if var == None:
-        return {"query": None, "df": None , "type": None}
+        return {"query" : None, "df" : None , "type" : None, "group" : None}
     var = var.replace("%", "")
     search_var = var.replace("FORMAT/", "").replace("INFO/","")
     if search_var not in self.complete_var_list:
@@ -104,7 +124,7 @@ class vcf:
     elif var.startswith("INFO/") and var.replace("INFO/", "") not in self.info_set.keys():
         error("%s not found in INFO variables" % var)
     elif var in standard_set_names:
-        return {"query":"%" + var, "include": var.replace("INFO/", ""), "df": var, "type": standard_set_types[var], "number": 1}
+        return {"query":"%" + var, "include": var.replace("INFO/", ""), "df": var, "type": standard_set_types[var], "number": 1, "group" : "STANDARD"}
     else:
         include_rep = var # Used with --include
         if var.startswith("INFO/") or var in self.info_set.keys():
@@ -119,7 +139,7 @@ class vcf:
                 query_string = "%" + var
             else:
                 query_string = "%INFO/" + var
-            return {"query": query_string, "include": include_rep,"df": var_data_rep , "type": var_info["type"], "number": var_number}
+            return {"query": query_string, "include": include_rep,"df": var_data_rep , "type": var_info["type"], "number": var_number, "group" : "INFO"}
         else:
             var_info = self.format_set[var.replace("FORMAT/","")]
             var_number = int(var_info["number"])
@@ -129,10 +149,10 @@ class vcf:
                 var_data_rep = var
             var_data_rep = var_data_rep.replace("/", ".").replace("%","")
             query_string = "[%" + var.replace("FORMAT/","") + "\\n]"
-            return {"query": query_string, "include": include_rep, "df": var_data_rep , "type": var_info["type"], "number": var_number}
+            return {"query": query_string, "include": include_rep, "df": var_data_rep , "type": var_info["type"], "number": var_number, "group" : "FORMAT"}
   
   def format_data_file_name(self,filename, x = None,y = None):
-    filename = replace_all(filename,["bcf", "vcf","gz"], "").strip(".")
+    filename = replace_all_at_end(filename,["bcf", "vcf","gz"], "").strip(".")
     if x == None:
         x = ""
     if y == None:
@@ -188,6 +208,44 @@ class vcf:
         return repr(query), self.analysis_dir, filename, x
     else:
         return repr(query), self.analysis_dir, filename, x, y
+
+  def tstv(self, variable = None):
+    """ Analyze tstv ratios over a given variable and across all samples. """
+    variable = self.resolve_variable(variable)
+    filename_pre = self.analysis_dir + "/" + self.format_data_file_name("tstv_" + self.filename, variable["df"])
+
+    if variable["group"] == None:
+      query = r"bcftools query --include 'INDEL=0' -f '%REF[\t%TGT]\tALL\n' --regions chrIII:1-1000000 {filename}".format(filename = self.filename, var=1)
+      var_set = self.samples + ["VAR"]
+      info_var = True
+    elif variable["group"] in ["STANDARD","INFO"]:
+      query = r"bcftools query -f '%REF\t%ALT[\t%GT]\n' {filename}".format(filename = self.filename, var=1)
+      info_var = True
+    else:
+      query = """bcftools query -f '%REF\t%ALT\t' """
+
+    tstv_set = {}
+
+    q = shlex.split(query)
+    for line in Popen(q, stdout=PIPE, stderr=PIPE).stdout:
+      
+      line = line.strip().replace("/","").split("\t")
+      REF = line[0]
+      line = line[1:] # I
+      
+      # For info variables
+      if info_var == True:
+        val = line[-1]
+        for k,sample in enumerate(self.samples):
+          if val not in tstv_set:
+            tstv_set[val] = {}
+            for sample in self.samples:
+              tstv_set[val][sample] = [0,0]
+          tstv_set[val][sample] = calc_tstv(REF, line[k], tstv_set[val][sample])
+
+
+    print pp(tstv_set)
+
 
   def compare_vcf(self, variable = None, pairs = None, vcf2 = None):
     """ Analyzes concordance of samples """

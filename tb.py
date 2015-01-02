@@ -3,10 +3,10 @@
 
 Usage:
   tb.py listvars <vcf>          
-  tb.py plot <vcf> <x> [<y>]      [options]
-  tb.py tstv <vcf>  
-  tb.py tstv <vcf>                  
+  tb.py plot <vcf> <x> [<y>]      [options]               
   tb.py concordance <vcf> [--vcf2=<vcf2>] [--x=<x>] [--pairs=<pairset>]
+  tb.py qc <vcf>   
+  tb.py tstv <vcf> [--x=<x>]
   tb.py -h | --help
   tb.py --version
 
@@ -43,7 +43,6 @@ if __name__ == '__main__':
     print(args)
 
     v = vcf(args["<vcf>"])
-    print get_plot("histogram")
     #===============#
     # Parse Options #
     #===============#
@@ -52,10 +51,11 @@ if __name__ == '__main__':
       opts.title = args["--title"]
 
     # Log Transformations
-    if args["<x>"].startswith("log:"):
-      opts.log_x_open = "log10("
-      opts.log_x_close = ")"
-      args["<x>"] = args["<y>"].replace("log:", "")
+    if args["<x>"] is not None:
+      if args["<x>"].startswith("log:"):
+        opts.log_x_open = "log10("
+        opts.log_x_close = ")"
+        args["<x>"] = args["<y>"].replace("log:", "")
     if args["<y>"] is not None:
       if args["<y>"].startswith("log:"):
         opts.log_y_open = "log10("
@@ -124,8 +124,9 @@ if __name__ == '__main__':
         r = v.query(args["<x>"], args["<y>"])
 
 
-    elif args["qc"] == True:
-      print("List Variables")
+    elif args["tstv"] == True:
+      """ Produces a tstv report """
+      v.tstv(args["--x"])
 
     elif args["concordance"] == True:
       print v.compare_vcf(variable = args["--x"], pairs = args["--pairs"])
