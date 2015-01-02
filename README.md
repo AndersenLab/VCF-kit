@@ -46,7 +46,27 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 
 	tb.py listvars <vcf>
 
-- [X] List Variables, Types, etc.
+Lists variables available for use in plotting within a vcf file. Outputs tables that look like this:
+
+FORMAT FIELDS
+
++-----------+--------------------------------------------------+---------+
+| id        | desc                                             | type    |
++===========+==================================================+=========+
+| FORMAT/GT | Genotype                                         | String  |
++-----------+--------------------------------------------------+---------+
+| FORMAT/GQ | Genotype Quality                                 | Integer |
++-----------+--------------------------------------------------+---------+
+| FORMAT/SP | Phred-scaled strand bias P-value                 | Integer |
++-----------+--------------------------------------------------+---------+
+| FORMAT/PL | List of Phred-scaled genotype likelihoods        | Integer |
++-----------+--------------------------------------------------+---------+
+| FORMAT/DV | # high-quality non-reference bases               | Integer |
++-----------+--------------------------------------------------+---------+
+| FORMAT/GL | Likelihoods for RR,RA,AA genotypes (R=ref,A=alt) | Float   |
++-----------+--------------------------------------------------+---------+
+| FORMAT/DP | # high-quality bases                             | Integer |
++-----------+--------------------------------------------------+---------+
 
 #### Plotting Variables
 
