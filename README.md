@@ -114,7 +114,9 @@ __Examples__
 
 	tb.py tstv <vcf>
 
-If no variable is specified, 
+If no variable is specified, tstv is shown by sample.
+
+![ts/tv by sample](https://raw.githubusercontent.com/AndersenLab/vcf-toolbox/img/TSTV_SAMPLE.png)
 
 	tb.py tstv <vcf> --x=CHROM
 
