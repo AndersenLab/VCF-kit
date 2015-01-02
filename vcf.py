@@ -48,7 +48,7 @@ class vcf:
   def __init__(self, filename):
       # Start by storing basic information about the vcf/bcf and checking that an index exists.
       self.filename = filename
-      self.analysis_dir = replace_all(self.filename,[".bcf", ".vcf",".gz"], "").strip(".")
+      self.analysis_dir = replace_all_at_end(self.filename,[".bcf", ".vcf",".gz"], "").strip(".")
       make_dir(self.analysis_dir)
       self.header = command(["bcftools","view","-h",filename])
       # Samples
@@ -214,7 +214,8 @@ class vcf:
       Analyze tstv ratios over a given variable and across all samples. 
     """
     variable = self.resolve_variable(variable)
-    filename_pre = self.analysis_dir + "/" + self.format_data_file_name("TSTV_" + self.filename, variable["df"])
+    filename = self.format_data_file_name("TSTV_" + self.filename, variable["df"])
+    filename_pre = self.analysis_dir + "/" + filename
 
     if variable["group"] == None:
       query = r"bcftools query --include 'INDEL=0' -f '%REF[\t%TGT]\tALL\n' {filename}".format(filename = self.filename, var=1)
@@ -247,15 +248,20 @@ class vcf:
           tstv_set[val][sample] = [0,0]
         if len(line[k].strip(".")) == 2:
             tstv_set[val][sample] = calc_tstv(REF, line[k], tstv_set[val][sample])
-    header = ["Sample", "nTransitions", "nTransversions", variable["df"]]
+    header = ["Sample", "nTransitions", "nTransversions", "tstv_ratio", variable["df"]]
 
     with open(filename_pre + ".txt","w+") as out:
         out.write('\t'.join(header) + "\n")
         for val, sample_set in tstv_set.items():
           for sample, tstv in sample_set.items():
-            out_line = '\t'.join(map(str,[sample, tstv[0], tstv[1], val]))
+            if tstv[1] == 0:
+              tstv_rate = 0
+            else:
+              tstv_rate = float(tstv[0])/tstv[1]
+            out_line = '\t'.join(map(str,[sample, tstv[0], tstv[1], tstv_rate, val]))
             out.write(out_line + "\n")
 
+    return repr(query), self.analysis_dir, filename
 
 
 
@@ -273,6 +279,8 @@ class vcf:
 
     if pairs is not None:
       pairs = [tuple(sorted(x.split(","))) for x in pairs.split(":")]
+    else:
+      pairs = []
 
     if vcf2 is not None:
       # Merge vcfs here and sort out variable names later.
@@ -329,9 +337,10 @@ class vcf:
             for k,v in enumerate(cr):
               cr_dict = {}
               cr_dict["Discordant_Sites"] = v[0]
-              cr_dict["Average_minimum_depth"] = v[1]
-              cr_dict["Sample_i"] = v[2]
-              cr_dict["Sample_j"] = v[3]
+              cr_dict["Number_of_Sites"] = v[1]
+              cr_dict["Average_minimum_depth"] = v[2]
+              cr_dict["Sample_i"] = v[3]
+              cr_dict["Sample_j"] = v[4]
               cr_dict["Same_Sample"] = v[0]
               cr_dict[variable["df"]] = i
               # Insert if they are the same sample.

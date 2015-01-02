@@ -24,13 +24,19 @@ from docopt import docopt
 from subprocess import call
 from vcf import vcf
 from utils import *
+from Rfn import *
 
+def create_chart(filename, Rcode):
+  with open(filename + ".R","w") as R:
+    R.write(Rcode)
+  call(["Rscript",filename + ".R"])
 
 class opts:
   """ Defines options that can be overridden """
   title = ""
   functions = ""
-  binwidth = ""
+  filters = ""
+  geom = ""
   add = ""
 
   # Log
@@ -87,7 +93,7 @@ if __name__ == '__main__':
         # Single Variable Plot #
         #======================#
 
-        query, analysis_dir, filename, r = v.query(args["<x>"], region = args["--region"])
+        query, analysis_dir, filename, variable = v.query(args["<x>"], region = args["--region"])
         os.chdir(analysis_dir)
 
         if args["<x>"] == "POS":
@@ -99,20 +105,16 @@ if __name__ == '__main__':
           opts.add += " + \n facet_grid(.~CHROM, scales='free_x')"
           opts.add += " + \n scale_x_continuous(labels = genetic_scale) "
           opts.functions += genetic_scale
-        if r["number"] == 1 and r["type"] in ["Integer","Float"]:
-          print(bc("Creating Histogram of %s" % r["df"],"BOLD"))
-          var1 = r["df"]
-          histogram = get_plot("histogram")
-          Rcode = histogram.format(**locals())
-        elif r["number"] == 1 and r["type"] in ["String"]:
-          print(bc("Creating Bar Chart of %s" % r["df"],"BOLD"))
-          var1 = r["df"]
-          barchart = get_plot("barchart")
-          Rcode = barchart.format(**locals())
+        if variable["number"] == 1 and variable["type"] in ["Integer","Float"]:
+          print(bc("Creating Histogram of %s" % variable["df"],"BOLD"))
+          aes = var_x = "df$" + variable["df"]
+          Rcode = get_plot("histogram").format(**locals())
+        elif variable["number"] == 1 and variable["type"] in ["String"]:
+          print(bc("Creating Bar Chart of %s" % variable["df"],"BOLD"))
+          aes = var_x = variable["df"]
+          Rcode = get_plot("barchart").format(**locals())
         
-        with open(filename + ".R","w") as R:
-          R.write(Rcode)
-        call(["Rscript",filename + ".R"])
+        create_chart(filename, Rcode)
 
           
       else:
@@ -126,7 +128,35 @@ if __name__ == '__main__':
 
     elif args["tstv"] == True:
       """ Produces a tstv report """
-      v.tstv(args["--x"])
+      query, analysis_dir, filename = v.tstv(args["--x"])
+      os.chdir(analysis_dir)
+
+      variable = v.resolve_variable(args["--x"])
+
+      aes = "x=" + variable["df"] + ",y=tstv_ratio, fill=" + variable["df"]
+      xlab = variable["df"]
+      ylab = "ts/tv ratio"
+      opts.functions += precision_axis
+      opts.add += " + \n scale_y_continuous(labels = precision_axis) "
+      if variable["type"] in ["Integer", "Float"]:
+        # Filter out sparse data.
+        aes += ",color=Sample"
+        opts.filters += "df <- filter(df, nTransitions + nTransversions > 10)"
+        opts.add += " + \n stat_smooth(aes(x={var}, y=tstv_ratio))".format(var=variable["df"])
+        Rcode = get_plot("scatter").format(**locals())
+
+        print("")
+        print(bc("Plotting scatter: ts/tv ratio x " + variable["df"],"BOLD"))
+        print("")
+
+      elif variable["type"] == "String":
+        opts.add += " + \n geom_jitter(aes(" + aes + "))"
+        Rcode = get_plot("boxplot").format(**locals())
+        print("")
+        print(bc("Plotting boxplot: ts/tv by " + variable["df"],"BOLD"))
+        print("")
+      create_chart(filename, Rcode)
+
 
     elif args["concordance"] == True:
       print v.compare_vcf(variable = args["--x"], pairs = args["--pairs"])

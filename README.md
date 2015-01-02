@@ -8,8 +8,7 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 	Usage:
 	  tb.py listvars <vcf>          
 	  tb.py plot <vcf> <x> [<y>]      [options]               
-	  tb.py concordance <vcf> [--vcf2=<vcf2>] [--x=<x>] [--pairs=<pairset>]
-	  tb.py qc <vcf>   
+	  tb.py concordance <vcf> [--vcf2=<vcf2>] [--x=<x>] [--values=<values>] [--pairs=<pairset>] 
 	  tb.py tstv <vcf> [--x=<x>]
 	  tb.py -h | --help
 	  tb.py --version
@@ -77,8 +76,9 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 
 - [X] Single Variable x Rate of Discordance (data is produced)
 - [X] Marking Pairs
+- [ ] Allow specifying specific values and ranges as comma delimited list (--values option).
 - [ ] Dealing with 2 files (merging, etc.)
-- [ ] Parallelize
+- [ ] Parallelize to speed up.
 - [ ] Plots
 	- [ ] Heatmap (when run without variable)
 	- [ ] Split when there are a large number of samples into smaller heatmaps.
@@ -94,9 +94,11 @@ Output a report on tstv or examine tstv across a given variable.
 
 - [X] Stratify tstv across variable
 - [X] ts/tv ratio by chromosome:position; summary table
+- [ ] Use bcftools to calculate ts and tv when not stratifying by variable (speed up)
 - [ ] Plots
-	- [ ] plot factor (by sample)
-	- [ ] plot categorical (by sample)
+	- [ ] plot aggregate (all)
+	- [X] plot categorical (by sample)
+	- [X] plot numeric (by sample) and aggregate
 
 #### Quality Control
 
