@@ -26,24 +26,6 @@ standard_set_types = {"CHROM":"String",
                       "QUAL":"Float",
                       "FILTER":"String"}
 
-tt = {    
-    'AG': [1,0],   # Transition
-    'CT': [1,0],   # Transition
-    'AC': [0,1],   # Transversion
-    'GT': [0,1],   # Transversion
-    'AT': [0,1],   # Transversion
-    'CG': [0,1],   # Transversion
-}
-
-def calc_tstv(REF, gt, tstv_count):
-  if REF == ''.join(set(gt)):
-    return tstv_count
-  else:
-    gt = ''.join(set(gt)).replace(REF, "")
-    tt_key = ''.join(sorted([REF,gt]))
-    return map(operator.add, tt[tt_key], tstv_count)
-
-
 class vcf:
   def __init__(self, filename):
       # Start by storing basic information about the vcf/bcf and checking that an index exists.
@@ -285,18 +267,21 @@ class vcf:
       # Merge vcfs here and sort out variable names later.
       pass
 
-    elif variable is None:
+    if variable is None:
       # Simple heat map
-      concordance_results = command(["bcftools", "gtcheck", "-G", "1", self.filename])
-      # [(1.0 - x[0]*1.0/x[1])] Concordance is added as the last column
-      concordance_results = [x.split("\t")[1:] + [1.0 - float(x[1])/float(x[2])] for x in concordance_results.split("\n") if x.startswith("CN")]
-      # Output here, simple heatmap plot.
+      fn = base_header
+      with open(filename_pre + "txt","w+") as f:
+        out = csv.DictWriter(f, delimiter='\t', fieldnames=fn)
+        out.writerow(dict((fn,fn) for fn in out.fieldnames))
+        concordance_results = command(["bcftools", "gtcheck", "-G", "1", self.filename])
+        cr = [map(set_type,x.split("\t")[1:]) for x in concordance_results.split("\n") if x.startswith("CN")]
+        out_cr(out, cr, pairs)
     else:
       #
       # Assess concordance across a variable.
       #
       variable = self.resolve_variable(variable)
-      q = "bcftools query -f '{variable}\\n' {filename}".format(variable=variable["query"], filename=self.filename)
+      query = "bcftools query -f '{variable}\\n' {filename}".format(variable=variable["query"], filename=self.filename)
       var_data = sorted(map(set_type,set(np.array(command(q, shell=True).strip().split("\n")))))
       # Bin data as needed
       binning = False
@@ -327,33 +312,15 @@ class vcf:
               include_string = "{variable}>={lower_bound} && {variable}<{upper_bound}".format(variable=variable["include"], lower_bound = lower_bound, upper_bound = i)
             else:
               include_string = "{variable}=={i}".format(variable=variable["include"], i=i)
-            q = "bcftools view --include '{include_string}' {filename} | bcftools gtcheck -G 1 - ".format(include_string=include_string, filename=self.filename)
+            query = "bcftools view --include '{include_string}' {filename} | bcftools gtcheck -G 1 - ".format(include_string=include_string, filename=self.filename)
             # cr = concordance results
-            cr = command(q, shell=True)
+            cr = command(query, shell=True)
             # Filter for concordance values
             cr = [map(set_type,x.split("\t")[1:]) for x in cr.split("\n") if x.startswith("CN")]
             # Insert concordance rate
-            for k,v in enumerate(cr):
-              cr_dict = {}
-              cr_dict["Discordant_Sites"] = v[0]
-              cr_dict["Number_of_Sites"] = v[1]
-              cr_dict["Average_minimum_depth"] = v[2]
-              cr_dict["Sample_i"] = v[3]
-              cr_dict["Sample_j"] = v[4]
-              cr_dict["Same_Sample"] = v[0]
-              cr_dict[variable["df"]] = i
-              # Insert if they are the same sample.
-              if tuple(sorted([v[3],v[4]])) in pairs:
-                cr_dict["Same_Sample"] = 1
-              else:
-                cr_dict["Same_Sample"] = 0
-              #Insert concordance rate.
-              if cr[k][1] != 0:
-                 cr_dict["Concordance"] = 1-v[0]/float(v[1])
-              else:
-                 cr_dict["Concordance"] = 0
-              out.writerow(cr_dict)
-        
+            out_cr(out, cr, pairs, variable, i)
+      return repr(query), self.analysis_dir, filename
+            
 
   def _parse_stats(lines):
     stats = {}
@@ -371,3 +338,45 @@ class vcf:
         formatted_values = coerce_types(l.split("\t"))[1:]
         values_lines.append(zip(columns,formatted_values))
     return stats
+
+
+tt = {    
+    'AG': [1,0],   # Transition
+    'CT': [1,0],   # Transition
+    'AC': [0,1],   # Transversion
+    'GT': [0,1],   # Transversion
+    'AT': [0,1],   # Transversion
+    'CG': [0,1],   # Transversion
+}
+
+def calc_tstv(REF, gt, tstv_count):
+  if REF == ''.join(set(gt)):
+    return tstv_count
+  else:
+    gt = ''.join(set(gt)).replace(REF, "")
+    tt_key = ''.join(sorted([REF,gt]))
+    return map(operator.add, tt[tt_key], tstv_count)
+
+
+def out_cr(out, cr, pairs, variable = None, i = None):
+  for k,v in enumerate(cr):
+    cr_dict = {}
+    cr_dict["Discordant_Sites"] = v[0]
+    cr_dict["Number_of_Sites"] = v[1]
+    cr_dict["Average_minimum_depth"] = v[2]
+    cr_dict["Sample_i"] = v[3]
+    cr_dict["Sample_j"] = v[4]
+    cr_dict["Same_Sample"] = v[0]
+    if variable != None:
+      cr_dict[variable["df"]] = i
+    # Insert if they are the same sample.
+    if tuple(sorted([v[3],v[4]])) in pairs:
+      cr_dict["Same_Sample"] = 1
+    else:
+      cr_dict["Same_Sample"] = 0
+    #Insert concordance rate.
+    if cr[k][1] != 0:
+       cr_dict["Concordance"] = 1-v[0]/float(v[1])
+    else:
+       cr_dict["Concordance"] = 0
+    out.writerow(cr_dict)

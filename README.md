@@ -40,7 +40,7 @@ A package for graphing, QC, and comparing variant data from VCF files. Uses bcft
 - [X] __--region__ - Restrict analysis to a particular region
 - [ ] __--samples__ - Restrict analysis to particular sample(s)
 - [ ] __--facet__ - Facet by filter or categorical variable.
-- [ ] __--noplot__ - Ignore plotting, but produce plot code.
+- [ ] __--noplot__ - Don't plot, just produce plot code and data.
 
 #### Listing Variables
 
@@ -82,7 +82,7 @@ Lists variables available for use in plotting within a vcf file. Outputs tables 
 
 #### Concordance Analysis
 
-	tb.py concordance <vcf>
+	tb.py concordance <vcf> [--vcf2=<vcf2>] [--x=<x>] [--values=<values>] [--pairs=<pairset>]
 
 - [X] Single Variable x Rate of Discordance (data is produced)
 - [X] Marking Pairs
@@ -90,7 +90,7 @@ Lists variables available for use in plotting within a vcf file. Outputs tables 
 - [ ] Dealing with 2 files (merging, etc.)
 - [ ] Parallelize to speed up.
 - [ ] Plots
-	- [ ] Heatmap (when run without variable)
+	- [ ] Heatmaps (when run without variable)
 	- [ ] Split when there are a large number of samples into smaller heatmaps.
 	- [ ] Concordance  across variable.
 - [X] Binning for many observations.
@@ -109,6 +109,11 @@ Examine ts/tv by sample,  ratio or examine tstv across a given variable.
 	- [X] plot aggregate (all)
 	- [X] plot categorical (by sample)
 	- [X] plot numeric (by sample) and aggregate
+- [ ] Options
+	- [ ] Region
+	- [ ] Samples
+	- [ ] title
+	- [ ] include
 
 #### Examples
 
