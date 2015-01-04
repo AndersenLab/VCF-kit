@@ -270,16 +270,18 @@ class vcf:
       # Merge vcfs here and sort out variable names later.
       pass
 
+    print variable
     if variable["group"] is None:
       # Simple heat map
       fn = base_header
-      #with open(filename_pre + "txt","w+") as f:
-      #  out = csv.DictWriter(f, delimiter='\t', fieldnames=fn)
-      #  out.writerow(dict((fn,fn) for fn in out.fieldnames))
-      query = "bcftools gtcheck -G 1 " + self.filename
-      #  concordance_results = command(shlex.split(query))
-      #  cr = [map(set_type,x.split("\t")[1:]) for x in concordance_results.split("\n") if x.startswith("CN")]
-      #  out_cr(out, cr, pairs)
+      with open(filename_pre + ".txt","w+") as f:
+        out = csv.DictWriter(f, delimiter='\t', fieldnames=fn)
+        out.writerow(dict((fn,fn) for fn in out.fieldnames))
+        query = "bcftools gtcheck -G 1 " + self.filename
+        q = shlex.split(query)
+        concordance_results = command(q)
+        cr = [map(set_type,x.split("\t")[1:]) for x in concordance_results.split("\n") if x.startswith("CN")]
+        out_cr(out, cr, pairs)
     else:
       #
       # Assess concordance across a variable.

@@ -80,7 +80,7 @@ Lists variables available for use in plotting within a vcf file. Outputs tables 
 	- [ ] Options
 
 
-#### Concordance Analysis
+## Concordance Analysis
 
 	tb.py concordance <vcf> [--vcf2=<vcf2>] [--x=<x>] [--values=<values>] [--pairs=<pairset>]
 
@@ -96,7 +96,15 @@ Lists variables available for use in plotting within a vcf file. Outputs tables 
 - [X] Binning for many observations.
 - [X] Statify by variable.
 
-#### tstv analysis
+	tb.py concordance <vcf>
+
+#### Examples
+
+If no variable is specified, a heatmap illustrating concordance between individuals is generated.
+
+![concordance heatmap](https://raw.githubusercontent.com/AndersenLab/vcf-toolbox/img/CONCORDANCE_EXAMPLE.png)
+
+## tstv analysis
 
 	tb.py tstv <vcf> --x=<x>
 

@@ -34,7 +34,6 @@ if (length(unique(df$Same_Sample)) == 2) {{
 # Heat Map #
 #==========#
 
-
 df_switched <- df
 names(df_switched)[4:5] <- c("Sample_j", "Sample_i")
 
@@ -47,8 +46,8 @@ df_matrix <- as.matrix(acast(m, m$Sample_i ~ m$Sample_j, m$Concordance))
 
 
 png(paste0("{filename}",".heatmap.png"),    # create PNG for the heat map        
-width = 15*300,        # 5 x 300 pixels
-height = 15*300,
+width = 20*300,        # 5 x 300 pixels
+height = 20*300,
 res = 600,            # 300 pixels per inch
 pointsize = 8)
 

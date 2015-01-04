@@ -27,6 +27,7 @@ from utils import *
 from Rfn import *
 
 def create_chart(filename, Rcode):
+  os.chdir(analysis_dir)
   with open(filename + ".R","w") as R:
     R.write(Rcode)
   call(["Rscript",filename + ".R"])
@@ -50,7 +51,6 @@ if __name__ == '__main__':
 
     v = vcf(args["<vcf>"])
     analysis_dir = v.analysis_dir
-    os.chdir(analysis_dir)
 
     #===============#
     # Parse Options #
