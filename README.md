@@ -102,6 +102,8 @@ Lists variables available for use in plotting within a vcf file. Outputs tables 
 
 If no variable is specified, a heatmap illustrating concordance between individuals is generated.
 
+	tb.py concordance <vcf>
+
 ![concordance heatmap](https://raw.githubusercontent.com/AndersenLab/vcf-toolbox/img/CONCORDANCE_EXAMPLE.png)
 
 ## tstv analysis
