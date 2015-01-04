@@ -134,6 +134,7 @@ class vcf:
             return {"query": query_string, "include": include_rep, "df": var_data_rep , "type": var_info["type"], "number": var_number, "group" : "FORMAT"}
   
   def format_data_file_name(self,filename, x = None,y = None):
+    print filename, x, y
     filename = replace_all_at_end(filename,["bcf", "vcf","gz"], "").strip(".")
     if x == None:
         x = ""
@@ -197,7 +198,7 @@ class vcf:
     """
     variable = self.resolve_variable(variable)
     filename = self.format_data_file_name("TSTV_" + self.filename, variable["df"])
-    filename_pre = self.analysis_dir + "/" + filename
+    filename_pre = filename
 
     if variable["group"] == None:
       query = r"bcftools query --include 'INDEL=0' -f '%REF[\t%TGT]\tALL\n' {filename}".format(filename = self.filename, var=1)
@@ -248,9 +249,11 @@ class vcf:
 
   def compare_vcf(self, variable = None, pairs = None, vcf2 = None):
     """ Analyzes concordance of samples """
+    variable = self.resolve_variable(variable)
+    print variable, variable["df"]
 
-    filename_pre = self.analysis_dir + "/" + self.format_data_file_name("Concordance_" + self.filename, variable )
-    remove_file(filename_pre)
+    filename_pre = self.format_data_file_name("Concordance_" + self.filename, variable["df"] )
+    #remove_file(filename_pre)
     #[2]Discordance  [3]Number of sites  [4]Average minimum depth  [5]Sample i [6]Sample j
     base_header = ["Discordant_Sites", "Number_of_Sites", "Average_minimum_depth", "Sample_i", "Sample_j", "Same_Sample", "Concordance"]
 
@@ -267,15 +270,16 @@ class vcf:
       # Merge vcfs here and sort out variable names later.
       pass
 
-    if variable is None:
+    if variable["group"] is None:
       # Simple heat map
       fn = base_header
-      with open(filename_pre + "txt","w+") as f:
-        out = csv.DictWriter(f, delimiter='\t', fieldnames=fn)
-        out.writerow(dict((fn,fn) for fn in out.fieldnames))
-        concordance_results = command(["bcftools", "gtcheck", "-G", "1", self.filename])
-        cr = [map(set_type,x.split("\t")[1:]) for x in concordance_results.split("\n") if x.startswith("CN")]
-        out_cr(out, cr, pairs)
+      #with open(filename_pre + "txt","w+") as f:
+      #  out = csv.DictWriter(f, delimiter='\t', fieldnames=fn)
+      #  out.writerow(dict((fn,fn) for fn in out.fieldnames))
+      query = "bcftools gtcheck -G 1 " + self.filename
+      #  concordance_results = command(shlex.split(query))
+      #  cr = [map(set_type,x.split("\t")[1:]) for x in concordance_results.split("\n") if x.startswith("CN")]
+      #  out_cr(out, cr, pairs)
     else:
       #
       # Assess concordance across a variable.
@@ -319,7 +323,8 @@ class vcf:
             cr = [map(set_type,x.split("\t")[1:]) for x in cr.split("\n") if x.startswith("CN")]
             # Insert concordance rate
             out_cr(out, cr, pairs, variable, i)
-      return repr(query), self.analysis_dir, filename
+      
+    return repr(query), filename_pre
             
 
   def _parse_stats(lines):

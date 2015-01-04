@@ -45,10 +45,13 @@ class opts:
 
 
 if __name__ == '__main__':
-    args = docopt(__doc__, version='Naval Fate 2.0')
+    args = docopt(__doc__, version='VCF-Toolbox v0.1')
     print(args)
 
     v = vcf(args["<vcf>"])
+    analysis_dir = v.analysis_dir
+    os.chdir(analysis_dir)
+
     #===============#
     # Parse Options #
     #===============#
@@ -129,7 +132,6 @@ if __name__ == '__main__':
     elif args["tstv"] == True:
       """ Produces a tstv report """
       query, analysis_dir, filename = v.tstv(args["--x"])
-      os.chdir(analysis_dir)
 
       variable = v.resolve_variable(args["--x"])
       
@@ -170,8 +172,14 @@ if __name__ == '__main__':
 
 
     elif args["concordance"] == True:
-      print v.compare_vcf(variable = args["--x"], pairs = args["--pairs"])
-
+      query, filename = v.compare_vcf(variable = args["--x"], pairs = args["--pairs"])
+      variable = v.resolve_variable(args["<x>"])
+      Rcode = get_plot("concordance").format(**locals())
+      print("")
+      print(bc("Plotting concordance by " + variable["df"],"BOLD"))
+      print("")
+      print Rcode
+      create_chart(filename, Rcode)
     else:
       pass
       
