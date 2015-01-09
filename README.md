@@ -1,7 +1,14 @@
 vcf-toolbox
 ===========
 
-A package for graphing, QC, and comparing variant data from VCF files. Uses bcftools.
+A package for graphing, QC, and comparing variant data from VCF files. Uses bcftools (a lot).
+
+The philosophy behind vcf-toolbox is simple: It allows you to be able to quickly explore variant data, examining variables, comparing them with one another, or examining things like concordance or ts/tv ratios across a variable. When plotting, the program uses the variable type to determine an appropriate plot.
+
+Beyond exploratory analysis though, I wanted to enable users to tweak and modify the plots so that they'd be usable within publications. To this end, the program works by generating a folder and propagating it with the raw data, R code, and plots. 
+
+This allows the user to go back modify or extend upon a given analysis.
+
 
 ### Planned Options
 
@@ -157,6 +164,7 @@ Outputs a QC report of one or more vcfs. If two vcfs are given, will compare the
 
 Odds and Ends
 
+- [ ] Add '# setwd() code within R scripts.'
 - [ ] Allele frequency spectrum
 - [ ] Base Changes (Frequency)
 - [ ] Insertion/Deletion Lengths

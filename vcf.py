@@ -52,6 +52,7 @@ class vcf:
           Description="(?P<desc>[^"]*)"
           >''', re.VERBOSE)
       self.info_set = {x["id"]:x for x in [m.groupdict() for m in r.finditer(self.header)]}
+      print self.info_set
       
       # Filter
       r = re.compile(r'''\#\#FILTER=<
