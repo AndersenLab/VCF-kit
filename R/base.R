@@ -2,6 +2,7 @@
 
 suppressMessages(library(ggplot2))
 suppressMessages(library(data.table))
+suppressMessages(library(scales))
 
 # Query {query}
 

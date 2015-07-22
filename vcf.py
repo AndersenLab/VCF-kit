@@ -199,7 +199,7 @@ class vcf:
     """
     variable = self.resolve_variable(variable)
     filename = self.format_data_file_name("TSTV_" + self.filename, variable["df"])
-    filename_pre = filename
+    filename_pre = self.analysis_dir + "/" + filename
 
     if variable["group"] == None:
       query = r"bcftools query --include 'INDEL=0' -f '%REF[\t%TGT]\tALL\n' {filename}".format(filename = self.filename, var=1)
@@ -362,7 +362,7 @@ def calc_tstv(REF, gt, tstv_count):
     return tstv_count
   else:
     gt = ''.join(set(gt)).replace(REF, "")
-    tt_key = ''.join(sorted([REF,gt]))
+    tt_key = ''.join(sorted([REF,gt]))[0:2]
     return map(operator.add, tt[tt_key], tstv_count)
 
 
