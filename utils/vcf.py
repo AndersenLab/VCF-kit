@@ -80,24 +80,46 @@ class vcf:
         else:
             return self.__reader.next().strip()
 
-    def window(self, windowsize, shift_type, shift_kind):
-        # Add start and end
-        line = "n"
-        result_list = deque(maxlen = windowsize)
+    def window(self, windowsize, shift_method):
+        """
+            Generates windows of VCF data by positions or SNP
+        """
+        if shift_method == ["SNP","sliding"]:
+            result_list = deque(maxlen = windowsize)
+        else:
+            result_list = deque()
+        curr_interval = [0, windowsize]
         try:
             while True:
-                if shift_kind == "SNP":
-                    if shift_type == "sliding":
-                        result_list.append(self.next())
-                    elif shift_type == "interval":
+                line = self.next()
+                if shift_method == ["SNP","sliding"]:
+                    result_list.append(line)
+                    if len(result_list) == windowsize:
+                        yield [int(x.split("\t")[1]) for x in result_list]
+                elif shift_method == ["SNP","interval"]:
+                    result_list.append(line)
+                    if len(result_list) == windowsize:
+                        return_list = [int(x.split("\t")[1]) for x in result_list]
                         result_list = []
-                        for snp in xrange(0,windowsize):
-                            result_list.append(self.next())
-                elif shift_kind == "position":
+                        yield return_list
+                elif shift_method == ["POS", "interval"]:
+                    # Query repeatedly...?
                     pass
-                result = [int(x.split("\t")[1]) for x in result_list]
-                if len(result) == windowsize:
-                    yield result 
+                elif shift_method == ["POS","sliding"]:
+                    if len(result_list) == 0:
+                        result_list.append(line)
+                    while True:
+                        positions = [int(x.split("\t")[1]) for x in result_list]
+                        max_pos = max(positions)
+                        min_pos = min(positions)
+                        if (max_pos - min_pos) > windowsize:
+                            result_list.popleft()
+                        else:
+                            break
+                    yield [int(x.split("\t")[1]) for x in result_list]
+                    result_list.append(line)
+                    
+
         except StopIteration:
             pass
                 
