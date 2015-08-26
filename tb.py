@@ -28,8 +28,19 @@ if __name__ == '__main__':
     args = docopt(__doc__, version='VCF-Toolbox v0.1', argv = debug)
     print(args)
     x = vcf(args["<vcf>"])
-    print(x.next())
-    for i in x.window(windowsize=20, shift_type = "interval", shift_kind = "SNP"):
+
+    print ["SNP", "sliding"]
+    for i in x.window(windowsize=20, shift_method = ["SNP", "sliding"]):
+      print i 
+
+    x = vcf(args["<vcf>"])
+    print ["POS", "sliding"]
+    for i in x.window(windowsize=200, shift_method = ["POS", "sliding"]):
+      print i 
+
+    x = vcf(args["<vcf>"])
+    print ["SNP", "interval"]
+    for i in x.window(windowsize=20, shift_method = ["SNP", "interval"]):
       print i 
 
 
