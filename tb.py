@@ -11,7 +11,6 @@ Options:
   --version                   Show version.
 """
 from docopt import docopt
-from subprocess import call
 from utils.vcf import *
 import sys
 
