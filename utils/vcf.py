@@ -1,7 +1,7 @@
 from cyvcf2 import VCF as cyvcf2
 from collections import OrderedDict, deque
 import re
-
+import numpy as np
 
 class vcf(cyvcf2):
     def __init__(self, filename):
@@ -70,7 +70,7 @@ class vcf(cyvcf2):
                         yield result_list[:-1]
                         result_list = [result_list[-1]]
                     elif len(result_list) == windowsize:
-                        yield result_list 
+                        yield result_list
                         result_list = []
                 elif shift_method == ["POS", "interval"]:
                     result_list = []
@@ -84,7 +84,7 @@ class vcf(cyvcf2):
                             max_pos = 0
                             curr_interval = [0, windowsize]
                             yield result_list[:-1]
-                            result_list = [result_list[-1]]
+                            result_list = [result_list, result_list[-1]]
                         elif max_pos >= curr_interval[0] and max_pos < curr_interval[1] and line not in result_list:
                             # If in current interval, do nothing.
                             pass
@@ -120,12 +120,19 @@ class vcf(cyvcf2):
         except StopIteration:
             yield result_list
 
+class variant_set:
+    def __init__(self, varset):
+        print dir(varset[0])
+        print varset[0]
+        self.shift_method = shift_method
+        self.gt = np.vstack([x.gt_types for x in varset])
+        self.segregating_sites = sum([np.any(p) for p in np.equal(3, x)])
+        
+
 x = vcf("../test.vcf.gz")
+print dir(x)
 
-#for i in x.window(windowsize=100000, shift_method = ["POS", "interval"]):
-#    print ["{chrom}:{pos}".format(chrom=x.CHROM, pos= x.POS) for x in i], "result"
-
-for i in x.window(windowsize=10, shift_method = ["SNP", "sliding"]):
-    print ["{chrom}:{pos}".format(chrom=x.CHROM, pos= x.POS) for x in i], "result"
-
-
+for i in x.window(windowsize = 100, shift_method = ["SNP","interval"]):
+    var = variant_set(i)
+    break
+    
