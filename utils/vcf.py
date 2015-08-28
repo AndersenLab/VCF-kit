@@ -45,23 +45,31 @@ class vcf(cyvcf2):
 
     def window(self, windowsize, shift_method):
         """
-            #Generates windows of VCF data by positions or SNP
+            Generates windows of VCF data by positions or SNP
         """
         if shift_method == ["SNP","sliding"]:
             result_list = deque(maxlen = windowsize)
         else:
             result_list = deque()
+        # Defaults
         curr_interval = [0, windowsize]
         try:
             while True:
                 line = self.next()
                 if shift_method == ["SNP","sliding"]:
                     result_list.append(line)
-                    if len(result_list) == windowsize:
+                    if len(set([o.CHROM for o in result_list])) > 1:
+                        yield list(result_list)[:-1]
+                        result_list = [result_list[-1]]
+                    elif len(result_list) == windowsize:
                         yield result_list
                 elif shift_method == ["SNP","interval"]:
                     result_list.append(line)
-                    if len(result_list) == windowsize:
+                    # Test for new chromosomes
+                    if len(set([o.CHROM for o in result_list])) > 1:
+                        yield result_list[:-1]
+                        result_list = [result_list[-1]]
+                    elif len(result_list) == windowsize:
                         yield result_list 
                         result_list = []
                 elif shift_method == ["POS", "interval"]:
@@ -101,7 +109,8 @@ class vcf(cyvcf2):
                         positions = [x.POS for x in result_list]
                         max_pos = max(positions)
                         min_pos = min(positions)
-                        if (max_pos - min_pos) > windowsize:
+                        chrom_num = len(set([o.CHROM for o in result_list])) 
+                        if (max_pos - min_pos) > windowsize or chrom_num > 1:
                             result_list.popleft()
                         else:
                             break
@@ -113,5 +122,10 @@ class vcf(cyvcf2):
 
 x = vcf("../test.vcf.gz")
 
-for i in x.window(windowsize=100000, shift_method = ["POS", "interval"]):
+#for i in x.window(windowsize=100000, shift_method = ["POS", "interval"]):
+#    print ["{chrom}:{pos}".format(chrom=x.CHROM, pos= x.POS) for x in i], "result"
+
+for i in x.window(windowsize=10, shift_method = ["SNP", "sliding"]):
     print ["{chrom}:{pos}".format(chrom=x.CHROM, pos= x.POS) for x in i], "result"
+
+

@@ -18,7 +18,7 @@ import sys
 
 debug = None
 if len(sys.argv) == 1:
-    debug = ['tajima', '20150731_WI_PASS.vcf.gz']
+    debug = ['tajima', 'test.vcf.gz']
 
 
 
