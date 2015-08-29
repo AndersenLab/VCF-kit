@@ -7,6 +7,7 @@ usage:
 
 commands:
   tajima
+  primer
 
 """
 from docopt import docopt
@@ -31,5 +32,6 @@ if __name__ == '__main__':
     if args["<command>"] == "":
       print(__doc__)
     elif args['<command>'] == 'tajima':
-        # In case subcommand is a script in some other programming language:
+        exit(call(['python', 'tajima.py'] + argv))
+    elif args['<command>'] == 'primer':
         exit(call(['python', 'tajima.py'] + argv))
