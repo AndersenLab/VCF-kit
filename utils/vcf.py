@@ -102,11 +102,13 @@ class vcf(cyvcf2):
                                 
                         line = self.next()
 
-                elif shift_method == "POS-sliding":
-                    if len(result_list) == 0:
-                        result_list.append(line)
+                #
+                # POS-Sliding
+                #
+                elif shift_method == "POS-Sliding":
+                    result_list.append(line)
                     while True:
-                        positions = [x.POS for x in result_list]
+                        positions = result_list.positions()
                         max_pos = max(positions)
                         min_pos = min(positions)
                         chrom_num = len(set([o.CHROM for o in result_list]))
@@ -115,7 +117,6 @@ class vcf(cyvcf2):
                         else:
                             break
                     yield result_list
-                    result_list.append(line)
 
         except StopIteration:
             if len(result_list) > 0:
@@ -123,7 +124,7 @@ class vcf(cyvcf2):
 
 
 class variant_interval(deque):
-    def __init__(self, interval = [], window_size = None, shift_method = None, varlist=None, lower_bound = 0):
+    def __init__(self, interval = [], window_size = None, shift_method = None, varlist=None, lower_bound = 1):
         self.shift_method = shift_method
         self.window_size = window_size
         self.lower_bound = lower_bound
@@ -141,9 +142,19 @@ class variant_interval(deque):
             POS = self.positions()
             CHROM = self[0].CHROM
             return (CHROM, min(POS), max(POS))
+        elif self.shift_method == "POS-Sliding":
+            # Space interval evenly around items
+            mean_pos = np.mean(self.positions())
+            half_window = self.window_size/2
+            lower_bound = int(mean_pos - half_window)
+            CHROM = self[0].CHROM
+            if lower_bound < 1:
+                lower_bound = 1
+            upper_bound = int(mean_pos + half_window)
+            return (CHROM, lower_bound, upper_bound)
         else:
-            #CHROM = self[0].CHROM
-            return ("", self.lower_bound, self.upper_bound)
+            CHROM = self[0].CHROM
+            return (CHROM, self.lower_bound, self.upper_bound)
 
     def iterate_interval(self):
         self.lower_bound += self.window_size
@@ -189,13 +200,12 @@ class variant_set:
         # self.shift_method = shift_method
         self.gt = np.vstack([x.gt_types for x in varset])
         self.segregating_sites = sum([np.any(p) for p in np.equal(3, x)])
-        print self.segregating_sites
+        #print self.segregating_sites
 
 
 x = vcf("../test.vcf.gz")
 
-for i in x.window(window_size=100000, shift_method="POS-Interval"):
+for i in x.window(window_size=100000, shift_method="POS-Sliding"):
     print(i)
 
-    # var = variant_set(i)
-    # break
+
