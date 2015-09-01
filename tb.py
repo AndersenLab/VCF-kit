@@ -27,7 +27,6 @@ if __name__ == '__main__':
                   version='VCF-Toolbox v0.1',
                   argv = debug,
                   options_first=True)
-    print(args)
     argv = [args['<command>']] + args['<args>']
     if args["<command>"] == "":
       print(__doc__)

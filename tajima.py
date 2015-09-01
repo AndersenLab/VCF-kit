@@ -3,8 +3,6 @@
 usage:
   tb.py tajima [--no-header] <window-size> <step-size> <vcf> 
 
-Example
-
 command:
   tajima        Calculate Tajima's D
 
@@ -14,6 +12,13 @@ options:
   --window-size               blah
   --step-size                 blash 
 
+output:
+    CHROM
+    BIN_START
+    BIN_END
+    N_Sites
+    N_SNPs
+    TajimaD
 
 
 """
@@ -26,8 +31,6 @@ import sys
 
 
 debug = None
-if len(sys.argv) == 1:
-    debug = ['tajima']
 
 
 
@@ -55,7 +58,9 @@ class tajima(vcf):
         for variant_interval in self.window(window_size= window_size, step_size = step_size, shift_method="POS-Interval"):
             pi = 0.0
             S = 0
+            n_sites = 0
             for variant in variant_interval:
+                n_sites += 1
                 AN = variant.INFO.get("AN")  # c;AN : total number of alleles in called genotypes
                 AC = variant.INFO.get("AC")  # j;AC : allele count in genotypes, for each ALT allele, in the same order as listed
                 try:
@@ -71,27 +76,27 @@ class tajima(vcf):
                 TajimaD = (pi - tw) / \
                           (var)**(0.5)
                 if not isinf(TajimaD) and S > 0:
-                    yield CHROM, variant_interval.lower_bound, variant_interval.upper_bound, S, TajimaD
+                    yield CHROM, variant_interval.lower_bound, variant_interval.upper_bound, n_sites, S, TajimaD
             except:
                 pass
 
 
 
 if __name__ == '__main__':
+    print sys.argv
     args = docopt(__doc__, 
                   version='VCF-Toolbox v0.1',
                   argv = debug,
                   options_first=True)
+    
+    if args["<vcf>"] == "":
+      print(__doc__)
     wz = int(args["<window-size>"])
     sz = int(args["<step-size>"])
     if args["--no-header"] == False:
-        print("CHROM\tBIN_START\tBIN_END\tN_SNPs\tTajimaD")
+        print("CHROM\tBIN_START\tBIN_END\tN_Sites\tN_SNPs\tTajimaD")
     for i in tajima(args["<vcf>"]).calc_tajima(wz,sz):
-        s, e = Popen(["bcftools", "view", "-H", args["<vcf>"], i[0] + ":" + str(i[1]) + "-" + str(i[2])], stdout = PIPE, stderr=PIPE).communicate()
-        n_lines = str(len(s.strip().split("\n")))
-        match = str(int(i[3]) == int(n_lines))
-        print i
-        print("\t".join([str(x) for x in i] + [n_lines, match]))
+        print("\t".join([str(x) for x in i] ))
 
 
 
