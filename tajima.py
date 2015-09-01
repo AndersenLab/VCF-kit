@@ -111,7 +111,6 @@ if __name__ == '__main__':
                   argv = debug)
     if args["<vcf>"] == "":
       print(__doc__)
-    print args
     wz = int(args["<window-size>"].replace(",",""))
     sz = None
     if not args["--sliding"]:
