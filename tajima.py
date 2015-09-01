@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  tb.py tajima 
+  tb.py tajima --window-size --step-size
 
 Example
 
@@ -51,10 +51,8 @@ class tajima(vcf):
         e1 = c1 / a1
         e2 = c2 / (a1**2 + a2)
 
-        for variant_interval in self.window(window_size=100000, shift_method="POS-Interval"):
+        for variant_interval in self.window(window_size=1000000, step_size = 100000, shift_method="POS-Interval"):
             pi = 0.0
-            n_sites = 0
-            gt = np.vstack([x.gt_types for x in variant_interval])
             S = 0
             for variant in variant_interval:
                 AN = variant.INFO.get("AN")  # c;AN : total number of alleles in called genotypes
@@ -72,26 +70,9 @@ class tajima(vcf):
                 TajimaD = (pi - tw) / \
                           (var)**(0.5)
                 if not isinf(TajimaD) and S > 0:
-                    yield CHROM, variant_interval.lower_bound, variant_interval.upper_bound, n_sites, TajimaD
+                    yield CHROM, variant_interval.lower_bound, variant_interval.upper_bound, S, TajimaD
             except:
                 pass
-
-
-class variant_ops:
-    """
-        Variant operator - takes a variant interval as input
-        and enables certain operations to be performed
-    """
-    def __init__(self, variant_interval, vcf):
-        # self.shift_method = shift_method
-        self.interval = variant_interval.interval()
-        self.gt = np.vstack([x.gt_types for x in variant_interval])
-        self.n = vcf.n 
-        self.segregating_sites = sum([np.any(p) for p in np.equal(3, self.gt)])
-        #print self.gt.T
-        #print np.vstack([x.gt_bases for x in variant_interval]).T
-        print self.segregating_sites
-        self.a1 = H(self.n) # Number of DNA sequences
 
 
 
@@ -101,13 +82,10 @@ if __name__ == '__main__':
                   argv = debug,
                   options_first=True)
     print(args)
-    print "TAJIMA"
+    v = tajima("/Users/dancook/coding/git/vcf-toolbox/test.vcf.gz")
+    print dir(v)
+    for i in v.calc_tajima():
+        print "\t".join([str(x) for x in i])
 
-
-v = tajima("/Users/dancook/coding/git/vcf-toolbox/test.vcf.gz")
-print dir(v)
-for i in v.calc_tajima():
-    print "\t".join([str(x) for x in i])
-    
 
 
