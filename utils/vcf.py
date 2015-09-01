@@ -1,14 +1,16 @@
 from cyvcf2 import VCF as cyvcf2
 from collections import OrderedDict, deque
-from itertools import islice
+from itertools import islice, combinations
 import re
 import numpy as np
-
+from copy import deepcopy
+np.set_printoptions(threshold=np.nan)
 
 class vcf(cyvcf2):
     def __init__(self, filename):
         cyvcf2.__init__(self, filename)
         self.filename = filename
+        self.n = len(self.samples) # Number of Samples
 
         # Meta Data
         comp = re.compile(r'''^##(?P<key>[^<#]+?)=(?P<val>[^<#]+$)''', re.M)
@@ -45,11 +47,11 @@ class vcf(cyvcf2):
             >''', re.VERBOSE)
         self.format_set = {x["id"]: x for x in [m.groupdict() for m in r.finditer(self.raw_header)]}
 
-    def window(self, window_size, shift_method):
+    def window(self, shift_method, window_size, step_size = None):
         """
             Generates windows of VCF data by positions or SNP
         """
-        result_list = variant_interval(window_size = window_size, shift_method = shift_method)
+        result_list = variant_interval(window_size = window_size, step_size = step_size, shift_method = shift_method)
         try:
             while True:
                 line = self.next()
@@ -69,39 +71,26 @@ class vcf(cyvcf2):
                 # POS-Interval
                 #
                 elif shift_method == "POS-Interval":
+                    result_list.append(line)
+                    last_chrom = line.CHROM
+                    chrom = line.CHROM
                     while True:
-                        result_list.append(line)
-                        positions = result_list.positions()
-                        max_pos = max(positions)
-                        min_pos = min(positions)
-                        while (min_pos >= result_list.upper_bound):
-                                result_list.iterate_interval()
-                                positions = result_list.positions()
-                                min_pos = min(positions)
-                        if not result_list.unique_chroms():
-                            # Chromosome Reset
-                            max_pos = 0
-                            yield result_list[0:len(result_list)-1]
+                        if chrom != last_chrom:
+                            yield result_list.filter_within_bounds()
                             result_list.get_last()
-                        elif max_pos >= result_list.lower_bound and max_pos > result_list.upper_bound and line not in result_list:
-                            # If in current interval, do nothing.
-                            pass
-                        elif max_pos < result_list.lower_bound:
-                            # If beneath interval - reset to beginning.
                             result_list.lower_bound = 0
                             result_list.upper_bound = window_size
-                        elif max_pos >= result_list.upper_bound:
-                            # If past interval, iterate and yield result.
-                            if len(result_list) > 0:
-                                yield result_list[0:len(result_list)-1]
-                                result_list.get_last()
-                                result_list.iterate_interval()
-                            else:
-                                pass
-
-                                
-                        line = self.next()
-
+                            chrom = line.CHROM
+                        if result_list.lower_bound  <= line.POS < result_list.upper_bound:
+                            line = self.next()
+                            result_list.append(line)
+                        if line.POS < result_list.lower_bound:
+                            result_list.iterate_interval()
+                        elif line.POS >= result_list.upper_bound:
+                            yield result_list.filter_within_bounds()
+                            result_list.iterate_interval()
+                        last_chrom = line.CHROM
+                        #print line.POS
                 #
                 # POS-Sliding
                 #
@@ -120,15 +109,20 @@ class vcf(cyvcf2):
 
         except StopIteration:
             if len(result_list) > 0:
-                yield result_list
-
+                if shift_method == "POS-Interval":
+                    yield result_list.filter_within_bounds()
+                else:
+                    yield result_list
 
 class variant_interval(deque):
-    def __init__(self, interval = [], window_size = None, shift_method = None, varlist=None, lower_bound = 1):
+    def __init__(self, interval = [], window_size = None, step_size = None, shift_method = None, varlist=None, lower_bound = 0):
         self.shift_method = shift_method
         self.window_size = window_size
+        self.step_size = step_size
+        if self.step_size == None:
+            self.step_size = window_size
         self.lower_bound = lower_bound
-        self.upper_bound = self.lower_bound + window_size
+        self.upper_bound = self.lower_bound + window_size - 1
         if shift_method in ["SNP-Sliding", "SNP-Interval"]:
             super(variant_interval, self).__init__(interval, maxlen = self.window_size)
         else:
@@ -148,8 +142,8 @@ class variant_interval(deque):
             half_window = self.window_size/2
             lower_bound = int(mean_pos - half_window)
             CHROM = self[0].CHROM
-            if lower_bound < 1:
-                lower_bound = 1
+            if lower_bound < 0:
+                lower_bound = 0
             upper_bound = int(mean_pos + half_window)
             return (CHROM, lower_bound, upper_bound)
         else:
@@ -157,9 +151,18 @@ class variant_interval(deque):
             return (CHROM, self.lower_bound, self.upper_bound)
 
     def iterate_interval(self):
-        self.lower_bound += self.window_size
-        self.upper_bound += self.window_size
+        self.lower_bound += self.step_size
+        self.upper_bound += self.step_size
         return self
+
+    def filter_within_bounds(self):
+        cut = [x for x in self if x.POS >= self.lower_bound and x.POS < self.upper_bound]
+        return variant_interval(interval = cut, 
+                             window_size = self.window_size,
+                             shift_method = self.shift_method,
+                             lower_bound = self.lower_bound,
+                             step_size = self.step_size)
+
 
     def __getitem__(self, index):
         if isinstance(index, slice):
@@ -167,12 +170,14 @@ class variant_interval(deque):
             return variant_interval(interval = cut, 
                                  window_size = self.window_size,
                                  shift_method = self.shift_method,
-                                 lower_bound = self.lower_bound)
+                                 lower_bound = self.lower_bound,
+                                 step_size = self.step_size)
         return deque.__getitem__(self, index)
+
 
     def get_last(self):
         """
-            Removes all items from the variant interval and 
+            Removes all items from the variant interval and
             sets to last item
         """
         super(variant_interval, self).__init__(self[len(self)-1:len(self)], maxlen = self.window_size)
@@ -193,19 +198,4 @@ class variant_interval(deque):
             return "{0}:{1}-{2}".format(*self.interval()) + " -> " + formatted_variants
         else:
             return  str(formatted_variants) + " Format"
-
-
-class variant_set:
-    def __init__(self, varset):
-        # self.shift_method = shift_method
-        self.gt = np.vstack([x.gt_types for x in varset])
-        self.segregating_sites = sum([np.any(p) for p in np.equal(3, x)])
-        #print self.segregating_sites
-
-
-x = vcf("../test.vcf.gz")
-
-for i in x.window(window_size=100000, shift_method="POS-Sliding"):
-    print(i)
-
 
