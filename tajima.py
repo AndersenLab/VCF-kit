@@ -1,17 +1,19 @@
 #! /usr/bin/env python
 """
 usage:
-  tb.py tajima [--no-header] <window-size> <step-size> <vcf> 
-  tb.py tajima [--no-header] <window-size> --sliding <vcf> 
-
-command:
-  tajima        Calculate Tajima's D
+  tb.py tajima [--no-header --extra] <window-size> <step-size> <vcf> 
+  tb.py tajima [--no-header --extra] <window-size> --sliding <vcf> 
 
 options:
   -h --help                   Show this screen.
   --version                   Show version.  
   --window-size               blah
   --step-size                 blash 
+  --extra                     display extra
+
+command:
+  tajima        Calculate Tajima's D
+
 
 output:
     CHROM
@@ -29,6 +31,7 @@ from itertools import combinations
 from utils.vcf import *
 from math import isinf
 import sys
+import os
 
 
 debug = None
@@ -43,7 +46,7 @@ class tajima(vcf):
     def __init__(self, filename):
       vcf.__init__(self,filename)
 
-    def calc_tajima(self, window_size, step_size, sliding = False):
+    def calc_tajima(self, window_size, step_size, extra = False):
         # Tajima D Constants
         n = self.n*2
         a1 = sum([1.0/i for i in xrange(1,n)])
@@ -83,28 +86,50 @@ class tajima(vcf):
                 TajimaD = (pi - tw) / \
                           (var)**(0.5)
                 if not isinf(TajimaD) and S > 0:
-                    yield CHROM, variant_interval.lower_bound, variant_interval.upper_bound, n_sites, S, TajimaD
+                    output = [CHROM,
+                              variant_interval.lower_bound,
+                              variant_interval.upper_bound,
+                              n_sites,
+                              S,
+                              TajimaD]
+                    if extra:
+                        if step_size is None:
+                            step_size = "NA"
+                        output += [os.path.split(self.filename)[1],
+                              window_size,
+                              step_size]
+                    yield "\t".join(map(str,output))
             except:
                 pass
 
-
+if len(sys.argv) == 1:
+  debug = ["tajima","100000", "10000", "~/Dropbox/AndersenLab/wormreagents/Variation/Andersen_VCF/20150731_WI_PASS.vcf.gz"]
 
 if __name__ == '__main__':
-    print sys.argv
     args = docopt(__doc__, 
                   version='VCF-Toolbox v0.1',
                   argv = debug)
-    print args
     if args["<vcf>"] == "":
       print(__doc__)
+    print args
     wz = int(args["<window-size>"])
     sz = None
     if not args["--sliding"]:
       sz = int(args["<step-size>"])
     if args["--no-header"] == False:
-        print("CHROM\tBIN_START\tBIN_END\tN_Sites\tN_SNPs\tTajimaD")
-    for i in tajima(args["<vcf>"]).calc_tajima(wz,sz):
-        print("\t".join([str(x) for x in i] ))
+        header_line = ["CHROM",
+                       "BIN_START",
+                       "BIN_END",
+                       "N_Sites",
+                       "N_SNPs",
+                       "TajimaD"]
+        if args["--extra"]:
+            header_line += ["filename",
+                            "window_size",
+                            "step_size"]
+        print "\t".join(header_line)
+    for i in tajima(args["<vcf>"]).calc_tajima(wz, sz, extra = args["--extra"]):
+        print(i)
 
 
 
