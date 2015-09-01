@@ -112,10 +112,10 @@ if __name__ == '__main__':
     if args["<vcf>"] == "":
       print(__doc__)
     print args
-    wz = int(args["<window-size>"])
+    wz = int(args["<window-size>"].replace(",",""))
     sz = None
     if not args["--sliding"]:
-      sz = int(args["<step-size>"])
+      sz = int(args["<step-size>"].replace(",",""))
     if args["--no-header"] == False:
         header_line = ["CHROM",
                        "BIN_START",
