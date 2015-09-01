@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  tb.py tajima --window-size --step-size
+  tb.py tajima [--no-header] <window-size> <step-size> <vcf> 
 
 Example
 
@@ -10,7 +10,9 @@ command:
 
 options:
   -h --help                   Show this screen.
-  --version                   Show version.
+  --version                   Show version.  
+  --window-size               blah
+  --step-size                 blash 
 
 
 
@@ -21,7 +23,6 @@ from itertools import combinations
 from utils.vcf import *
 from math import isinf
 import sys
-
 
 
 debug = None
@@ -38,7 +39,7 @@ class tajima(vcf):
     def __init__(self, filename):
       vcf.__init__(self,filename)
 
-    def calc_tajima(self):
+    def calc_tajima(self, window_size, step_size):
         # Tajima D Constants
         n = self.n*2
         a1 = sum([1.0/i for i in xrange(1,n)])
@@ -51,7 +52,7 @@ class tajima(vcf):
         e1 = c1 / a1
         e2 = c2 / (a1**2 + a2)
 
-        for variant_interval in self.window(window_size=1000000, step_size = 100000, shift_method="POS-Interval"):
+        for variant_interval in self.window(window_size= window_size, step_size = step_size, shift_method="POS-Interval"):
             pi = 0.0
             S = 0
             for variant in variant_interval:
@@ -82,10 +83,12 @@ if __name__ == '__main__':
                   argv = debug,
                   options_first=True)
     print(args)
-    v = tajima("/Users/dancook/coding/git/vcf-toolbox/test.vcf.gz")
-    print dir(v)
-    for i in v.calc_tajima():
-        print "\t".join([str(x) for x in i])
+    wz = int(args["<window-size>"])
+    sz = int(args["<step-size>"])
+    if args["--no-header"] == False:
+        print("CHROM\tBIN_START\tBIN_END\tN_SNPs\tTajimaD")
+    for i in tajima(args["<vcf>"]).calc_tajima(wz,sz):
+        print("\t".join([str(x) for x in i]))
 
 
 
