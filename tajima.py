@@ -19,6 +19,7 @@ from docopt import docopt
 from subprocess import call
 from itertools import combinations
 from utils.vcf import *
+from math import isinf
 import sys
 
 
@@ -37,41 +38,43 @@ class tajima(vcf):
     def __init__(self, filename):
       vcf.__init__(self,filename)
 
-      # Tajima D Constants
-      self.a1 = sum([1.0/d for d in xrange(1,self.n-1)])
-      self.a2 = sum([1.0/d**2 for d in xrange(1,self.n-1)])
-      self.b1 = (self.n + 1.0) / (3.0*(self.n - 1))
-      self.b2 = ( 2 * (self.n**2 + self.n + 3.0) / 
-                (9.0 * self.n * (self.n -1.0)))
-      self.c1 = self.b1 - (1.0 / self.a1)
-      self.c2 = self.b2 - (self.n + 2 / (self.a1*self.n)) + (self.a2 / (self.a1**2) )
-      self.e1 = self.c1 / self.a1
-      self.e2 = self.c2 / (self.a1**2 + self.a2)
-
     def calc_tajima(self):
-        self.sum_pi = 0.0
-        self.n_sites = 0
-        for variant_interval in self.window(window_size=1000000, shift_method="POS-Interval"):
-            self.gt = np.vstack([x.gt_types for x in variant_interval])
-            self.gt2 = np.vstack([x.gt_types for x in variant_interval])
-            self.segregating_sites = sum([np.any(p) for p in np.equal(3, self.gt)])
+        # Tajima D Constants
+        n = self.n*2
+        a1 = sum([1.0/i for i in xrange(1,n)])
+        a2 = sum([1.0/i**2 for i in xrange(1,n)])
+        b1 = (n + 1.0) / (3.0*(n - 1))
+        b2 = (2.0 * (n**2 + n + 3.0)) / \
+           (9.0 * n * (n -1.0))
+        c1 = b1 - (1.0 / a1)
+        c2 = b2 - ((n + 2.0) / (a1*n)) + (a2 / (a1**2) )
+        e1 = c1 / a1
+        e2 = c2 / (a1**2 + a2)
+
+        for variant_interval in self.window(window_size=100000, shift_method="POS-Interval"):
+            pi = 0.0
+            n_sites = 0
+            gt = np.vstack([x.gt_types for x in variant_interval])
+            S = 0
             for variant in variant_interval:
                 AN = variant.INFO.get("AN")  # c;AN : total number of alleles in called genotypes
                 AC = variant.INFO.get("AC")  # j;AC : allele count in genotypes, for each ALT allele, in the same order as listed
                 try:
                     # Biallelic sites only!
-                    self.sum_pi += (2.0 * AC * (AN-AC)) / (AN * (AN-1.0)) 
-                    self.n_sites += 1
+                    pi += (2.0 * AC * (AN-AC)) / (AN * (AN-1.0))
+                    S += 1
                 except:
                     pass
-        self.pi = (self.sum_pi / self.n_sites)
-
-            #for k, i in enumerate(combinations( self.gt.T , 2)):
-            #    print np.diff(i)
-            #    if k == 20:
-            #      break
-
-
+            try:
+                CHROM = variant_interval[0].CHROM
+                tw = (S / a1)
+                var = (e1 * S) + ((e2 * S) * (S - 1.0))
+                TajimaD = (pi - tw) / \
+                          (var)**(0.5)
+                if not isinf(TajimaD) and S > 0:
+                    yield CHROM, variant_interval.lower_bound, variant_interval.upper_bound, n_sites, TajimaD
+            except:
+                pass
 
 
 class variant_ops:
@@ -101,8 +104,10 @@ if __name__ == '__main__':
     print "TAJIMA"
 
 
-v = tajima("test.vcf.gz")
+v = tajima("/Users/dancook/coding/git/vcf-toolbox/test.vcf.gz")
 print dir(v)
-v.calc_tajima()
+for i in v.calc_tajima():
+    print "\t".join([str(x) for x in i])
+    
 
 
