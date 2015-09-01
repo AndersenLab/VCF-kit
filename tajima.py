@@ -18,7 +18,7 @@ options:
 
 """
 from docopt import docopt
-from subprocess import call
+from subprocess import call, Popen, PIPE
 from itertools import combinations
 from utils.vcf import *
 from math import isinf
@@ -82,13 +82,16 @@ if __name__ == '__main__':
                   version='VCF-Toolbox v0.1',
                   argv = debug,
                   options_first=True)
-    print(args)
     wz = int(args["<window-size>"])
     sz = int(args["<step-size>"])
     if args["--no-header"] == False:
         print("CHROM\tBIN_START\tBIN_END\tN_SNPs\tTajimaD")
     for i in tajima(args["<vcf>"]).calc_tajima(wz,sz):
-        print("\t".join([str(x) for x in i]))
+        s, e = Popen(["bcftools", "view", "-H", args["<vcf>"], i[0] + ":" + str(i[1]) + "-" + str(i[2])], stdout = PIPE, stderr=PIPE).communicate()
+        n_lines = str(len(s.strip().split("\n")))
+        match = str(int(i[3]) == int(n_lines))
+        print i
+        print("\t".join([str(x) for x in i] + [n_lines, match]))
 
 
 
