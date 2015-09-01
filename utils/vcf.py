@@ -81,14 +81,16 @@ class vcf(cyvcf2):
                             result_list.lower_bound = 0
                             result_list.upper_bound = window_size
                             chrom = line.CHROM
-                        if result_list.lower_bound  <= line.POS < result_list.upper_bound:
-                            line = self.next()
-                            result_list.append(line)
                         if line.POS < result_list.lower_bound:
                             result_list.iterate_interval()
                         elif line.POS >= result_list.upper_bound:
                             yield result_list.filter_within_bounds()
                             result_list.iterate_interval()
+                            #for k,i in enumerate(result_list.filter_within_bounds()):
+                            #    print k, i.CHROM, i.POS, "\n", result_list.upper_bound
+                        if result_list.lower_bound  <= line.POS < result_list.upper_bound:
+                            line = self.next()
+                            result_list.append(line)
                         last_chrom = line.CHROM
                         #print line.POS
                 #
