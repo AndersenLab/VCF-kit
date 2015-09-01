@@ -105,8 +105,10 @@ class vcf(cyvcf2):
                         chrom_num = len(set([o.CHROM for o in result_list]))
                         if (max_pos - min_pos) > window_size or chrom_num > 1:
                             result_list.popleft()
+                            result_list.iterate_interval() # Updates lower and upper bounds
                         else:
                             break
+                    # Update variant interval
                     yield result_list
 
         except StopIteration:
@@ -133,28 +135,18 @@ class variant_interval(deque):
     def positions(self):
         return [x.POS for x in self]
 
-    def interval(self):
-        if self.shift_method in ["SNP-Sliding", "SNP-Interval"]:
-            POS = self.positions()
-            CHROM = self[0].CHROM
-            return (CHROM, min(POS), max(POS))
-        elif self.shift_method == "POS-Sliding":
-            # Space interval evenly around items
+    def iterate_interval(self):
+        if self.shift_method == "POS-Sliding":
             mean_pos = np.mean(self.positions())
             half_window = self.window_size/2
-            lower_bound = int(mean_pos - half_window)
-            CHROM = self[0].CHROM
-            if lower_bound < 0:
-                lower_bound = 0
-            upper_bound = int(mean_pos + half_window)
-            return (CHROM, lower_bound, upper_bound)
+            self.lower_bound = int(mean_pos - half_window)
+            if self.lower_bound < 0:
+                self.lower_bound = 0
+            self.upper_bound = int(mean_pos + half_window)
         else:
-            CHROM = self[0].CHROM
-            return (CHROM, self.lower_bound, self.upper_bound)
-
-    def iterate_interval(self):
-        self.lower_bound += self.step_size
-        self.upper_bound += self.step_size
+            self.lower_bound += self.step_size
+            self.upper_bound += self.step_size
+        self.CHROM = self[0].CHROM
         return self
 
     def filter_within_bounds(self):
@@ -167,6 +159,7 @@ class variant_interval(deque):
 
 
     def __getitem__(self, index):
+
         if isinstance(index, slice):
             cut = islice(self, index.start, index.stop, index.step)
             return variant_interval(interval = cut, 
@@ -193,11 +186,9 @@ class variant_interval(deque):
         return len(set([var.CHROM for var in self])) == 1 and len(self) > 0
 
     def __repr__(self):
-        formatted_variants = ["{chrom}:{pos}".format(chrom=var.CHROM, pos=var.POS) for var in self]
+        formatted_variants = ["{chrom}:{pos}".format(chrom=self.CHROM, pos=var.POS) for var in self]
         formatted_variants = "\t".join(formatted_variants)
         interval = self.interval()
-        if interval is not None:
-            return "{0}:{1}-{2}".format(*self.interval()) + " -> " + formatted_variants
-        else:
-            return  str(formatted_variants) + " Format"
+        return "{0}:{1}-{2}".format(*self.interval()) + " -> " + formatted_variants
+
 
