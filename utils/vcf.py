@@ -126,7 +126,7 @@ class variant_interval(deque):
         if self.step_size == None:
             self.step_size = window_size
         self.lower_bound = lower_bound
-        self.upper_bound = self.lower_bound + window_size - 1
+        self.upper_bound = self.lower_bound + window_size
         if shift_method in ["SNP-Sliding", "SNP-Interval"]:
             super(variant_interval, self).__init__(interval, maxlen = self.window_size)
         else:
@@ -150,6 +150,9 @@ class variant_interval(deque):
         return self
 
     def filter_within_bounds(self):
+        #remove_list = [x for x in self if x.POS < self.lower_bound]
+        #for i in remove_list:
+        #    self.remove(i)
         cut = [x for x in self if x.POS >= self.lower_bound and x.POS < self.upper_bound]
         return variant_interval(interval = cut, 
                              window_size = self.window_size,
@@ -159,7 +162,6 @@ class variant_interval(deque):
 
 
     def __getitem__(self, index):
-
         if isinstance(index, slice):
             cut = islice(self, index.start, index.stop, index.step)
             return variant_interval(interval = cut, 
