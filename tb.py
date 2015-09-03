@@ -8,6 +8,7 @@ usage:
 commands:
   tajima
   primer
+  genome
 
 """
 from docopt import docopt
@@ -32,7 +33,7 @@ if __name__ == '__main__':
     argv = [args['<command>']] + args['<args>']
     if args["<command>"] == "":
       print(__doc__)
-    elif args['<command>'] == 'tajima':
-        exit(call(['python', getScriptPath() + '/tajima.py'] + argv))
-    elif args['<command>'] == 'primer':
-        exit(call(['python',  getScriptPath() + '/primer.py'] + argv))
+    elif args['<command>'] in ['tajima', 'primer','genome']:
+        comm = ['python', getScriptPath() + '/' + args["<command>"] + ".py"] + argv
+        exit(call(comm))
+
