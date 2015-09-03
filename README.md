@@ -14,10 +14,22 @@ vcf-toolbox
 	  -h --help                   Show this screen.
 	  --version                   Show version.
 
-### Progress
+### Roadmap
+
+#### Tajima-D
 
 * [ ] Tajima-D
+	* [ ] Documentation
+
+#### Genotyping
+
 * [ ] Primer Design 
-	* [ ] PCR
 	* [ ] snip-SNP
-* [ ] sgRNA design?
+	* [ ] Indels
+	* [ ] IDT - PCR order form
+
+#### Genome Manager
+
+* [ ] Check that tools (bwa/samtools/blast) are available.
+	* [ ] Skip bwa if not available
+* [ ] Error Checking

@@ -100,7 +100,6 @@ if __name__ == '__main__':
                 puts(colored.green('\nDownloading: ' + ref_dl[3] + "; " + url + '\n'))
 
             # stack overflow: 15644964; 
-            
             r = requests.get(url, stream = True)
             ref_filename = ref_dir + "/" + ref_dl[3] + ".tmp.fa.gz"
             with open(ref_filename , 'wb') as f:

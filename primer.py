@@ -22,6 +22,7 @@ from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
 from Bio.Restriction import AllEnzymes
 import Bio
+
 debug = None
 if len(sys.argv) == 1:
     debug = ['primer', "--option", "test.vcf.gz"]
@@ -34,6 +35,7 @@ if __name__ == '__main__':
                   version='VCF-Toolbox v0.1',
                   argv = debug,
                   options_first=False)
+    v = vcf(args["<vcf>"])
 
     search_results2 = AllEnzymes.search( Seq("tattgaaaaaaac", DNA_SET ))
     search_results = AllEnzymes.search(  Seq("tattgaagtaaac", DNA_SET ))
