@@ -1,6 +1,7 @@
 from subprocess import check_output
 from collections import OrderedDict
 
+
 class sequence:
     """
         Sequence object for keeping track
@@ -9,11 +10,13 @@ class sequence:
     def __init__(self, chrom, start, end, seq):
         self.chrom = chrom
         self.start = start
-        self.end   = end
+        self.end = end
         self.seq = seq
 
     def __repr__(self):
-        return ">{self.chrom}:{self.start}-{self.end}\n{self.seq}".format(**locals())
+        seq_repr = ">{self.chrom}:{self.start}-{self.end}\n{self.seq}"
+        return seq_repr.format(**locals())
+
 
 class Fasta:
     """
@@ -40,12 +43,13 @@ class Fasta:
             self.chrom = self.alt_contig_names[chrom_pos]
         return self
 
-    def keys(self, weight = False):
+    def keys(self, weight=False):
         with open(self.reference + ".fai") as f:
             chrom_length = [x.strip().split("\t")[0:2] for x in f.readlines()]
-            chrom_length = [[x[0],int(x[1])] for x in chrom_length]
-            if weight == True:
+            chrom_length = [[x[0], int(x[1])] for x in chrom_length]
+            if weight is True:
                 genome_length = sum([x[1] for x in chrom_length])
-                return OrderedDict([x[0],1.0*x[1]/genome_length] for x in chrom_length)
+                return OrderedDict([x[0], 1.0*x[1]/genome_length]
+                                   for x in chrom_length)
             else:
                 return OrderedDict(chrom_length)
