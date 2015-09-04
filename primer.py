@@ -55,18 +55,16 @@ class seq_vcf(vcf):
             if len([x for x in self.contigs.keys() if x not in self.reference.keys()]) > 0:
                 with indent(4):
                     puts(colored.yellow("""\nWarning: VCF / Reference contigs don't match\nUsing contig names within VCF.\n"""))
-            print self.reference["NC_003279.8"][1:20]
+                    self.reference.alt_contig_names = dict(zip(self.contigs.keys(), self.reference.keys(),))
 
 
     def extract(self):
         for i in self:
-            print dir(self.reference)
-            print self.reference.keys()
-            x = [x.split("\t")[0] for x in x.strip().split("\n")]
-            print x
-            exit()#print dir(x)
-            #yield i
-
+            window = 1000
+            start = i.POS - window + 1
+            end = i.POS + window
+            yield self.reference[i.CHROM][start:end]
+            
 
 
 if __name__ == '__main__':
@@ -78,9 +76,9 @@ if __name__ == '__main__':
     
     # Locate Reference
     v = seq_vcf(args["<vcf>"], args["--ref"])
-    print v.reference
     for i in v.extract():
-        print type(i)
+        print i
+        exit()
 
     search_results2 = AllEnzymes.search( Seq("tattgaaaaaaac", DNA_SET ))
     search_results = AllEnzymes.search(  Seq("tattgaagtaaac", DNA_SET ))

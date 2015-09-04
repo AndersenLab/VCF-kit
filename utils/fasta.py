@@ -1,15 +1,29 @@
 from subprocess import check_output
 from collections import OrderedDict
 
+class sequence:
+    """
+        Sequence object for keeping track
+        of chromosomal position.
+    """
+    def __init__(self, chrom, start, end, seq):
+        self.chrom = chrom
+        self.start = start
+        self.end   = end
+        self.seq = seq
+
+    def __repr__(self):
+        return ">{self.chrom}:{self.start}-{self.end}\n{self.seq}".format(**locals())
+
 class Fasta:
     """
         Extract regions from fasta files indexed with samtools
     """
     def __init__(self, reference):
         self.reference = reference
+        self.alt_contig_names = {}
 
     def __getitem__(self, chrom_pos):
-        print chrom_pos, "CHROM"
         if isinstance(chrom_pos, slice):
             start = chrom_pos.start
             if start < 1:
@@ -17,8 +31,13 @@ class Fasta:
             end = chrom_pos.stop
             chrom_pos = "{self.chrom}:{start}-{end}".format(**locals())
             query_string = ["samtools", "faidx", self.reference, chrom_pos]
-            return check_output(query_string)
+            seq = ''.join(check_output(query_string).strip().split("\n")[1:])
+            seq = sequence(self.chrom_name, start, end, seq)
+            return seq
         self.chrom = chrom_pos
+        self.chrom_name = chrom_pos
+        if chrom_pos in self.alt_contig_names.keys():
+            self.chrom = self.alt_contig_names[chrom_pos]
         return self
 
     def keys(self, weight = False):
