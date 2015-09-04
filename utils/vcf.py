@@ -1,23 +1,30 @@
 from cyvcf2 import VCF as cyvcf2
 from collections import OrderedDict, deque
-from itertools import islice, combinations
+from itertools import islice
+from clint.textui import colored, puts, indent
 import re
+import os
 import numpy as np
-from copy import deepcopy
 np.set_printoptions(threshold=np.nan)
+
 
 class vcf(cyvcf2):
     def __init__(self, filename):
+        if not os.path.isfile(filename):
+            with indent(4):
+                exit(puts(colored.red("\nError: " + filename + " does not exist\n")))
+
         cyvcf2.__init__(self, filename)
         self.filename = filename
-        self.n = len(self.samples) # Number of Samples
+        # Check if file exists
+        self.n = len(self.samples)  # Number of Samples
 
         # Meta Data
         comp = re.compile(r'''^##(?P<key>[^<#]+?)=(?P<val>[^<#]+$)''', re.M)
         self.metadata = OrderedDict(comp.findall(self.raw_header))
 
         # Contigs
-        self.contigs = dict(zip(
+        self.contigs = OrderedDict(zip(
             re.compile("##contig=<ID=(.*?),").findall(self.raw_header),
             map(int, re.compile("##contig.*length=(.*?)>").findall(self.raw_header))
         ))
