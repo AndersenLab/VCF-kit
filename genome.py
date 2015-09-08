@@ -4,6 +4,7 @@ usage:
   tb.py genome <vcf>
   tb.py genome --search=<term>
   tb.py genome --download=<asm_name> [--fix-chrom-names]
+  tb.py genome --wormbase
 
 options:
   -h --help                   Show this screen.
@@ -123,8 +124,8 @@ if __name__ == '__main__':
                             if line.startswith(">"):
                                 chrom_name = re.match(".*[c|C]hromosome ([A-Za-z0-9]+)[W]*", line)
                                 if chrom_name is not None:
-                                    outline = ">" + chrom_name.group(1)
-                                    puts(colored.blue(line.strip("\n>")) + " --> " + colored.blue(outline.strip(">")))
+                                    outline = ">" + chrom_name.group(1) + "\n"
+                                    puts(colored.blue(line.strip("\n>")) + " --> " + colored.blue(outline.strip("\n>")))
                             outfa.write(outline)
 
             with indent(2):
@@ -151,7 +152,12 @@ if __name__ == '__main__':
             with indent(2):
                 puts(colored.green("\nCreating blast index\n"))
 
-            call(["makeblastdb", "-in", ref_filename, "-dbtype=nucl"])
+            comm = "gunzip -c {ref} | makeblastdb -in - -dbtype=nucl -title={ref} -out={ref}".format(ref=ref_filename)
+            call(comm, shell = True)
+
+            # Remove temp files
+            os.remove(ref_filename.replace(".fa.gz",".tmp.fa.gz"))
+            os.remove(ref_filename.replace(".fa.gz",".tmp.fa"))
 
             # Add error checking here...
 
