@@ -3,7 +3,7 @@
 usage:
   tb.py genome <vcf>
   tb.py genome --search=<term>
-  tb.py genome --download=<asm_name>
+  tb.py genome --download=<asm_name> [--fix-chrom-names]
 
 options:
   -h --help                   Show this screen.
@@ -15,9 +15,11 @@ from utils.vcf import *
 import sys
 from clint.textui import colored, puts, indent, progress
 from Bio.Entrez import esearch, read, efetch, esummary
+import gzip
 from subprocess import call
 from time import time
 from tabulate import tabulate as tb
+import re
 import requests
 import os
 
@@ -109,10 +111,27 @@ if __name__ == '__main__':
                         f.write(chunk)
                         f.flush()
 
+
+            if args["--fix-chrom-names"]:
+                with indent(2):
+                    puts(colored.green('\nFixing chromosome names\n'))
+
+                with open(ref_filename.replace(".fa.gz",".fa"), 'w') as outfa:
+                    with gzip.open(ref_filename, 'rb') as f:
+                        for line in f:
+                            outline = line
+                            if line.startswith(">"):
+                                chrom_name = re.match(".*[c|C]hromosome ([A-Za-z0-9]+)[W]*", line)
+                                if chrom_name is not None:
+                                    outline = ">" + chrom_name.group(1)
+                                    puts(colored.blue(line.strip("\n>")) + " --> " + colored.blue(outline.strip(">")))
+                            outfa.write(outline)
+
             with indent(2):
                 puts(colored.green('\nSwitching from gzip to bgzip\n'))
             # Convert to bgzip
-            call(["gunzip", "-f", ref_filename])
+            if not args["--fix-chrom-names"]:
+                call(["gunzip", "-f", ref_filename])
             comm_bgzip = "bgzip --stdout {ref_filename} > {ref_out}"
             comm_bgzip = comm_bgzip.format(ref_filename = ref_filename.replace(".fa.gz",".fa"),
                               ref_out = ref_filename.replace(".tmp",""))
