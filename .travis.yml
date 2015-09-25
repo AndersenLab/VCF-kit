@@ -6,5 +6,6 @@ python:
 install: "pip install -r requirements.txt"
 # command to run tests
 script: 
+  - apt-get install samtools
   - py.test test.py
 sudo: false
