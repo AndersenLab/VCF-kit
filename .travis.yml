@@ -9,10 +9,7 @@ addons:
     packages:
     - bwa
     - samtools
-    - bcftools
 # command to run tests
 script: 
   - py.test test.py
-  - samtools
-  - bcftools
 sudo: false
