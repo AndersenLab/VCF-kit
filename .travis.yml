@@ -7,9 +7,12 @@ install: "pip install -r requirements.txt"
 addons:
   apt:
     packages:
+    - bwa
     - samtools
     - bcftools
 # command to run tests
 script: 
   - py.test test.py
+  - samtools
+  - bcftools
 sudo: false
