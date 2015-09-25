@@ -4,8 +4,12 @@ python:
   - "2.7"
 # command to install dependencies
 install: "pip install -r requirements.txt"
+addons:
+  apt:
+    packages:
+    - samtools
+    - bcftools
 # command to run tests
 script: 
-  - apt-get install samtools
   - py.test test.py
 sudo: false
