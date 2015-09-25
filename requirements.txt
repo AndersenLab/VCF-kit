@@ -1,6 +1,6 @@
 cython>=0.22.1
 numpy
 docopt
-Bio
+biopython
 clint
 requests
