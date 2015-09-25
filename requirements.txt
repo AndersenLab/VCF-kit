@@ -1,6 +1,5 @@
-Cython
+cython>=0.22.1
 numpy
-cyvcf2
 docopt
 Bio
 clint
