@@ -1,4 +1,5 @@
 Cython
+numpy
 cyvcf2
 docopt
 Bio
