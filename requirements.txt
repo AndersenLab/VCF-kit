@@ -1,3 +1,4 @@
+Cython
 cyvcf2
 docopt
 Bio
