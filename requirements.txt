@@ -4,3 +4,4 @@ docopt
 biopython
 clint
 requests
+python-nexus
