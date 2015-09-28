@@ -4,7 +4,7 @@ usage:
   tb.py genome <vcf>
   tb.py genome --search=<term>
   tb.py genome --download=<asm_name> [--fix-chrom-names]
-  tb.py genome --wormbase
+  tb.py genome wormbase (--species)
 
 options:
   -h --help                   Show this screen.
@@ -24,6 +24,8 @@ import re
 import requests
 import os
 
+
+# ftplib
 
 debug = None
 if len(sys.argv) == 1:
