@@ -11,6 +11,7 @@ commands:
   genome
   phylo
   freq
+  geno
 
 """
 from docopt import docopt
@@ -35,7 +36,7 @@ if __name__ == '__main__':
     argv = [args['<command>']] + args['<args>']
     if args["<command>"] == "":
       print(__doc__)
-    elif args['<command>'] in ['tajima', 'primer','genome','phylo','freq']:
+    elif args['<command>'] in ['tajima', 'primer','genome','phylo','freq',"geno"]:
         comm = ['python', getScriptPath() + '/' + args["<command>"] + ".py"] + argv
         exit(call(comm))
 
