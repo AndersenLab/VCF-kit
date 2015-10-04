@@ -59,15 +59,36 @@ class seq_vcf(vcf):
                     self.reference.alt_contig_names = dict(zip(self.contigs.keys(), self.reference.keys(),))
 
 
-    def extract_ref_alt(self):
-        for i in self:
-            if i.is_snp:
-                window = 1000
-                start = i.POS - window + 1
-                end = i.POS + window
-                ref = self.reference[i.CHROM][start:i.POS-1].seq + i.REF + self.reference[i.CHROM][i.POS+1:end].seq
-                alt = self.reference[i.CHROM][start:i.POS-1].seq + i.ALT[0] + self.reference[i.CHROM][i.POS+1:end].seq
-                yield Seq(ref, DNA_SET), Seq(alt, DNA_SET)
+    def extract_restriction(self, window = 2000):
+        for varset in self.window(window_size=window, step_size = 1, shift_method="POS-Sliding"):
+            #print i.lower_bound, i.upper_bound
+            start = varset.lower_bound
+            print start, "LOWER BOUND"
+            end = varset.upper_bound
+            if varset.unique_chroms:
+                CHROM = varset[0].CHROM
+            ref = self.reference[CHROM][start:end].seq
+            print start,end
+            if len(varset) > 1:
+                alt = ref
+                for var in varset:
+                    print var.POS, "POSITION"
+                    # Extract ref and alt sequences
+                    print start, var.POS, end
+                    alt = alt[:var.POS-start], var.ALT[0], "Q",  alt[var.POS-start+1:]
+                    alt = "".join(alt)
+                print ref
+                print "+========+"
+                print alt  
+                #ref = Seq(ref, DNA_SET)
+                #alt = Seq(alt, DNA_SET)
+                #ref = dict(AllEnzymes.search(ref).items())
+                #alt = dict(AllEnzymes.search(alt).items())
+                #ref = {k:v for k,v in ref.items() if len(v) > 0 and len(v) <= 3 and
+                #                                                 ref[k] != alt[k] and
+                #                                                 abs(len(ref[k]) - len(alt[k])) == 1}
+                #alt = {k:v for k,v in alt.items() if k in ref.keys()}
+                #yield ref, alt
             
 
 
@@ -80,16 +101,10 @@ if __name__ == '__main__':
     print args
     # Locate Reference
     v = seq_vcf(args["<vcf>"], args["--ref"])
-
+    print dir(seq_vcf)
     if args["snpsnp"] == True:
-        for ref, alt in v.extract_ref_alt():
-            restriction_ref = dict(AllEnzymes.search(ref).items())
-            restriction_alt = dict(AllEnzymes.search(alt).items())
-            ref_sites = {k:v for k,v in restriction_ref.items() if len(v) > 0 and len(v) <= 3 and
-                                                                 restriction_ref[k] != restriction_alt[k] and
-                                                                 abs(len(restriction_ref[k]) - len(restriction_alt[k])) == 1}
-            alt_sites = {k:v for k,v in restriction_alt.items() if k in ref_sites.keys()}
-            print ref_sites, alt_sites
+        for ref, alt in v.extract_restriction():
+            print ref, alt
 
 
 

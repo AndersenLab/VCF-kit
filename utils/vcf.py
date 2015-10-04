@@ -105,6 +105,10 @@ class vcf(cyvcf2):
                 #
                 elif shift_method == "POS-Sliding":
                     result_list.append(line)
+                    result_list.lower_bound = result_list[0].POS - window_size/2
+                    if result_list.lower_bound < 0:
+                        result_list.lower_bound = 0
+                    result_list.upper_bound = result_list.lower_bound + window_size
                     while True:
                         positions = result_list.positions()
                         max_pos = max(positions)
@@ -194,10 +198,9 @@ class variant_interval(deque):
         """
         return len(set([var.CHROM for var in self])) == 1 and len(self) > 0
 
-    def __repr__(self):
-        formatted_variants = ["{chrom}:{pos}".format(chrom=self.CHROM, pos=var.POS) for var in self]
-        formatted_variants = "\t".join(formatted_variants)
-        interval = self.interval()
-        return "{0}:{1}-{2}".format(*self.interval()) + " -> " + formatted_variants
-
+    #def __repr__(self):
+    #    formatted_variants = ["{chrom}:{pos}".format(chrom=self.CHROM, pos=var.POS) for var in self]
+    #    formatted_variants = "\t".join(formatted_variants)
+    #    interval = self.interval()
+    #    return "{0}:{1}-{2}".format(*self.interval()) + " -> " + formatted_variants
 
