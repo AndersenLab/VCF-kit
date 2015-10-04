@@ -59,36 +59,29 @@ class seq_vcf(vcf):
                     self.reference.alt_contig_names = dict(zip(self.contigs.keys(), self.reference.keys(),))
 
 
-    def extract_restriction(self, window = 2000):
+    def extract_restriction(self, window = 20000):
         for varset in self.window(window_size=window, step_size = 1, shift_method="POS-Sliding"):
-            #print i.lower_bound, i.upper_bound
+            print len(varset), varset
             start = varset.lower_bound
-            print start, "LOWER BOUND"
             end = varset.upper_bound
-            if varset.unique_chroms:
-                CHROM = varset[0].CHROM
+            print start, end
+            print varset[0].ALT, varset[0].POS
+            CHROM = varset[0].CHROM
             ref = self.reference[CHROM][start:end].seq
-            print start,end
-            if len(varset) > 1:
-                alt = ref
-                for var in varset:
-                    print var.POS, "POSITION"
-                    # Extract ref and alt sequences
-                    print start, var.POS, end
-                    alt = alt[:var.POS-start], var.ALT[0], "Q",  alt[var.POS-start+1:]
-                    alt = "".join(alt)
-                print ref
-                print "+========+"
-                print alt  
-                #ref = Seq(ref, DNA_SET)
-                #alt = Seq(alt, DNA_SET)
-                #ref = dict(AllEnzymes.search(ref).items())
-                #alt = dict(AllEnzymes.search(alt).items())
-                #ref = {k:v for k,v in ref.items() if len(v) > 0 and len(v) <= 3 and
-                #                                                 ref[k] != alt[k] and
-                #                                                 abs(len(ref[k]) - len(alt[k])) == 1}
-                #alt = {k:v for k,v in alt.items() if k in ref.keys()}
-                #yield ref, alt
+            alt = ref
+            for var in varset:
+                print var.CHROM, var.POS
+                # Spike alt sequence with all variants.
+                alt = alt[:var.POS-start] + var.ALT[0] + alt[var.POS-start+1:]
+            ref = Seq(ref, DNA_SET)
+            alt = Seq(alt, DNA_SET)
+            ref = dict(AllEnzymes.search(ref).items())
+            alt = dict(AllEnzymes.search(alt).items())
+            ref = {k:v for k,v in ref.items() if len(v) > 0 and len(v) <= 3 and
+                                                             ref[k] != alt[k] and
+                                                             abs(len(ref[k]) - len(alt[k])) == 1}
+            alt = {k:v for k,v in alt.items() if k in ref.keys()}
+            yield varset, ref, alt, start, end
             
 
 
@@ -103,8 +96,8 @@ if __name__ == '__main__':
     v = seq_vcf(args["<vcf>"], args["--ref"])
     print dir(seq_vcf)
     if args["snpsnp"] == True:
-        for ref, alt in v.extract_restriction():
-            print ref, alt
+        for varset, ref, alt, start, end in v.extract_restriction():
+            print varset, ref, alt, start, end
 
 
 
