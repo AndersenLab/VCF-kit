@@ -15,21 +15,44 @@ options:
 """
 from docopt import docopt
 from clint.textui import colored, puts, indent
-from subprocess import call
 from utils.vcf import *
 from utils.fasta import *
 import sys
-import gc
+from utils.primer3 import primer3
 import os
 from glob import glob
-from Bio.Seq import Seq 
+from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
 from Bio.Restriction import AllEnzymes
-import Bio
 
 debug = None
 if len(sys.argv) == 1:
     debug = ['primer', "--ref=WBcel235", "test.vcf.gz"]
+
+
+class restriction_sites:
+    """
+        Container for determining restriction sites
+        and modifying their coordinates
+    """
+    def __init__(self, ref_seq, alt_seq):
+        self.ref_seq = Seq(ref_seq, DNA_SET)
+        self.alt_seq = Seq(alt_seq, DNA_SET)
+        self.ref_sites = dict(AllEnzymes.search(self.ref_seq).items())
+        self.alt_sites = dict(AllEnzymes.search(self.alt_seq).items())
+        self.ref_sites_diff = {k:v for k,v in self.ref_sites.items() if len(v) > 0 and len(v) <= 3 and
+                                                         abs(len(self.ref_sites[k]) - len(self.alt_sites[k])) == 1}
+        self.alt_sites_diff = {k:self.alt_sites[k] for k,v in self.ref_sites_diff.items()}
+
+    def shift_positions(self, shift):
+        for k in self.ref_sites_diff.keys():
+            for n, s1 in enumerate(self.ref_sites_diff[k]):
+                self.ref_sites_diff[k][n] = s1 + shift
+            for n, s2 in enumerate(self.alt_sites_diff[k]):
+                self.alt_sites_diff[k][n] = s2 + shift
+
+    def __len__(self):
+        return len(self.ref_sites_diff.keys())
 
 
 class seq_vcf(vcf):
@@ -59,29 +82,21 @@ class seq_vcf(vcf):
                     self.reference.alt_contig_names = dict(zip(self.contigs.keys(), self.reference.keys(),))
 
 
-    def extract_restriction(self, window = 20000):
+    def extract_restriction(self, window = 2000):
         for varset in self.window(window_size=window, step_size = 1, shift_method="POS-Sliding"):
-            print len(varset), varset
             start = varset.lower_bound
             end = varset.upper_bound
-            print start, end
-            print varset[0].ALT, varset[0].POS
             CHROM = varset[0].CHROM
-            ref = self.reference[CHROM][start:end].seq
-            alt = ref
+            ref_seq = self.reference[CHROM][start:end].seq
+            alt_seq = ref_seq
             for var in varset:
-                print var.CHROM, var.POS
-                # Spike alt sequence with all variants.
-                alt = alt[:var.POS-start] + var.ALT[0] + alt[var.POS-start+1:]
-            ref = Seq(ref, DNA_SET)
-            alt = Seq(alt, DNA_SET)
-            ref = dict(AllEnzymes.search(ref).items())
-            alt = dict(AllEnzymes.search(alt).items())
-            ref = {k:v for k,v in ref.items() if len(v) > 0 and len(v) <= 3 and
-                                                             ref[k] != alt[k] and
-                                                             abs(len(ref[k]) - len(alt[k])) == 1}
-            alt = {k:v for k,v in alt.items() if k in ref.keys()}
-            yield varset, ref, alt, start, end
+                # Spike all alt variants within sequence.
+                alt_seq = alt_seq[:var.POS-start] + var.ALT[0] + alt_seq[var.POS-start+1:]
+            rsites = restriction_sites(ref_seq, alt_seq)
+            if len(rsites) > 0:
+                primer_set = primer3()
+                for primer in primer_set.fetch_primers(ref_seq):
+                    yield primer, restriction_sites, start, end
             
 
 
@@ -96,9 +111,7 @@ if __name__ == '__main__':
     v = seq_vcf(args["<vcf>"], args["--ref"])
     print dir(seq_vcf)
     if args["snpsnp"] == True:
-        for varset, ref, alt, start, end in v.extract_restriction():
-            print varset, ref, alt, start, end
-
-
-
-    x = seq_vcf(args["<vcf>"])
+        for primer, restriction_sites, start, end in v.extract_restriction():
+            #print primer
+            print restriction_sites
+            print start, end
