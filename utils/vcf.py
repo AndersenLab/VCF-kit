@@ -5,17 +5,19 @@ from clint.textui import colored, puts, indent
 import re
 import os
 import numpy as np
+import sys
+import fileinput
 np.set_printoptions(threshold=np.nan)
 
 
 class vcf(cyvcf2):
     def __init__(self, filename):
-        if not os.path.isfile(filename):
+        if not os.path.isfile(filename) and filename != "-":
             with indent(4):
                 exit(puts(colored.red("\nError: " + filename + " does not exist\n")))
-
-        cyvcf2.__init__(self, filename)
         self.filename = filename
+
+        cyvcf2.__init__(self, self.filename)
         # Check if file exists
         self.n = len(self.samples)  # Number of Samples
 
