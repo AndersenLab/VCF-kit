@@ -36,7 +36,7 @@ if __name__ == '__main__':
     argv = [args['<command>']] + args['<args>']
     if args["<command>"] == "":
       print(__doc__)
-    elif args['<command>'] in ['tajima', 'primer','genome','phylo','freq',"geno"]:
+    elif args['<command>'] in ['tajima', 'primer','genome','phylo','freq',"geno","vcf2tsv"]:
         comm = ['python', getScriptPath() + '/' + args["<command>"] + ".py"] + argv
         exit(call(comm))
 
