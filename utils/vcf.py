@@ -7,54 +7,56 @@ import os
 import numpy as np
 import sys
 import fileinput
+from subprocess import Popen, PIPE
 np.set_printoptions(threshold=np.nan)
 
 
 class vcf(cyvcf2):
-    def __init__(self, filename):
+    def __init__(self, filename, passthru = False):
         if not os.path.isfile(filename) and filename != "-":
             with indent(4):
                 exit(puts(colored.red("\nError: " + filename + " does not exist\n")))
         self.filename = filename
 
-        cyvcf2.__init__(self, self.filename)
-        # Check if file exists
-        self.n = len(self.samples)  # Number of Samples
+        if passthru == False:
+            cyvcf2.__init__(self, self.filename)
+            # Check if file exists
+            self.n = len(self.samples)  # Number of Samples
 
-        # Meta Data
-        comp = re.compile(r'''^##(?P<key>[^<#]+?)=(?P<val>[^<#]+$)''', re.M)
-        self.metadata = OrderedDict(comp.findall(self.raw_header))
+            # Meta Data
+            comp = re.compile(r'''^##(?P<key>[^<#]+?)=(?P<val>[^<#]+$)''', re.M)
+            self.metadata = OrderedDict(comp.findall(self.raw_header))
 
-        # Contigs
-        self.contigs = OrderedDict(zip(
-            re.compile("##contig=<ID=(.*?),").findall(self.raw_header),
-            map(int, re.compile("##contig.*length=(.*?)>").findall(self.raw_header))
-        ))
-        # Info
-        r = re.compile(r'''\#\#INFO=<
-            ID=(?P<id>[^,]+),
-            Number=(?P<number>-?\d+|\.|[AG]),
-            Type=(?P<type>Integer|Float|Flag|Character|String),
-            Description="(?P<desc>[^"]*)"
-            >''', re.VERBOSE)
-        self.info_set = {x["id"]: x for x in [m.groupdict() for m in r.finditer(self.raw_header)]}
+            # Contigs
+            self.contigs = OrderedDict(zip(
+                re.compile("##contig=<ID=(.*?),").findall(self.raw_header),
+                map(int, re.compile("##contig.*length=(.*?)>").findall(self.raw_header))
+            ))
+            # Info
+            r = re.compile(r'''\#\#INFO=<
+                ID=(?P<id>[^,]+),
+                Number=(?P<number>-?\d+|\.|[AG]),
+                Type=(?P<type>Integer|Float|Flag|Character|String),
+                Description="(?P<desc>[^"]*)"
+                >''', re.VERBOSE)
+            self.info_set = {x["id"]: x for x in [m.groupdict() for m in r.finditer(self.raw_header)]}
 
-        # Filter
-        r = re.compile(r'''\#\#FILTER=<
-            ID=(?P<id>[^,]+),
-            Description="(?P<desc>[^"]*)"
-            >''', re.VERBOSE)
-        self.filter_set = {x["id"]: x for x in [m.groupdict() for m in r.finditer(self.raw_header)]}
+            # Filter
+            r = re.compile(r'''\#\#FILTER=<
+                ID=(?P<id>[^,]+),
+                Description="(?P<desc>[^"]*)"
+                >''', re.VERBOSE)
+            self.filter_set = {x["id"]: x for x in [m.groupdict() for m in r.finditer(self.raw_header)]}
 
 
-        # Format
-        r = re.compile(r'''\#\#FORMAT=<
-            ID=(?P<id>.+),
-            Number=(?P<number>-?\d+|\.|[AG]),
-            Type=(?P<type>.+),
-            Description="(?P<desc>.*)"
-            >''', re.VERBOSE)
-        self.format_set = {x["id"]: x for x in [m.groupdict() for m in r.finditer(self.raw_header)]}
+            # Format
+            r = re.compile(r'''\#\#FORMAT=<
+                ID=(?P<id>.+),
+                Number=(?P<number>-?\d+|\.|[AG]),
+                Type=(?P<type>.+),
+                Description="(?P<desc>.*)"
+                >''', re.VERBOSE)
+            self.format_set = {x["id"]: x for x in [m.groupdict() for m in r.finditer(self.raw_header)]}
 
     def window(self, shift_method, window_size, step_size = None):
         """
@@ -131,6 +133,19 @@ class vcf(cyvcf2):
                 else:
                     yield result_list
 
+    def output_raw(self):
+        """
+            Outputs raw vcf
+        """
+        sys.stdin.flush()
+        if self.filename == "-":
+            for n,line in enumerate(sys.stdin.xreadlines()):
+                yield(line)
+        else:
+            out = Popen(["bcftools", "view", self.filename], stdout=PIPE)
+            for line in out.stdout:
+                yield(line)
+
 class variant_interval(deque):
     def __init__(self, interval = [], window_size = None, step_size = None, shift_method = None, varlist=None, lower_bound = 0):
         self.shift_method = shift_method
@@ -199,6 +214,8 @@ class variant_interval(deque):
             all belong to the same chromosome
         """
         return len(set([var.CHROM for var in self])) == 1 and len(self) > 0
+
+
 
     #def __repr__(self):
     #    formatted_variants = ["{chrom}:{pos}".format(chrom=self.CHROM, pos=var.POS) for var in self]

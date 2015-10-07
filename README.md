@@ -53,6 +53,14 @@ In the table below - the first line indicates that the sample __ED3052__ has 2 s
 | ED3052 | 8          | 2            |
 | ED3052 | 9          | 1            |
 
+#### geno
+
+Modify genotypes.
+
+```
+	tb.ph geno transfer-filter <vcf>
+```
+
 ### Roadmap
 
 #### Tajima-D
@@ -66,6 +74,11 @@ In the table below - the first line indicates that the sample __ED3052__ has 2 s
 	* [ ] snip-SNP
 	* [ ] Indels
 	* [ ] IDT - PCR order form
+
+#### vcf2tsv
+
+* [X] Wide
+* [X] Long
 
 #### Genome Manager
 
