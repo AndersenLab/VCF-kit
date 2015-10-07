@@ -11,7 +11,7 @@ commands:
   genome
   phylo
   freq
-  geno
+  vcf2tsv
 
 """
 from docopt import docopt

@@ -31,6 +31,10 @@ vcf-toolbox
 
 #### freq
 
+#### vcf2tsv
+
+Generate long or wide format tab-separated-values (tsv) from a VCF.
+
 Calculates the frequency of homozygous genotypes by sample (e.g. number of singletons, doubletons, tripletons, etc. by sample)
 
 ```
