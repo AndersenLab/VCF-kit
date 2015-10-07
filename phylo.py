@@ -33,16 +33,16 @@ if __name__ == '__main__':
     if args["fasta"]:
         seqs = {}
         for sample in samples:
-          seqs[sample] = ""
+          seqs[sample] = []
         for line in v:
           if line.is_snp:
             non_missing = [x.replace(".","-") for x in line.gt_bases]
             sample_gt = zip(samples,[x[-1] for x in non_missing])
             for sample, gt in sample_gt:
-              seqs[sample] += gt
+              seqs[sample].append(gt)
         for sample, seq in seqs.items():
             print(">" + sample)
-            print(seq)
+            print(''.join(seq))
     elif args["nexus"]:
         n = NexusWriter()
         for line in v:

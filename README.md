@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/AndersenLab/vcf-toolbox.svg?branch=v2)](https://travis-ci.org/AndersenLab/vcf-toolbox)
+[![Build Status](https://travis-ci.org/AndersenLab/vcf-toolbox.svg?branch=master)](https://travis-ci.org/AndersenLab/vcf-toolbox)
 
 vcf-toolbox
 ===========
@@ -30,6 +30,10 @@ vcf-toolbox
 #### phylo
 
 #### freq
+
+#### vcf2tsv
+
+Generate long or wide format tab-separated-values (tsv) from a VCF.
 
 Calculates the frequency of homozygous genotypes by sample (e.g. number of singletons, doubletons, tripletons, etc. by sample)
 
@@ -85,3 +89,11 @@ Modify genotypes.
 * [ ] Check that tools (bwa/samtools/blast) are available.
 	* [ ] Skip bwa if not available
 * [ ] Error Checking
+
+#### vcf2tsv
+
+* [X] Wide
+* [X] Long
+* [ ] set fields (INFO / FORMAT)
+* [ ] Variants Only
+* [ ] bigquery schema?
