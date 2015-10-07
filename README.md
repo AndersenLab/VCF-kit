@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/AndersenLab/vcf-toolbox.svg?branch=v2)](https://travis-ci.org/AndersenLab/vcf-toolbox)
+[![Build Status](https://travis-ci.org/AndersenLab/vcf-toolbox.svg?branch=master)](https://travis-ci.org/AndersenLab/vcf-toolbox)
 
 vcf-toolbox
 ===========
