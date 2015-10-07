@@ -77,7 +77,9 @@ if __name__ == '__main__':
               if ":" in var:
                   var = var.split(":")[1]
               header.append(var)
-          print("\t".join(header))
+          # Add Format to FORMAT
+          header = header[:-len(format)] + ["F_" + x for x in header[-len(format):]]
+          print("\t".join(header).replace("-->",""))
         elif n < len(v.samples) and args["long"]:
             pass
         elif n >= len(v.samples) and args["long"]:
