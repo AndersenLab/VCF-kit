@@ -72,3 +72,11 @@ In the table below - the first line indicates that the sample __ED3052__ has 2 s
 * [ ] Check that tools (bwa/samtools/blast) are available.
 	* [ ] Skip bwa if not available
 * [ ] Error Checking
+
+#### vcf2tsv
+
+* [X] Wide
+* [X] Long
+* [ ] set fields (INFO / FORMAT)
+* [ ] Variants Only
+* [ ] bigquery schema?

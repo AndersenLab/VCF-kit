@@ -58,15 +58,13 @@ if __name__ == '__main__':
         print_header = "--print-header"
     if args["long"]:
         query_start = repr("%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER\t" + \
-                      '\t'.join(['%' + x for x in info]) + "\t[%SAMPLE\t" + \
+                      '\t'.join(['%' + x for x in info]) + "\t[-->%SAMPLE\t" + \
                       '\t'.join(['%' + x for x in format]) + "\n]").strip("'")
     elif args["wide"]:
         query_start = repr("%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER\t" + \
                       '\t'.join(['%INFO/' + x for x in info]) + \
                       "[\t%SAMPLE\t" + '\t'.join(['%' + x for x in format]) + "]\n").strip("'")
     comm = filter(len,["bcftools", "query", print_header, "-f", query_start, v.filename])
-    comm = comm[0:4] + ['"' + comm[4] + '"'] + comm[5:]
-    #print ' '.join(comm)
     comm = Popen(comm, stdout = PIPE, stderr = PIPE)
     for n, line in enumerate(comm.stdout):
         if n == 0 and args["--print-header"] and args["wide"]:
@@ -82,5 +80,16 @@ if __name__ == '__main__':
           print("\t".join(header))
         elif n < len(v.samples) and args["long"]:
             pass
+        elif n >= len(v.samples) and args["long"]:
+            line = line.strip("\n").split("\t")
+            if line[0].startswith("-->"):
+                line = fill_fields + line[len(line)-len(fill_fields):]
+            else:
+                fill_fields = line[0:(7 + len(info))]
+            print "\t".join(line).replace("-->","")
+
+            
+
         else:
             print(line.strip("\n"))
+
