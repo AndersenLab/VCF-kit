@@ -42,7 +42,7 @@ if __name__ == '__main__':
                   argv = debug,
                   options_first=False)
     # Locate Reference
-    v = vcf(args["<vcf>"], passthru = True)
+    v = vcf(args["<vcf>"])
     format_added = False
     if args["transfer-filter"]:
         for line in v.output_raw():
