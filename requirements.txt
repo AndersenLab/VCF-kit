@@ -1,3 +1,5 @@
+setuptools
+cyvcf2
 docopt
 biopython
 clint
