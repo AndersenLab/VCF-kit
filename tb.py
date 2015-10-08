@@ -11,6 +11,7 @@ commands:
   genome
   phylo
   freq
+  geno
   vcf2tsv
 
 """
