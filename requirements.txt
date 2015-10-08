@@ -1,6 +1,6 @@
-cython>=0.22.1
-cyvcf2
+cython>=0.23.3
 numpy
+cyvcf2
 docopt
 biopython
 clint
