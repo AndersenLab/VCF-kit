@@ -1,8 +1,8 @@
 cython>=0.22.1
 numpy
-cyvcf2
 docopt
 biopython
 clint
 requests
 python-nexus
+cyvcf2
