@@ -11,4 +11,3 @@ addons:
 # command to run tests
 script: 
   - py.test test.py
-sudo: true
