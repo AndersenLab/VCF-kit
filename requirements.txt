@@ -6,3 +6,4 @@ biopython
 clint
 requests
 python-nexus
+cyvcf2
