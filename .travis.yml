@@ -3,7 +3,7 @@ python:
   - "2.7"
 
 install: 
-	- pip install -r requirements.txt
+  - pip install -r requirements.txt
 addons:
   apt:
     packages:
@@ -12,5 +12,5 @@ addons:
 
 script: 
   - py.test test.py
-  
+
 sudo: false
