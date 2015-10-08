@@ -1,13 +1,16 @@
 language: python
 python:
   - "2.7"
-# command to install dependencies
-install: "pip install -r requirements.txt"
+
+install: 
+	- pip install -r requirements.txt
 addons:
   apt:
     packages:
     - bwa
     - samtools
-# command to run tests
+
 script: 
   - py.test test.py
+  
+sudo: false
