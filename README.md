@@ -174,6 +174,7 @@ Tools for producing files useful in constructing phylogies.
 Generates the allele frequency on a per-sample basis. 
 
 * [X] Calc. freq of individual samples.
+* [ ] Heterozygous genotypes
 
 #### tstv
 
@@ -200,5 +201,6 @@ Converts a VCF into a tsv - in wide or long format, and taking into account anno
 
 #### Possible additions?
 
-* [ ] 
+* [ ] Upload to UCSC
+* [ ] Annotate variants (track-based search)
 
