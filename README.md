@@ -142,34 +142,63 @@ Generate long or wide format tab-separated-values (tsv) from a VCF.
 
 ### Roadmap
 
-#### Tajima-D
+* [ ] Check for BWA, Blast, Primer3, other req'd CLI tools.
+
+#### Tajima
 
 * [ ] Tajima-D
 	* [ ] Documentation
 
-#### Genotyping
+#### Primer
+
+Suite of tools for genotyping: via sanger sequencing, using snip-SNPs, and indels. Generates appropriate primers and predicts band sizes for indels and snip-SNPs.
 
 * [ ] Primer Design 
 	* [ ] snip-SNP
 	* [ ] Indels
-	* [ ] IDT - PCR order form
 
-#### vcf2tsv
+#### Genome 
 
-* [X] Wide
-* [X] Long
-* [X] Parse ANN Fields (e.g. snpeff)
-
-#### Genome Manager
+Manages genomes used for generating primers and other tasks. Performs indexing for all necessary tools.
 
 * [ ] Check that tools (bwa/samtools/blast) are available.
 	* [ ] Skip bwa if not available
 * [ ] Error Checking
 
+#### phylo
+
+Tools for producing files useful in constructing phylogies.
+
+#### freq
+
+Generates the allele frequency on a per-sample basis. 
+
+* [X] Calc. freq of individual samples.
+
+#### tstv
+
+* [ ] Calc. tstv ratios and stratify by other variables (e.g. depth)
+* [ ] Visualization in R?
+
+#### geno
+
+Utilities for working with genotypes.
+
+* [X] - Transfer filter
+* [X] - Heterozygous polarization.
+
 #### vcf2tsv
+
+Converts a VCF into a tsv - in wide or long format, and taking into account annotation fields (ANN) added by programs such as SNPeff.
 
 * [X] Wide
 * [X] Long
+* [X] Parse ANN Fields (e.g. snpeff)
+* [ ] Read from stdin
 * [ ] set fields (INFO / FORMAT)
-* [ ] Variants Only
-* [ ] bigquery schema?
+* [ ] generate bigquery schema and output script
+
+#### Possible additions?
+
+* [ ] 
+
