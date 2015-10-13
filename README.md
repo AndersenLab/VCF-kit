@@ -18,6 +18,8 @@ vcf-toolbox
 	  genome
 	  phylo
 	  freq
+	  geno
+	  vcf2tsv
 
 ## Commands
 
@@ -131,11 +133,12 @@ Output from this utility appears as the table below. The first line indicates th
 Generate long or wide format tab-separated-values (tsv) from a VCF.
 
 ```
-	tb.py vcf2tsv (wide|long) [--print-header] <vcf>
+	tb.py vcf2tsv (wide|long) [--print-header --snpeff] <vcf>
 ```
 
 * __wide | long__ - Select one of __wide__ or __long__ to set the output format. 
 * __--print-header__ - Print a header row specifying column names.
+* __--ANN__ - Parse annotation fields. Results in 1 row x (n)annotations x (n)samples when long or 1 row x (n)annotations x (n)variants when wide.
 
 ### Roadmap
 
@@ -155,6 +158,7 @@ Generate long or wide format tab-separated-values (tsv) from a VCF.
 
 * [X] Wide
 * [X] Long
+* [X] Parse ANN Fields (e.g. snpeff)
 
 #### Genome Manager
 
