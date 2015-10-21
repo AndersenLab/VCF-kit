@@ -91,7 +91,6 @@ __Download genomes__
 
 To download a genome, specify its assembly name (`asm_name`) as provided from search results. Use `--fix-chrom-names` to replace NCBI chromosome names with more appropriate roman numeral or numeric chromosome names.
 
-## phylo
 
 Suite of tools for genotyping: via sanger sequencing, using snip-SNPs, and indels. Generates appropriate primers and predicts band sizes for indels and snip-SNPs.
 
@@ -99,7 +98,12 @@ Suite of tools for genotyping: via sanger sequencing, using snip-SNPs, and indel
 	* [ ] snip-SNP
 	* [ ] Indels
 
-fasta sequences from variant data. This is useful for generating phylogenetic trees from VCF files.
+## phylo
+
+Generate fasta sequences from variant data. This is useful for generating phylogenetic trees from VCF files.
+
+* [ ] Generate phylogeny from VCF (using fasttree + R Script)
+* [ ] Option: take every X SNPs; Sample X SNPs
 
 ## geno
 
