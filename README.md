@@ -25,6 +25,11 @@ vcf-toolbox
 
 ## tajima
 
+
+* [ ] Tajima-D
+	* [ ] Documentation
+
+
 Generate a Tajima's D statistic using a sliding window or across bins. 
 
 __Calculate Tajima's D using a sliding window__
@@ -51,7 +56,15 @@ The code above will calculate Tajima's D within 1,000 bp bins across the genome.
 
 ## primer
 
+* [ ] Spike in primers with variants.
+
 ## genome
+
+Manages genomes used for generating primers and other tasks. Performs indexing for all necessary tools.
+
+* [ ] Check that tools (bwa/samtools/blast) are available.
+	* [ ] Skip bwa if not available
+* [ ] Error Checking
 
 
 The __genome__ utility can be used to download genomes from NCBI, <wormbase?>, etc. Downloaded genomes are indexed with bwa, samtools (faidx) and blast. 
@@ -80,9 +93,18 @@ To download a genome, specify its assembly name (`asm_name`) as provided from se
 
 ## phylo
 
+Suite of tools for genotyping: via sanger sequencing, using snip-SNPs, and indels. Generates appropriate primers and predicts band sizes for indels and snip-SNPs.
+
+* [ ] Primer Design 
+	* [ ] snip-SNP
+	* [ ] Indels
+
+fasta sequences from variant data. This is useful for generating phylogenetic trees from VCF files.
+
 ## geno
 
-The `geno` command offers functions for modifying genotypes.
+* [X] - Transfer filter
+* [X] - Heterozygous polarization.
 
 ###### transfer-filter
 
@@ -90,7 +112,10 @@ The `geno` command offers functions for modifying genotypes.
 	tb.py geno transfer-filter <vcf>
 ```
 
-Generate a FORMAT field filter column (GF) and transfer filters applied within the FILTER column to the GF field. This utility is useful if variants are called individually (producing a single VCF) for samples and then later merged into a multi-sample VCF. It enables you to track which variant filters were applied to a specific sample rather than across a population.
+Generate a FORMAT field filter column (GF) and transfer filters applied within the FILTER column to the GF field. This utility is useful if variants are called individually (producing a single VCF) for samples and then later merged into a multi-sample VCF. It enables you to track which variant filters were applied to a specific sample rather than across a population. The following header line is added:
+
+`##FORMAT=<ID=GF,Number=1,Type=String,Description="Genotype Filter">`
+
 
 ###### het-polarization
 
@@ -104,6 +129,9 @@ Creates a new FORMAT field (HP) and "polarizes" or switches heterozygous genotyp
 * __AB__ - A heterozygous genotype remains a heterozygous genotype.
 * __BB__ - A heterozygous genotype was switched to a homozygous alternate genotype.
 
+The following header line is added:
+
+`##FORMAT=<ID=HP,Number=1,Type=String,Description="Flag used to mark whether a variant was polarized">`
 
 
 ## freq
@@ -130,7 +158,7 @@ Output from this utility appears as the table below. The first line indicates th
 
 ## vcf2tsv
 
-Generate long or wide format tab-separated-values (tsv) from a VCF.
+Converts a VCF into a tsv - in wide or long format, and taking into account annotation fields (ANN) added by programs such as SNPeff.
 
 ```
 	tb.py vcf2tsv (wide|long) [--print-header --snpeff] <vcf>
@@ -140,64 +168,18 @@ Generate long or wide format tab-separated-values (tsv) from a VCF.
 * __--print-header__ - Print a header row specifying column names.
 * __--ANN__ - Parse annotation fields. Results in 1 row x (n)annotations x (n)samples when long or 1 row x (n)annotations x (n)variants when wide.
 
-### Roadmap
-
-* [ ] Check for BWA, Blast, Primer3, other req'd CLI tools.
-
-#### Tajima
-
-* [ ] Tajima-D
-	* [ ] Documentation
-
-#### Primer
-
-Suite of tools for genotyping: via sanger sequencing, using snip-SNPs, and indels. Generates appropriate primers and predicts band sizes for indels and snip-SNPs.
-
-* [ ] Primer Design 
-	* [ ] snip-SNP
-	* [ ] Indels
-
-#### Genome 
-
-Manages genomes used for generating primers and other tasks. Performs indexing for all necessary tools.
-
-* [ ] Check that tools (bwa/samtools/blast) are available.
-	* [ ] Skip bwa if not available
-* [ ] Error Checking
-
-#### phylo
-
-Tools for producing files useful in constructing phylogies.
-
-#### freq
-
-Generates the allele frequency on a per-sample basis. 
-
-* [X] Calc. freq of individual samples.
-* [ ] Heterozygous genotypes
-
-#### tstv
-
-* [ ] Calc. tstv ratios and stratify by other variables (e.g. depth)
-* [ ] Visualization in R?
-
-#### geno
-
-Utilities for working with genotypes.
-
-* [X] - Transfer filter
-* [X] - Heterozygous polarization.
-
-#### vcf2tsv
-
-Converts a VCF into a tsv - in wide or long format, and taking into account annotation fields (ANN) added by programs such as SNPeff.
-
 * [X] Wide
 * [X] Long
 * [X] Parse ANN Fields (e.g. snpeff)
 * [ ] Read from stdin
 * [ ] set fields (INFO / FORMAT)
 * [ ] generate bigquery schema and output script
+
+
+### Additional Features
+
+* [ ] Check for BWA, Blast, Primer3, other req'd CLI tools.
+* [ ] tstv
 
 #### Possible additions?
 
