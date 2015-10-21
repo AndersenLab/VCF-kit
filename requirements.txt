@@ -1,5 +1,5 @@
 setuptools
-cyvcf2
+cyvcf2>=0.1.9
 docopt
 biopython
 clint
