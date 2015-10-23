@@ -71,8 +71,7 @@ if __name__ == '__main__':
                 puts(colored.red("Error: Not all programs successfully installed: "  + ", ".join(program_installed)))
     elif args["<command>"] == "":
         print(__doc__)
-        program_list = ["bwa", "samtools", "bcftools", "blastn", "muscle", "muscle2"]
-        for prog in program_list:
+        for prog in program_list.values():
             try:
                 check_output(["which", prog])
             except CalledProcessError:
