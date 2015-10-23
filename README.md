@@ -102,7 +102,7 @@ Suite of tools for genotyping: via sanger sequencing, using snip-SNPs, and indel
 
 Generate fasta sequences from variant data. This is useful for generating phylogenetic trees from VCF files.
 
-* [ ] Generate phylogeny from VCF (using fasttree + R Script)
+* [ ] Generate phylogeny from VCF (using MUSCLE + R Script)
 * [ ] Option: take every X SNPs; Sample X SNPs
 
 ## geno
