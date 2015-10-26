@@ -1,8 +1,9 @@
-setuptools
+cython>=0.23.3
+numpy
 cyvcf2>=0.1.9
 docopt
 biopython
 clint
 requests
-python-nexus
+
 
