@@ -1,4 +1,4 @@
-cython>=0.23.3
+cyvcf2>=0.1.9
 numpy
 docopt
 biopython
