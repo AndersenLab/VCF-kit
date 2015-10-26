@@ -2,3 +2,7 @@
 *.bcf
 *.csi
 *.pdf
+
+*.pyc
+build
+dist
