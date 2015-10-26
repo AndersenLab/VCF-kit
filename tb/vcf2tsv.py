@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  tb.py vcf2tsv (wide|long) [--print-header --ANN] <vcf>
+  tb vcf2tsv (wide|long) [--print-header --ANN] <vcf>
 
 options:
   -h --help                   Show this screen.
@@ -83,7 +83,8 @@ if __name__ == '__main__':
                       "[\t%SAMPLE\t" + '\t'.join(['%' + x for x in format]) + "]\n").strip("'")
     comm = filter(len,["bcftools", "query", print_header, "-f", query_start, v.filename])
     comm = Popen(comm, stdout = PIPE, stderr = PIPE)
-    ANN_loc = info.index("ANN") + 7
+    if args["--ANN"]:
+        ANN_loc = info.index("ANN") + 7
     for n, line in enumerate(comm.stdout):
         if n == 0 and args["--print-header"] and args["wide"]:
             # Split out snpeff annotations

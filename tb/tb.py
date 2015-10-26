@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 """
 usage:
-  tb.py <command> [<args>...]
-  tb.py setup
-  tb.py -h | --help
-  tb.py --version
+  tb <command> [<args>...]
+  tb setup
+  tb -h | --help
+  tb --version
 
 commands:
   tajima
@@ -21,6 +21,7 @@ from subprocess import call, check_output, CalledProcessError
 from utils.vcf import *
 from clint.textui import colored, puts, indent
 import sys
+import tb
 import os
 
 
@@ -29,9 +30,9 @@ if len(sys.argv) == 1:
     debug = [""]
 
 def getScriptPath():
-    return os.path.dirname(os.path.realpath(sys.argv[0]))
+    return os.path.dirname(tb.__file__)
 
-if __name__ == '__main__':
+def main():
     args = docopt(__doc__, 
                   version='VCF-Toolbox v0.1',
                   argv = debug,
@@ -80,4 +81,7 @@ if __name__ == '__main__':
     elif args['<command>'] in ['tajima', 'primer','genome','phylo','freq',"geno","vcf2tsv"]:
         comm = ['python', getScriptPath() + '/' + args["<command>"] + ".py"] + argv
         exit(call(comm))
+
+if __name__ == '__main__':
+    main()
 

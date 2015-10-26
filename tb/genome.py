@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 """
 usage:
-  tb.py genome <vcf>
-  tb.py genome --search=<term>
-  tb.py genome --download=<asm_name> [--fix-chrom-names]
-  tb.py genome wormbase (--species)
+  tb genome <vcf>
+  tb genome --search=<term>
+  tb genome --download=<asm_name> [--fix-chrom-names]
+  tb genome wormbase (--species)
 
 options:
   -h --help                   Show this screen.

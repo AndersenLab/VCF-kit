@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """
 usage:
-  tb.py primer [--ref=<reference>] <vcf>
-  tb.py primer snpsnp [--ref=<reference>] <vcf>
+  tb primer [--ref=<reference>] <vcf>
+  tb primer snpsnp [--ref=<reference>] <vcf>
 
 Example
 
