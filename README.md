@@ -13,8 +13,9 @@ vcf-toolbox
 	  tb.py --version
 
 	commands:
-	  tajima
+	  call
 	  primer
+	  tajima
 	  genome
 	  phylo
 	  freq
@@ -22,6 +23,18 @@ vcf-toolbox
 	  vcf2tsv
 
 ## Commands
+
+## call
+
+```
+
+	tb call <seqs.fasta> <vcf>
+
+```
+
+Perform variant calling using blast. Useful for validating variants using sanger sequencing or other methods. 
+
+* <seqs.fasta> 
 
 ## tajima
 
@@ -65,6 +78,7 @@ Manages genomes used for generating primers and other tasks. Performs indexing f
 * [ ] Check that tools (bwa/samtools/blast) are available.
 	* [ ] Skip bwa if not available
 * [ ] Error Checking
+* [ ] List genomes; List by invoking `tb` also.
 
 
 The __genome__ utility can be used to download genomes from NCBI, <wormbase?>, etc. Downloaded genomes are indexed with bwa, samtools (faidx) and blast. 
@@ -103,7 +117,7 @@ Suite of tools for genotyping: via sanger sequencing, using snip-SNPs, and indel
 Generate fasta sequences from variant data. This is useful for generating phylogenetic trees from VCF files.
 
 * [X] Generate phylogeny from VCF (generates a tree)
-* [ ] Generate phylogeny plot (using R)
+* [X] Generate phylogeny plot (using browser)
 
 ## geno
 
@@ -176,8 +190,9 @@ Converts a VCF into a tsv - in wide or long format, and taking into account anno
 * [X] Long
 * [X] Parse ANN Fields (e.g. snpeff)
 * [ ] Read from stdin
-* [ ] set fields (INFO / FORMAT)
+* [ ] set fields to output (INFO / FORMAT)
 * [ ] generate bigquery schema and output script
+* [ ] import into sqlite database
 
 
 ### Additional Features
