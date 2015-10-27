@@ -10,6 +10,7 @@ options:
 
 """
 from docopt import docopt
+import tb
 from utils.vcf import *
 from subprocess import Popen
 import sys
@@ -30,6 +31,7 @@ if __name__ == '__main__':
     module_path = os.path.split(os.path.realpath(__file__))[0]
     v = vcf(args["<vcf>"])
     samples = v.samples
+    _ROOT = os.path.split(os.path.dirname(tb.__file__))[0]
     if args["fasta"] or args["tree"]:
         """
             Generate an aligned fasta from a VCF file.
@@ -64,8 +66,18 @@ if __name__ == '__main__':
           tree, err = Popen(["muscle","-maketree","-in","-","-cluster",tree_type], stdin = PIPE, stdout = PIPE).communicate(input = fasta)
           print(tree)
           if args["--plot"]:
+              from jinja2 import Template
+              import webbrowser
+              import tempfile
               # R code for plotting here!
-              pass
+              prefix = _ROOT + "/static"
+              tree_template = Template(open(_ROOT + "/templates/tree.html", 'r').read())
+              html_out = tempfile.NamedTemporaryFile(suffix=".html", delete = False)
+              with html_out as f:
+                  tree = tree.replace("\n","")
+                  f.write(tree_template.render(**locals()))
+                  #print html_out.name
+                  webbrowser.open("file://" + html_out.name)
 
 
 

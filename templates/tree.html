@@ -1,0 +1,21 @@
+<html>
+<head>
+	<script type="text/javascript" src="{{prefix}}/jquery-1.11.3.min.js" ></script>			
+	<script type="text/javascript" src="{{prefix}}/jsphylosvg-1.55/raphael-min.js" ></script> 
+	<script type="text/javascript" src="{{prefix}}/jsphylosvg-1.55/jsphylosvg-min.js"></script>
+	<script type="text/javascript">
+    window.onload = function(){
+            var dataObject = { newick: '{{ tree }}' };
+            phylocanvas = new Smits.PhyloCanvas(
+                dataObject,
+                'svgCanvas',
+                $(window).width()*0.5, $(window).height()
+            );
+    };
+    </script>
+			
+</head>
+<body>
+	<div id="svgCanvas"> </div>
+</body>
+</html>			
