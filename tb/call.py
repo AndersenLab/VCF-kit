@@ -19,6 +19,8 @@ from collections import defaultdict
 from clint.textui import colored, puts, indent, puts_err
 import os
 
+from Bio.Blast.Applications import NcbiblastxCommandline
+
 
 debug = None
 if len(sys.argv) == 1:
@@ -37,10 +39,9 @@ if __name__ == '__main__':
     # Open fasta and read
     handle = open(args["<seq.fasta>"], "rU")
     for record in SeqIO.parse(handle, "fasta") :
-        print record.id
-        bl = blast_diff(reference)
-        r = bl.blast(record.seq)
-        print r
+        if record.id == "CB4856":
+          bl = blast_diff(reference)
+          r = bl.blast(record.seq)
 
     if args["<vcf>"]:
         concordance = True

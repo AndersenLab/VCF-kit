@@ -3,6 +3,9 @@ from utils import *
 from collections import defaultdict
 from pprint import pprint as pp
 import csv
+from Bio.Blast import NCBIXML
+from Bio.Seq import Seq
+from cStringIO import StringIO
 
 
 field = ["query_id",
@@ -18,6 +21,59 @@ field = ["query_id",
          "evalue",
          "bit_score"]
 
+
+def boolify(s):
+    if s == 'True':
+        return True
+    if s == 'False':
+        return False
+    raise ValueError("huh?")
+
+def autoconvert(s):
+    for fn in (boolify, int, float):
+        try:
+            return fn(s)
+        except ValueError:
+            pass
+    return s
+
+def compare_fasta(chrom, start, ref, alt):
+        for i in range(len(ref)):
+            POS = i + start
+            if ref[i] == alt[i]:
+                print chrom, POS,  ref[i]
+            elif ref[i] != alt[i]:
+                print chrom, POS, ref[i], alt[i]
+            else:
+                print chrom, POS
+
+
+class blast_diff:
+
+    def __init__(self, db):
+        self.db = db
+        self.output_format = "sacc sstart send sstrand evalue mismatch sseq qseq"
+
+    def blast(self, q, chrom = None, pos = None):
+        blastn_query = "echo {q} | blastn -query - -db={self.db} -outfmt '6 {self.output_format}'  -num_alignments 1 ".format(**locals())
+        self.query = q
+        self.query_length = len(q)
+        self.chrom = chrom
+        self.pos = pos
+        resp, err = Popen(blastn_query,
+                          stdout=PIPE,
+                          stderr=PIPE,
+                          shell=True).communicate()
+        resp = map(autoconvert, resp.split("\n")[0].split("\t"))
+        resp = dict(zip(self.output_format.split(" "), resp))
+        print resp["sstart"], resp["send"], resp["sseq"]
+        if resp["sstart"] > resp["send"]:
+            print "REVERSAL"
+            resp["sseq"] = Seq(resp["sseq"]).reverse_complement()
+            resp["qseq"] = Seq(resp["qseq"]).reverse_complement()
+            resp["sstart"], resp["send"] = resp["send"], resp["sstart"]
+        print compare_fasta(resp["sacc"], resp["sstart"], resp["sseq"], resp["qseq"])
+        return resp
 
 
 class blastn:

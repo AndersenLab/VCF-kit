@@ -79,6 +79,10 @@ Manages genomes used for generating primers and other tasks. Performs indexing f
 	* [ ] Skip bwa if not available
 * [ ] Error Checking
 * [ ] List genomes; List by invoking `tb` also.
+* [ ] Add UCSC genome source
+* [ ] Add wormbase genome source
+* [ ] Add custom genome directory
+
 
 
 The __genome__ utility can be used to download genomes from NCBI, <wormbase?>, etc. Downloaded genomes are indexed with bwa, samtools (faidx) and blast. 
