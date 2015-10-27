@@ -158,6 +158,8 @@ if __name__ == '__main__':
             call(comm, shell = True)
 
             # Remove temp files
+            if args["--fix-chrom-names"]:
+                os.remove(ref_filename.replace(".fa.gz",".tmp.fa.gz"))
             os.remove(ref_filename.replace(".fa.gz",".tmp.fa"))
 
             # Add error checking here...
