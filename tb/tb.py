@@ -8,6 +8,7 @@ usage:
 
 commands:
   tajima
+  call
   primer
   genome
   phylo
@@ -78,7 +79,7 @@ def main():
             except CalledProcessError:
                 with indent(4):
                     puts(colored.red(prog + " not installed. Use a package manager to install or try using 'tb.py setup'\n"))
-    elif args['<command>'] in ['tajima', 'primer','genome','phylo','freq',"geno","vcf2tsv"]:
+    elif args['<command>'] in ['tajima', 'call', 'primer','genome','phylo','freq',"geno","vcf2tsv"]:
         comm = ['python', getScriptPath() + '/' + args["<command>"] + ".py"] + argv
         exit(call(comm))
 
