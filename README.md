@@ -8,9 +8,9 @@ vcf-toolbox
 	VCF-Toolbox 0.1
 
 	usage:
-	  tb.py <command> [<args>...]
-	  tb.py -h | --help
-	  tb.py --version
+	  tb <command> [<args>...]
+	  tb -h | --help
+	  tb --version
 
 	commands:
 	  call
@@ -27,9 +27,7 @@ vcf-toolbox
 ## call
 
 ```
-
-	tb call <seqs.fasta> <vcf>
-
+tb call <seqs.fasta> <vcf>
 ```
 
 Perform variant calling using blast. Useful for validating variants using sanger sequencing or other methods. 
@@ -38,34 +36,68 @@ Perform variant calling using blast. Useful for validating variants using sanger
 
 ## tajima
 
-
-* [ ] Tajima-D
-	* [ ] Documentation
-
-
 Generate a Tajima's D statistic using a sliding window or across bins. 
 
-__Calculate Tajima's D using a sliding window__
+__Parameters__:
+
+* __--no-header__ - Outputs results without a header. 
+* __--extra__ - 
+* __window-size__ - Size of window 
+
+###### Calculate Tajima's D using a sliding window
+
+When run, the code below will calculate Tajima's D across a 100,000 bp sliding window that moves 1,000 bp with each iteratino.
 
 ```
-	tb.py tajima 100000 1000 <vcf>
+tb tajima 100000 1000 <vcf>
 ```
 
-When run, the code above would calculate Tajima's D across a 100,000 bp sliding window that moves 1,000 bp with each iteratino.
+| CHROM   |   BIN_START |   BIN_END |   N_Sites |   N_SNPs |   TajimaD |
+|:--------|------------:|----------:|----------:|---------:|----------:|
+| I       |           0 |    100000 |         1 |        1 |  -1.59468 |
+| I       |        1000 |    101000 |         1 |        1 |  -1.59468 |
+| I       |        2000 |    102000 |         1 |        1 |  -1.59468 |
+| I       |        3000 |    103000 |         1 |        1 |  -1.59468 |
+| I       |        4000 |    104000 |         1 |        1 |  -1.59468 |
+| I       |        5000 |    105000 |         1 |        1 |  -1.59468 |
+| I       |        6000 |    106000 |         2 |        2 |  -1.53214 |
+| I       |        7000 |    107000 |         2 |        2 |  -1.53214 |
+| I       |        8000 |    108000 |         2 |        2 |  -1.53214 |
 
-__Calculate Tajima's D using a continous sliding window__
+
+###### Calculate Tajima's D using a continous sliding window
+
+When run, the code below will calculate Tajima's D across a 100,000 bp sliding window that captures every unique bin of variants that fall within 100,000 bp of one another.
+
 ```
-	tb.py tajima 100000 --sliding <vcf>
+tb tajima 100000 --sliding <vcf>
 ```
 
-When run, the code above would calculate Tajima's D across a 100,000 bp sliding window that captures every unique bin of variants that fall within 100,000 bp of one another.
+| CHROM   |   BIN_START |   BIN_END |   N_Sites |   N_SNPs |    TajimaD |
+|:--------|------------:|----------:|----------:|---------:|-----------:|
+| I       |           0 |    100000 |         1 |        1 | -1.59468   |
+| I       |           0 |    100000 |         2 |        2 | -1.53214   |
+| I       |       90777 |    190777 |         2 |        2 | -0.0291034 |
+| I       |      154576 |    254576 |         2 |        2 | -0.589097  |
+| I       |      207871 |    307871 |         2 |        2 | -1.53214   |
 
-__Calculate Tajima's D using a bins__
+
+###### Calculate Tajima's D using a bins
+
 ```
-	tb.py tajima 1000 1000 <vcf>
+tb tajima 1000 1000 <vcf>
 ```
 
-The code above will calculate Tajima's D within 1,000 bp bins across the genome.
+The code above will calculate Tajima's D using 100,000 bp bins across the genome.
+
+| CHROM   |   BIN_START |   BIN_END |   N_Sites |   N_SNPs |    TajimaD |
+|:--------|------------:|----------:|----------:|---------:|-----------:|
+| I       |           0 |    100000 |         1 |        1 | -1.59468   |
+| I       |      100000 |    200000 |         2 |        2 | -0.0291034 |
+| I       |      200000 |    300000 |         2 |        2 | -1.53214   |
+| I       |      300000 |    400000 |         2 |        2 | -1.53214   |
+| I       |      400000 |    500000 |         2 |        2 | -0.670611  |
+| I       |      500000 |    600000 |         2 |        1 | -1.59468   |
 
 ## primer
 
@@ -90,13 +122,13 @@ The __genome__ utility can be used to download genomes from NCBI, <wormbase?>, e
 __Output reference filename for a given VCF__
 
 ```
-  tb.py genome <vcf>
+  tb genome <vcf>
 ```
 
 __Search for genomes__
 
 ```
-  tb.py genome --search=<term>
+  tb genome --search=<term>
 ```
 
 Search NCBI, etc. for genomes.
@@ -104,7 +136,7 @@ Search NCBI, etc. for genomes.
 __Download genomes__
 
 ```
-  tb.py genome --download=<asm_name> [--fix-chrom-names]
+  tb genome --download=<asm_name> [--fix-chrom-names]
 ```
 
 To download a genome, specify its assembly name (`asm_name`) as provided from search results. Use `--fix-chrom-names` to replace NCBI chromosome names with more appropriate roman numeral or numeric chromosome names.
@@ -123,7 +155,7 @@ Suite of tools for genotyping: via sanger sequencing, using snip-SNPs, and indel
 The `phylo fasta` command can be used to generate a fasta file. Every base corresponds with a SNP. creating an alignment that can be fed into tools to produce phylogenies. Alternatively, you can use the `phylo tree` command.
 
 ```
-	tb phylo fasta <vcf>
+tb phylo fasta <vcf>
 ```
 
 __Output__:
@@ -142,11 +174,11 @@ AGAGA-CCCTGG-...
 The `phylo tree` command produces an alignment using SNPs which is fed into [MUSCLE](http://nar.oxfordjournals.org/content/32/5/1792.full) to produce a phylogeny in [Newick format](http://evolution.genetics.washington.edu/phylip/newicktree.html). Both neighbor joining and UPGMA trees can be constructed.
 
 ```
-	tb phylo tree nj <vcf>
+tb phylo tree nj <vcf>
 ```
 
 ```
-(((N2:0.0250154,PX179:0.02262):0.00270637,(((((EG4946:0.035835,AB1:0.0349638):0.00435886,GXW1:0.0490124):0.00222221,(((WN2001:0.0850733,CB4856:0.130009):0.0128017,EG4725:0.0731268):0.0133522,JU360:0.0585466):0.0102722):0.00536502,(RC301:0.0359497,QG536:0.0452108):0.0228549):0.00448383,(NIC1:0.0273521,DL200:0.040108):0.0132313):0.00550894):0.013224,JT11398:0.013224);
+(((N2:0.0250154,PX179:0.02262):0.00270637,(((((EG4946:0.035835,AB1:0.0349638):0.00435886,GXW1:0.0490124):0.00222221,(((WN2001:0.0850733,CB4856:0.130009)...
 ```
 
 Generate fasta sequences from variant data. This is useful for generating phylogenetic trees from VCF files.
@@ -156,10 +188,10 @@ Generate fasta sequences from variant data. This is useful for generating phylog
 `phylo tree` can be used to generate a plot of a phylogeny by adding the `--plot` flag. 
 
 ```
-	tb phylo tree nj --plot <vcf>
+tb phylo tree nj --plot <vcf>
 ```
 
-
+![phylogeny example](https://github.com/AndersenLab/vcf-toolbox/raw/img/tb_phylo.png)
 
 ## geno
 
@@ -169,7 +201,7 @@ Generate fasta sequences from variant data. This is useful for generating phylog
 ###### transfer-filter
 
 ```
-	tb.py geno transfer-filter <vcf>
+tb geno transfer-filter <vcf>
 ```
 
 Generate a FORMAT field filter column (GF) and transfer filters applied within the FILTER column to the GF field. This utility is useful if variants are called individually (producing a single VCF) for samples and then later merged into a multi-sample VCF. It enables you to track which variant filters were applied to a specific sample rather than across a population. The following header line is added:
@@ -180,7 +212,7 @@ Generate a FORMAT field filter column (GF) and transfer filters applied within t
 ###### het-polarization
 
 ```
-	tb.py geno het-polarization <vcf>
+tb geno het-polarization <vcf>
 ```
 
 Creates a new FORMAT field (HP) and "polarizes" or switches heterozygous genotypes based on genotype likelyhoods (GL) or Phred-scaled genotype likelihoods (PL). For example, a variant with 7 reads supporting a reference call and 1 read supporting an alternate allele might be called as a heterozygous genotype. However, in hermaphroditic species (_e.g. C. elegans_) where limited or no heterozygosity exists, it is much more likely that the genotype is homozygous reference. The HP FORMAT field will list one of the following depending on the change made:
@@ -199,7 +231,7 @@ The following header line is added:
 Calculates the frequency of homozygous genotypes by sample (e.g. number of singletons, doubletons, tripletons, etc. by sample)
 
 ```
-	tb.py freq <vcf>
+tb freq <vcf>
 ```
 
 Output from this utility appears as the table below. The first line indicates that the sample __ED3052__ has 2 singletons (private alleles). The second line indicates there are 3 doubltons.
@@ -221,7 +253,7 @@ Output from this utility appears as the table below. The first line indicates th
 Converts a VCF into a tsv - in wide or long format, and taking into account annotation fields (ANN) added by programs such as SNPeff.
 
 ```
-	tb.py vcf2tsv (wide|long) [--print-header --snpeff] <vcf>
+tb vcf2tsv (wide|long) [--print-header --snpeff] <vcf>
 ```
 
 * __wide | long__ - Select one of __wide__ or __long__ to set the output format. 
