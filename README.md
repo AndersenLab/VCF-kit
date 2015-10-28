@@ -60,7 +60,7 @@ tb call <seqs.fasta> <vcf>
 
 Perform variant calling using blast. Useful for validating variants using sanger sequencing or other methods. 
 
-* <seqs.fasta> 
+* __seqs.fasta__
 
 ### tajima
 
@@ -68,9 +68,11 @@ Generate a Tajima's D statistic using a sliding window or across bins.
 
 __Parameters__:
 
+* __window-size__ - Size of window from in which to calculate Tajima's D. 
+* __step-size__ - Size of step taken.
+* __--sliding__ - Fluidly slide along genome, capturing every window of a given `window-size`. Equivelent to `step-size` = 1;
 * __--no-header__ - Outputs results without a header. 
-* __--extra__ - 
-* __window-size__ - Size of window 
+* __--extra__ - Adds on `filename`, `window-size` and `step-size` as additional columns. Useful for comparing different files / parameters. 
 
 ###### Calculate Tajima's D using a sliding window
 
