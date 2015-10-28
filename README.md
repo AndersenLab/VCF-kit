@@ -52,7 +52,7 @@ vcf-toolbox
 
 ## Commands
 
-## call
+### call
 
 ```
 tb call <seqs.fasta> <vcf>
@@ -62,7 +62,7 @@ Perform variant calling using blast. Useful for validating variants using sanger
 
 * <seqs.fasta> 
 
-## tajima
+### tajima
 
 Generate a Tajima's D statistic using a sliding window or across bins. 
 
@@ -127,11 +127,11 @@ The code above will calculate Tajima's D using 100,000 bp bins across the genome
 | I       |      400000 |    500000 |         2 |        2 | -0.670611  |
 | I       |      500000 |    600000 |         2 |        1 | -1.59468   |
 
-## primer
+### primer
 
 * [ ] Spike in primers with variants.
 
-## genome
+### genome
 
 Manages genomes used for generating primers and other tasks. Performs indexing for all necessary tools.
 
@@ -176,7 +176,7 @@ Suite of tools for genotyping: via sanger sequencing, using snip-SNPs, and indel
 	* [ ] snip-SNP
 	* [ ] Indels
 
-## phylo
+### phylo
 
 ###### Generate a fasta-alignment for variant calls
 
@@ -221,7 +221,7 @@ tb phylo tree nj --plot <vcf>
 
 ![phylogeny example](https://github.com/AndersenLab/vcf-toolbox/raw/img/tb_phylo.png)
 
-## geno
+### geno
 
 * [X] - Transfer filter
 * [X] - Heterozygous polarization.
@@ -254,7 +254,7 @@ The following header line is added:
 `##FORMAT=<ID=HP,Number=1,Type=String,Description="Flag used to mark whether a variant was polarized">`
 
 
-## freq
+### freq
 
 Calculates the frequency of homozygous genotypes by sample (e.g. number of singletons, doubletons, tripletons, etc. by sample)
 
@@ -276,7 +276,7 @@ Output from this utility appears as the table below. The first line indicates th
 | ED3052 | 8          | 2            |
 | ED3052 | 9          | 1            |
 
-## vcf2tsv
+### vcf2tsv
 
 Converts a VCF into a tsv - in wide or long format, and taking into account annotation fields (ANN) added by programs such as SNPeff.
 
