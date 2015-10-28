@@ -118,10 +118,48 @@ Suite of tools for genotyping: via sanger sequencing, using snip-SNPs, and indel
 
 ## phylo
 
+###### Generate a fasta-alignment for variant calls
+
+The `phylo fasta` command can be used to generate a fasta file. Every base corresponds with a SNP. creating an alignment that can be fed into tools to produce phylogenies. Alternatively, you can use the `phylo tree` command.
+
+```
+	tb phylo fasta <vcf>
+```
+
+__Output__:
+
+```
+>QG536
+AGGGATCCT-GGG...
+>GXW1
+AGAGATCCCTGGG...
+>DL200
+AGAGA-CCCTGG-...
+```
+
+###### Generate a phylogenetic tree (newick format)
+
+The `phylo tree` command produces an alignment using SNPs which is fed into [MUSCLE](http://nar.oxfordjournals.org/content/32/5/1792.full) to produce a phylogeny in [Newick format](http://evolution.genetics.washington.edu/phylip/newicktree.html). Both neighbor joining and UPGMA trees can be constructed.
+
+```
+	tb phylo tree nj <vcf>
+```
+
+```
+(((N2:0.0250154,PX179:0.02262):0.00270637,(((((EG4946:0.035835,AB1:0.0349638):0.00435886,GXW1:0.0490124):0.00222221,(((WN2001:0.0850733,CB4856:0.130009):0.0128017,EG4725:0.0731268):0.0133522,JU360:0.0585466):0.0102722):0.00536502,(RC301:0.0359497,QG536:0.0452108):0.0228549):0.00448383,(NIC1:0.0273521,DL200:0.040108):0.0132313):0.00550894):0.013224,JT11398:0.013224);
+```
+
 Generate fasta sequences from variant data. This is useful for generating phylogenetic trees from VCF files.
 
-* [X] Generate phylogeny from VCF (generates a tree)
-* [X] Generate phylogeny plot (using browser)
+###### Plot a phylogeny from a VCF file
+
+`phylo tree` can be used to generate a plot of a phylogeny by adding the `--plot` flag. 
+
+```
+	tb phylo tree nj --plot <vcf>
+```
+
+
 
 ## geno
 

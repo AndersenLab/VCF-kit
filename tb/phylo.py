@@ -75,6 +75,7 @@ if __name__ == '__main__':
               html_out = tempfile.NamedTemporaryFile(suffix=".html", delete = False)
               with html_out as f:
                   tree = tree.replace("\n","")
+                  sample_len = len(samples)
                   f.write(tree_template.render(**locals()))
                   #print html_out.name
                   webbrowser.open("file://" + html_out.name)
