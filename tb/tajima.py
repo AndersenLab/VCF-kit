@@ -32,6 +32,8 @@ from utils.vcf import *
 from math import isinf
 import sys
 import os
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE,SIG_DFL) 
 
 
 debug = None

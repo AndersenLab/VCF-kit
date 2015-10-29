@@ -301,7 +301,7 @@ tb vcf2tsv (wide|long) [--print-header --snpeff] <vcf>
 
 ### Additional Features
 
-* [ ] Check for BWA, Blast, Primer3, other req'd CLI tools.
+* [X] Check for BWA, Blast, Primer3, other req'd CLI tools.
 * [ ] tstv
 
 #### Possible additions?
