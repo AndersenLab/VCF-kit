@@ -3,7 +3,6 @@ python:
   - "2.7"
 
 install: 
-  - sudo pip install cython
   - pip install -r requirements.txt
   - python setup.py install
 addons:
@@ -14,5 +13,3 @@ addons:
 
 script: 
   - py.test test.py
-
-sudo: true
