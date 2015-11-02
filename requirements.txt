@@ -2,7 +2,6 @@ setuptools
 numpy
 cython
 cyvcf2>=0.1.9
-numpy
 docopt
 biopython
 clint
