@@ -39,4 +39,4 @@ if __name__ == '__main__':
                             line[9+n] = replacement
             print '\t'.join(line)
         else:
-            print line
+            print line,
