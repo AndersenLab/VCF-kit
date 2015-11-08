@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  tb <command> [<args>...]
+  tb <command> [<args>...] 
   tb setup
   tb -h | --help
   tb --version
@@ -11,6 +11,7 @@ commands:
   call
   primer
   genome
+  rename
   phylo
   freq
   geno
@@ -79,7 +80,7 @@ def main():
             except CalledProcessError:
                 with indent(4):
                     puts(colored.red(prog + " not installed. Use a package manager to install or try using 'tb.py setup'\n"))
-    elif args['<command>'] in ['tajima', 'call', 'primer','genome','phylo','freq',"geno","vcf2tsv"]:
+    elif args['<command>'] in ['tajima', 'call', 'primer','genome','rename','phylo','freq',"geno","vcf2tsv"]:
         comm = ['python', getScriptPath() + '/' + args["<command>"] + ".py"] + argv
         exit(call(comm))
 
