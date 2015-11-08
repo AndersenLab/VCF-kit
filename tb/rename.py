@@ -37,6 +37,6 @@ if __name__ == '__main__':
                     for n, sample in enumerate(line[9:]):
                         if sample == orig:
                             line[9+n] = replacement
-            print line
+            print '\t'.join(line)
         else:
-            pass
+            print line
