@@ -126,7 +126,10 @@ if __name__ == '__main__':
                                 else:
                                     line[k+9] = v[0:-1] + ["AB"]
                         else:
-                            line[k+9] = v + ["."]
+                            if add_HP_flag == 0:
+                                line[k+9] = v
+                            else:
+                                line[k+9] = v + ["."]
                         line[k+9] = ":".join(line[k+9])
                 line = "\t".join(line)
             print(line)
