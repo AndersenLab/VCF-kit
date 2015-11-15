@@ -94,7 +94,7 @@ if __name__ == '__main__':
                         line = line[0:9] + geno_set
                     line = '\t'.join(l)
                 line = line.strip().split("\t")
-                if line[8].find("PL") > -1 and len(line[4].split(",")) == 1:
+                if line[8].find("PL") > -1 and len(line[4].split(",")) == 1 and line[8].find("HP") == -1:
                     PL = line[8].split(":").index("PL")
                     add_HP_flag = 0
                     for k,v in enumerate(line[9:]):
