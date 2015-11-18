@@ -13,5 +13,5 @@ setup(name='vcf-toolbox',
       [console_scripts]
       tb = tb.tb:main
       """,
-      install_requires=["docopt", "cyvcf2", "biopython", "clint", "requests"],
+      install_requires=["docopt", "cyvcf2", "biopython", "clint", "requests", "numpy"],
       zip_safe=False)

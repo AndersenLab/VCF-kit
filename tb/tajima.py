@@ -111,6 +111,7 @@ if __name__ == '__main__':
     args = docopt(__doc__, 
                   version='VCF-Toolbox v0.1',
                   argv = debug)
+    print(args)
     if args["<vcf>"] == "":
       print(__doc__)
     wz = int(args["<window-size>"].replace(",",""))
