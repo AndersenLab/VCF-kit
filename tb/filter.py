@@ -42,7 +42,6 @@ if __name__ == '__main__':
     f = {}
     filter_s = [x for x in args.values() if x in ["REF","HET","ALT","MISSING"]][0]
     # Filter by rate or by number?
-    print args
     if args["--min"]:
         if int(float(args["--min"])) != float(args["--min"]):
             filter_key_min = "r_" + filter_s
@@ -57,6 +56,9 @@ if __name__ == '__main__':
         else:
             filter_key_max = filter_s
             filter_val_max = int(float(args["--max"]))
+
+    # Output header
+    sys.stdout.write(v.raw_header)
     for line in v:
         ok_to_print = True
         f["ALT"] = line.num_hom_alt
@@ -74,4 +76,4 @@ if __name__ == '__main__':
             if f[filter_key_max] > filter_val_max:
                 ok_to_print = False
         if ok_to_print:
-            sys.stdout.write(str(line) + str(f) + "\t" + str(filter_val_max))
+            sys.stdout.write(str(line))
