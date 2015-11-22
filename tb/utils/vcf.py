@@ -178,7 +178,7 @@ class vcf(cyvcf2):
                         var_col = ref_alt[gt]
                     pos = pos - start
                     fasta = fasta[:pos] + variant[var_col] + fasta[pos+1:]
-                    return fasta
+                return fasta
         else:
             # Return reference sequence
             return fasta
