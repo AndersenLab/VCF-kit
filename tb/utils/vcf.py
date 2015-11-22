@@ -12,11 +12,13 @@ np.set_printoptions(threshold=np.nan)
 
 
 class vcf(cyvcf2):
-    def __init__(self, filename):
+    def __init__(self, filename, reference=None):
         if not os.path.isfile(filename) and filename != "-":
             with indent(4):
                 exit(puts(colored.red("\nError: " + filename + " does not exist\n")))
         self.filename = filename
+        if reference:
+            self.reference = reference
 
         cyvcf2.__init__(self, self.filename)
         # Check if file exists
@@ -141,6 +143,47 @@ class vcf(cyvcf2):
         for line in self:
             yield(str(line))
 
+    def fasta(self, region, sample = "", het=False, hom=True):
+        """
+            Fetch a fasta sequence; spike with variant calls for a given sample
+        """
+        chrom, start, end = re.split("[:-]", region)
+        start, end = int(start), int(end)
+        fasta, err = Popen(["samtools", "faidx", self.reference, region], stdout = PIPE, stderr = PIPE).communicate()
+        fasta = ''.join(fasta.split("\n")[1:])
+        var_col = 3
+        comm = ["bcftools", "view", "-H", self.filename, region]
+
+        # Use het?
+        use_het = 3
+        if het:
+            use_het = 4
+
+        ref_alt = {"./.": 3, "0/0": 3, "0/1": use_het, "1/1": 4}
+        if sample:
+            if sample != "ALT":
+                comm.insert(2,"--samples=" + sample)
+            var_col = 4
+        if sample:
+            variants, err = Popen(comm, stdout = PIPE, stderr = PIPE).communicate()
+            variants = [x.split("\t") for x in variants.strip().split("\n")]
+            if variants[0][0]:
+                for variant in variants:
+                    chrom, pos = variant[0], int(variant[1])
+                    fm = variant[8]
+                    gt = variant[9]
+                    GT_loc = fm.split(":").index("GT")
+                    gt = gt.split(":")[GT_loc]
+                    if gt in ref_alt and sample != "ALT":
+                        var_col = ref_alt[gt]
+                    pos = pos - start
+                    fasta = fasta[:pos] + variant[var_col] + fasta[pos+1:]
+                    return fasta
+        else:
+            # Return reference sequence
+            return fasta
+
+
 class variant_interval(deque):
     def __init__(self, interval = [], window_size = None, step_size = None, shift_method = None, varlist=None, lower_bound = 0):
         self.shift_method = shift_method
@@ -209,8 +252,6 @@ class variant_interval(deque):
             all belong to the same chromosome
         """
         return len(set([var.CHROM for var in self])) == 1 and len(self) > 0
-
-
 
     #def __repr__(self):
     #    formatted_variants = ["{chrom}:{pos}".format(chrom=self.CHROM, pos=var.POS) for var in self]
