@@ -103,7 +103,6 @@ class seq_vcf(vcf):
 if __name__ == '__main__':
     #print debug
     args = docopt(__doc__, 
-                  version='VCF-Toolbox v0.1',
                   argv = debug,
                   options_first=False)
     print args

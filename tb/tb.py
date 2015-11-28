@@ -32,20 +32,21 @@ debug = None
 if len(sys.argv) == 1:
     debug = [""]
 
+
 def getScriptPath():
     return os.path.dirname(tb.__file__)
 
+
 def main():
-    args = docopt(__doc__, 
-                  version='VCF-Toolbox v0.1',
-                  argv = debug,
+    args = docopt(__doc__,
+                  argv=debug,
                   options_first=True)
     argv = [args['<command>']] + args['<args>']
-    program_list = {"bwa":"bwa",
-                        "samtools":"samtools",
-                        "bcftools": "bcftools",
-                        "blast": "blastn",
-                        "muscle": "muscle"}
+    program_list = {"bwa": "bwa",
+                    "samtools": "samtools",
+                    "bcftools": "bcftools",
+                    "blast": "blastn",
+                    "muscle": "muscle"}
     if args["<command>"] == "setup":
         """
             Use Homebrew to install programs!
@@ -72,7 +73,7 @@ def main():
                 puts(colored.blue("Programs successfully installed!"))
         else:
             with indent(4):
-                puts(colored.red("Error: Not all programs successfully installed: "  + ", ".join(program_installed)))
+                puts(colored.red("Error: Not all programs successfully installed: " + ", ".join(program_installed)))
     elif args["<command>"] == "":
         print(__doc__)
         for prog in program_list.values():
@@ -80,11 +81,11 @@ def main():
                 check_output(["which", prog])
             except CalledProcessError:
                 with indent(4):
-                    puts(colored.red(prog + " not installed. Use a package manager to install or try using 'tb.py setup'\n"))
-    elif args['<command>'] in ['tajima', 'filter', 'call', 'primer','genome','rename','phylo','freq',"geno","vcf2tsv"]:
+                    puts(
+                        colored.red(prog + " not installed. Use a package manager to install or try using 'tb.py setup'\n"))
+    elif args['<command>'] in ['tajima', 'filter', 'call', 'primer', 'genome', 'rename', 'phylo', 'freq', "geno", "vcf2tsv"]:
         comm = ['python', getScriptPath() + '/' + args["<command>"] + ".py"] + argv
         exit(call(comm))
 
 if __name__ == '__main__':
     main()
-
