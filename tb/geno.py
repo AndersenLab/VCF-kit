@@ -20,15 +20,17 @@ from utils.fasta import *
 import sys
 import math
 from signal import signal, SIGPIPE, SIG_DFL
-signal(SIGPIPE,SIG_DFL) 
+signal(SIGPIPE, SIG_DFL)
 np.set_printoptions(threshold=np.nan)
 
+
 def phred2p(phred):
-    return 10**(phred/-10.0)
- 
+    return 10**(phred / -10.0)
+
+
 def GL2PL(gl):
     """ Converts Genotype likelyhoods to phred scaled (PL) genotype likelyhoods. """
-    return -int(gl*10)
+    return -int(gl * 10)
 
 debug = None
 if len(sys.argv) == 1:
@@ -36,10 +38,10 @@ if len(sys.argv) == 1:
 
 
 if __name__ == '__main__':
-    #print debug
-    args = docopt(__doc__, 
+    # print debug
+    args = docopt(__doc__,
                   version='VCF-Toolbox v0.1',
-                  argv = debug,
+                  argv=debug,
                   options_first=False)
     # Locate Reference
     v = vcf(args["<vcf>"])
@@ -69,7 +71,7 @@ if __name__ == '__main__':
                 # Get Sample information and count
                 samples = line.split("\t")[9:]
             elif line.startswith("##FORMAT=<ID=GL,"):
-                 line = """##FORMAT=<ID=PL,Number=G,Type=Integer,Description="List of Phred-scaled genotype likelihoods">"""
+                line = """##FORMAT=<ID=PL,Number=G,Type=Integer,Description="List of Phred-scaled genotype likelihoods">"""
             elif line.startswith("#"):
                 # Add Info line for het polarization flag
                 if line.startswith("##FORMAT") and format_added == False:
@@ -81,9 +83,9 @@ if __name__ == '__main__':
                     # Replace GL with PL scores.
                     line = line.split('\t')
                     GL_loc = line[8].split(":").index("GL")
-                    line[8] = line[8].replace("GL","PL")
+                    line[8] = line[8].replace("GL", "PL")
                     geno_set = []
-                    for k,v in enumerate(line[9:]):
+                    for k, v in enumerate(line[9:]):
                         GT = v.split(":")
                         GL_set = GT[GL_loc].split(",")
                         try:
@@ -93,43 +95,44 @@ if __name__ == '__main__':
                         geno_set.append(':'.join(GT))
                         line = line[0:9] + geno_set
                     line = '\t'.join(l)
-                line = line.strip().split("\t")
-                if line[8].find("PL") > -1 and len(line[4].split(",")) == 1 and line[8].find("HP") == -1:
-                    PL = line[8].split(":").index("PL")
-                    add_HP_flag = 0
-                    for k,v in enumerate(line[9:]):
-                        PL_set = v.split(":")[PL].split(",")
-                        v = v.split(":")
-                        if len(PL_set) == 3:
-                            PL_set = [phred2p(int(i)) for i in PL_set]
-                            log_score = -math.log10(PL_set[0]/PL_set[2])
-                            if add_HP_flag == 0:
-                                if line[8].find("HP") == -1:
-                                    line[8] = line[8] + ":HP" 
-                                add_HP_flag = 1
-                            if (log_score < -2):
-                                v[0] = "0/0"
-                                if v[-1] not in ["AA","AB","BB"]:
-                                    line[k+9] = v + ["AA"]
+                if line.find("0/1") > 0:
+                    line = line.strip().split("\t")
+                    if line[8].find("PL") > -1 and len(line[4].split(",")) == 1 and line[8].find("HP") == -1:
+                        PL = line[8].split(":").index("PL")
+                        add_HP_flag = 0
+                        for k, v in enumerate(line[9:]):
+                            PL_set = v.split(":")[PL].split(",")
+                            v = v.split(":")
+                            if len(PL_set) == 3:
+                                PL_set = [phred2p(int(i)) for i in PL_set]
+                                log_score = -math.log10(PL_set[0] / PL_set[2])
+                                if add_HP_flag == 0:
+                                    if line[8].find("HP") == -1:
+                                        line[8] = line[8] + ":HP"
+                                    add_HP_flag = 1
+                                if (log_score < -2):
+                                    v[0] = "0/0"
+                                    if v[-1] not in ["AA", "AB", "BB"]:
+                                        line[k + 9] = v + ["AA"]
+                                    else:
+                                        line[k + 9] = v[0:-1] + ["AA"]
+                                elif (log_score > 2):
+                                    v[0] = "1/1"
+                                    if v[-1] not in ["AA", "AB", "BB"]:
+                                        line[k + 9] = v + ["BB"]
+                                    else:
+                                        line[k + 9] = v[0:-1] + ["BB"]
                                 else:
-                                    line[k+9] = v[0:-1] + ["AA"]
-                            elif (log_score > 2):
-                                v[0] = "1/1"
-                                if v[-1] not in ["AA","AB","BB"]:
-                                    line[k+9] = v + ["BB"]
-                                else:
-                                    line[k+9] = v[0:-1] + ["BB"]
+                                    v[0] = "0/1"
+                                    if v[-1] not in ["AA", "AB", "BB"]:
+                                        line[k + 9] = v + ["AB"]
+                                    else:
+                                        line[k + 9] = v[0:-1] + ["AB"]
                             else:
-                                v[0] = "0/1"
-                                if v[-1] not in ["AA","AB","BB"]:
-                                    line[k+9] = v + ["AB"]
+                                if add_HP_flag == 0:
+                                    line[k + 9] = v
                                 else:
-                                    line[k+9] = v[0:-1] + ["AB"]
-                        else:
-                            if add_HP_flag == 0:
-                                line[k+9] = v
-                            else:
-                                line[k+9] = v + ["."]
-                        line[k+9] = ":".join(line[k+9])
-                line = "\t".join(line)
+                                    line[k + 9] = v + ["."]
+                            line[k + 9] = ":".join(line[k + 9])
+                    line = "\t".join(line)
             print(line)

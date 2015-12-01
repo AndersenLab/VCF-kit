@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """
 usage:
-  tb primer [--ref=<reference>] <vcf>
-  tb primer snpsnp [--ref=<reference>] <vcf>
+  tb primer [--ref=<reference> --sample=<sample>] <vcf>
+  tb primer snpsnp [--ref=<reference> --sample=<sample>] <vcf>
 
 Example
 
@@ -103,7 +103,6 @@ class seq_vcf(vcf):
 if __name__ == '__main__':
     #print debug
     args = docopt(__doc__, 
-                  version='VCF-Toolbox v0.1',
                   argv = debug,
                   options_first=False)
     print args
