@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  tb filter (REF|HET|ALT|MISSING) [--min=<min> --max=<max>] <vcf>
+  tb filter (REF|HET|ALT|MISSING) [--min=<min> --max=<max> --soft-filter=<soft> --mode=<mode>] <vcf>
 
 Example
 
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     # Output header
     sys.stdout.write(v.raw_header)
     for line in v:
-        ok_to_print = True
+        filtered = False
         f["ALT"] = line.num_hom_alt
         f["HET"] = line.num_het
         f["REF"] = line.num_hom_ref
@@ -71,9 +71,21 @@ if __name__ == '__main__':
         f["r_MISSING"] = f["MISSING"] / n_samples
         if args["--min"]:
             if f[filter_key_min] < filter_val_min:
-                ok_to_print = False
+                filtered = True
         if args["--max"]:
             if f[filter_key_max] > filter_val_max:
-                ok_to_print = False
-        if ok_to_print:
+                filtered = True
+        if args["--soft-filter"]:
+            if filtered is False:
+                sys.stdout.write(str(line))
+            else:
+                line = str(line).split("\t")
+                if args["--mode"] == "+":
+                    if line[6] == "PASS":
+                        line[6] = ""
+                    line[6] = ';'.join([line[6]] + [args["--soft-filter"]]).strip(";")
+                elif args["--mode"] == "x":
+                    line[6] = args["--soft-filter"]
+                sys.stdout.write('\t'.join(line))
+        elif filtered is False:
             sys.stdout.write(str(line))
