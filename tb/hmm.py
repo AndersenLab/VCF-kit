@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  tb hmm [--alt=<alt_sample>] <vcf>
+  tb hmm [--alt=<alt_sample> --] <vcf>
 
 Example
 
@@ -9,10 +9,11 @@ options:
   -h --help                   Show this screen.
   --version                   Show version.
 
-
-
 """
 from docopt import docopt
+# Suppress the rocket ship!
+import matplotlib
+matplotlib.use("Agg")
 from utils.vcf import *
 from utils.fasta import *
 from collections import defaultdict
@@ -78,7 +79,6 @@ if __name__ == '__main__':
     chromosome = []
     positions = []
 
-    print args
     if args["--alt"]:
         # Subset by sample
         alt_sample = args["--alt"]
@@ -101,7 +101,7 @@ if __name__ == '__main__':
         sequence = [to_model[x[2]] for x in sample_gt]
         if sequence:
             results = model.forward_backward( sequence )[1]
-            result_gt = [from_model[x] for x in np.greater(results[:,0],results[:,1])]
+            result_gt = [from_model[x] for x in np.greater(results[:,1],results[:,0])]
             results = ((a,b,c,d) for (a,b,c),d in zip(sample_gt, result_gt))
 
             # Output results
@@ -120,4 +120,6 @@ if __name__ == '__main__':
                 last_contig = chrom
                 last_pos = pos
                 n += 1
+            out = '\t'.join(map(str,[contig, start, end, sample, last_pred]))
+            print(out)
 
