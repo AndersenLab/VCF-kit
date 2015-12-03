@@ -8,6 +8,7 @@ usage:
 
 commands:
   tajima
+  hmm
   filter
   call
   primer
@@ -83,7 +84,7 @@ def main():
                 with indent(4):
                     puts(
                         colored.red(prog + " not installed. Use a package manager to install or try using 'tb.py setup'\n"))
-    elif args['<command>'] in ['tajima', 'filter', 'call', 'primer', 'genome', 'rename', 'phylo', 'freq', "geno", "vcf2tsv"]:
+    elif args['<command>'] in ['tajima', 'hmm', 'filter', 'call', 'primer', 'genome', 'rename', 'phylo', 'freq', "geno", "vcf2tsv"]:
         comm = ['python', getScriptPath() + '/' + args["<command>"] + ".py"] + argv
         exit(call(comm))
 
