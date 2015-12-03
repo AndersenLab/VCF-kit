@@ -76,10 +76,12 @@ if __name__ == '__main__':
             if f[filter_key_max] > filter_val_max:
                 filtered = True
         if args["--soft-filter"]:
+            line = str(line).split("\t")
+            if args["--mode"] == "x":
+                line[6] = "PASS"
             if filtered is False:
-                sys.stdout.write(str(line))
+                sys.stdout.write('\t'.join(line))
             else:
-                line = str(line).split("\t")
                 if args["--mode"] == "+":
                     if line[6] == "PASS":
                         line[6] = ""
