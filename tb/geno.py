@@ -56,7 +56,7 @@ if __name__ == '__main__':
                 # Add Info line for het polarization flag
                 if line.startswith("##FORMAT") and format_added == False:
                     format_added = True
-                    line = line + "\n##FORMAT=<ID=GF,Number=1,Type=String,Description=\"Genotype Filter\">"
+                    line = line + "\n##FORMAT=<ID=FT,Number=1,Type=String,Description=\"Genotype-level filter\">"
             else:
                 line = line.split("\t")
                 FILTER = line[6]
@@ -86,13 +86,13 @@ if __name__ == '__main__':
                     line[8] = line[8].replace("GL", "PL")
                     geno_set = []
                     for k, v in enumerate(line[9:]):
-                        GT = v.split(":")
-                        GL_set = GT[GL_loc].split(",")
+                        FT = v.split(":")
+                        GL_set = FT[GL_loc].split(",")
                         try:
-                            GT[GL_loc] = ','.join([str(GL2PL(float(i))) for i in GL_set])
+                            FT[GL_loc] = ','.join([str(GL2PL(float(i))) for i in GL_set])
                         except:
-                            GT[GL_loc] = ",".join(GL_set)
-                        geno_set.append(':'.join(GT))
+                            FT[GL_loc] = ",".join(GL_set)
+                        geno_set.append(':'.join(FT))
                         line = line[0:9] + geno_set
                     line = '\t'.join(l)
                 if line.find("0/1") > 0:
