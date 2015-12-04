@@ -7,8 +7,8 @@ def test_tajima():
     if err:
         raise Exception(err)
     m = hashlib.md5()
-    m.update(out)
-    assert m.hexdigest() == "d41d8cd98f00b204e9800998ecf8427e"
+    m.update(str(out.splitlines()))
+    assert m.hexdigest() == "d751713988987e9331980363e24189ce"
 
 
 def test_vcf2tsv_long():
@@ -16,13 +16,13 @@ def test_vcf2tsv_long():
     if err:
         raise Exception(err)
     m = hashlib.md5()
-    m.update(out)
-    assert m.hexdigest() == "5d36ceaf5298e6c63b76cd13eefac647"
+    m.update(str(out.splitlines()))
+    assert m.hexdigest() == "38ec18fad37b9f43e0d5b9e5f6276e79"
 
 def test_vcf2tsv_wide():
     out, err = Popen(["tb","vcf2tsv","wide","--print-header","test.vcf.gz"], stdout = PIPE).communicate()
     if err:
         raise Exception(err)
     m = hashlib.md5()
-    m.update(out)
-    assert m.hexdigest() == "0fed86670ec7d2d2cae9b108b70d39d9"
+    m.update(str(out.splitlines()))
+    assert m.hexdigest() == "eca9efc25822aab59dfe29c42c1b01fc"
