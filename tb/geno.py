@@ -60,7 +60,7 @@ if __name__ == '__main__':
             else:
                 line = line.split("\t")
                 FILTER = line[6]
-                line[8] = line[8] + ":" + "GF"
+                line[8] = line[8] + ":" + "FT"
                 line[9:] = [x + ":" + FILTER for x in line[9:]]
                 line = '\t'.join(line)
             sys.stdout.write(line + "\n")
