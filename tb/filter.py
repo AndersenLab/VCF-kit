@@ -43,22 +43,38 @@ if __name__ == '__main__':
     filter_s = [x for x in args.values() if x in ["REF","HET","ALT","MISSING"]][0]
     # Filter by rate or by number?
     if args["--min"]:
+        direction = "<"
         if int(float(args["--min"])) != float(args["--min"]):
             filter_key_min = "r_" + filter_s
             filter_val_min = float(args["--min"])
+            filter_type = "FREQUENCY"
         else:
             filter_key_min = filter_s
             filter_val_min = int(float(args["--min"]))
+            filter_type = "COUNT"
+        filter_value = filter_val_min
     if args["--max"]:
+        direction = ">"
         if int(float(args["--max"])) != float(args["--max"]):
             filter_key_max = "r_" + filter_s
             filter_val_max = float(args["--max"])
+            filter_type = "FREQUENCY"
         else:
             filter_key_max = filter_s
             filter_val_max = int(float(args["--max"]))
+            filter_type = "COUNT"
+        filter_value = filter_val_max
 
     # Output header
-    sys.stdout.write(v.raw_header)
+    header = v.raw_header.splitlines()
+    for n, i in enumerate(header):
+        if i.startswith("##FILTER") and args["--soft-filter"]:
+            filter_name = args["--soft-filter"]
+            filter_line = """##FILTER=<ID={filter_name},Description="Apply filter if {filter_type}({filter_s}) {direction} {filter_value}">""".format(**locals())
+            header.insert(n+1, filter_line)
+            break
+    header = '\n'.join(header)
+    sys.stdout.write(header)
     for line in v:
         filtered = False
         f["ALT"] = line.num_hom_alt
