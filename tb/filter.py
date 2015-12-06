@@ -73,7 +73,7 @@ if __name__ == '__main__':
             filter_line = """##FILTER=<ID={filter_name},Description="Apply filter if {filter_type}({filter_s}) {direction} {filter_value}">""".format(**locals())
             header.insert(n+1, filter_line)
             break
-    header = '\n'.join(header)
+    header = '\n'.join(header) + "\n"
     sys.stdout.write(header)
     for line in v:
         filtered = False
