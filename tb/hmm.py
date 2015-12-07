@@ -86,12 +86,12 @@ if __name__ == '__main__':
             positions.append(line.POS)
             gt_list.append(list(line.gt_types))
     gt_set = np.vstack([gt_list]).astype("int32")
-    gt_set[gt_set == 1] = -1 # Het
-    gt_set[gt_set == 2] = -1 # Missing
+    gt_set[gt_set == 1] = -9 # Het
+    gt_set[gt_set == 2] = -9 # Missing
     gt_set[gt_set == 3] = 1 # Alt
-
     # Result dict
     vcf_gt_out = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
+    print_header = True
 
     for sample, column in zip(v.samples, gt_set.T):
         sample_gt = zip(chromosome, positions, column)
@@ -99,10 +99,13 @@ if __name__ == '__main__':
         sequence = [to_model[x[2]] for x in sample_gt]
         if sequence:
             results = model.forward_backward( sequence )[1]
-            result_gt = [from_model[x] for x in np.greater(results[:,1],results[:,0])]
+            result_gt = [from_model[x] for x in np.greater(results[:,0],results[:,1])]
             results = ((a,b,c,d) for (a,b,c),d in zip(sample_gt, result_gt))
             # Output results
             if args["--vcf-out"] is False:
+                if print_header:
+                    print("chrom\tstart\tend\tsample\tgt\tsites")
+                    print_header = False
                 n = 0
                 site_count = 0
                 last_contig = "null"
@@ -125,21 +128,20 @@ if __name__ == '__main__':
                 print(out)
             elif args["--vcf-out"]:
                 for chrom, pos, orig, pred in results:
-                    vcf_gt_out[chrom][pos][sample] = [orig, pred]
+                    vcf_gt_out[chrom][pos][sample] = {'orig': orig, 'pred' : pred}
 
 
     if args["--vcf-out"]:
         # Output vcf
-        print(v.insert_header_line("##FORMAT=<ID=GT_ORIG,Number=1,Type=String,Description=\"Original Genotype replaced by HMM\">"))
         v = vcf(args["<vcf>"])
+        print(v.insert_header_line("##FORMAT=<ID=GT_ORIG,Number=1,Type=String,Description=\"Original Genotype replaced by HMM\">"))
         for n, line in enumerate(v):
             line = variant_line(line)
-            if line.has_gt:
+            if line.has_gt and line.chrom in chromosome and line.pos in positions:
                 for s, sample in enumerate(v.samples):
                     orig_pred = vcf_gt_out[line.chrom][line.pos][sample]
                     if len(orig_pred) > 0:
-                        #print sample, orig_pred, to_gt[orig_pred[1]], to_gt[orig_pred[1]]
-                        line.modify_gt_format(s, "GT", to_gt[orig_pred[1]])
-                        line.modify_gt_format(s, "GT_ORIG", to_gt[orig_pred[0]])
-            print(line)
+                        line.modify_gt_format(s, "GT", to_gt[orig_pred['pred']])
+                        line.modify_gt_format(s, "GT_ORIG", to_gt[orig_pred['orig']])
+                print(line)
 
