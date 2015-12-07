@@ -23,7 +23,8 @@ from yahmm import *
 import itertools
 import numpy as np
 from pprint import pprint as pp
-
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE,SIG_DFL) 
 
 # Setup hmm
 model = Model( name="RIL_GT" )
@@ -47,14 +48,12 @@ model.add_transition( alt, model.end, 0.0001 )
 model.bake( verbose=True )
 
 to_model = {0:'ref', 1: 'alt'}
-to_gt = {1:'0/0', 2: '1/1'}
-from_model = {True: 0, False: 1}
-GT_Class = {True: 0, False: 1}
-GT = {True: 0, 'alt': 1}
+to_gt = {0:'0/0', 1: '1/1'}
+from_model = {True: 1, False: 0}
 
 debug = None
 if len(sys.argv) == 1:
-    debug = ["hmm", "--alt=CB4856", "--vcf-out", "../test.vcf.gz"]
+    debug = ["hmm", "--alt=CB4856",  "../test.vcf.gz"]
 
 if __name__ == '__main__':
     args = docopt(__doc__,
@@ -101,7 +100,7 @@ if __name__ == '__main__':
         if sequence:
             results = model.forward_backward( sequence )[1]
             result_gt = [from_model[x] for x in np.greater(results[:,1],results[:,0])]
-            results = ((a,b,c,d+1) for (a,b,c),d in zip(sample_gt, result_gt))
+            results = ((a,b,c,d) for (a,b,c),d in zip(sample_gt, result_gt))
             # Output results
             if args["--vcf-out"] is False:
                 n = 0
@@ -112,7 +111,7 @@ if __name__ == '__main__':
                     site_count += 1
                     if chrom != last_contig or pred != last_pred:
                         if n > 0:
-                            out = '\t'.join(map(str,[contig, start, end, sample, last_pred, site_count]))
+                            out = '\t'.join(map(str,[contig, start, end, sample, last_pred+1, site_count]))
                             print(out)
                             site_count = 0
                         contig = chrom
@@ -122,11 +121,11 @@ if __name__ == '__main__':
                     last_contig = chrom
                     last_pos = pos
                     n += 1
-                out = '\t'.join(map(str,[contig, start, end, sample, last_pred, site_count]))
+                out = '\t'.join(map(str,[contig, start, end, sample, last_pred+1, site_count]))
                 print(out)
             elif args["--vcf-out"]:
                 for chrom, pos, orig, pred in results:
-                    vcf_gt_out[chrom][pos][sample] = [orig+1, pred]
+                    vcf_gt_out[chrom][pos][sample] = [orig, pred]
 
 
     if args["--vcf-out"]:
@@ -139,7 +138,8 @@ if __name__ == '__main__':
                 for s, sample in enumerate(v.samples):
                     orig_pred = vcf_gt_out[line.chrom][line.pos][sample]
                     if len(orig_pred) > 0:
+                        #print sample, orig_pred, to_gt[orig_pred[1]], to_gt[orig_pred[1]]
                         line.modify_gt_format(s, "GT", to_gt[orig_pred[1]])
-                        line.modify_gt_format(s, "GT_ORIG", to_gt[orig_pred[1]])
+                        line.modify_gt_format(s, "GT_ORIG", to_gt[orig_pred[0]])
             print(line)
 
