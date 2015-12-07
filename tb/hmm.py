@@ -140,8 +140,7 @@ if __name__ == '__main__':
     if args["--vcf-out"]:
         hmm_gt = np.hstack([hmm_gt_set]).T
         v = vcf(args["<vcf>"])
-        # print(v.insert_header_line("##FORMAT=<ID=GT_ORIG,Number=1,Type=String,Description=\"Original
-        # Genotype replaced by HMM\">"))
+        print(v.insert_header_line("##FORMAT=<ID=GT_ORIG,Number=1,Type=String,Description=\"Original Genotype replaced by HMM\">"))
         for n, line in enumerate(v):
             line = variant_line(line)
             if line.has_gt and line.chrom in chromosome and line.pos in positions:
