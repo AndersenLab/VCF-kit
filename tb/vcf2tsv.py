@@ -69,7 +69,6 @@ if __name__ == '__main__':
 
     # Construct Query String
     print_header = ""
-    print args
     if args["--print-header"]:
         print_header = "--print-header"
     if args["long"]:
