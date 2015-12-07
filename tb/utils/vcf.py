@@ -3,6 +3,7 @@ from collections import OrderedDict, deque
 from itertools import islice
 from clint.textui import colored, puts, indent
 import re
+from copy import copy
 import os
 import numpy as np
 import sys
@@ -58,6 +59,15 @@ class vcf(cyvcf2):
             Description="(?P<desc>.*)"
             >''', re.VERBOSE)
         self.format_set = {x["id"]: x for x in [m.groupdict() for m in r.finditer(self.raw_header)]}
+
+        self.header = copy(self.raw_header)
+
+    def insert_header_line(self, header_line):
+        header = self.header.splitlines()
+        header.insert(len(header)-1, header_line)
+        self.header = '\n'.join(header)
+        return self.header
+
 
     def window(self, shift_method, window_size, step_size = None):
         """
@@ -258,4 +268,41 @@ class variant_interval(deque):
     #    formatted_variants = "\t".join(formatted_variants)
     #    interval = self.interval()
     #    return "{0}:{1}-{2}".format(*self.interval()) + " -> " + formatted_variants
+
+class variant_line:
+    def __init__(self, line):
+        line = str(line).strip().split("\t")
+        self.line = line
+        self.chrom = line[0]
+        self.pos = int(line[1])
+        self.format_field = line[8].split(":")
+        self.has_gt = False
+        if "GT" in self.format_field:
+            self.gt_loc = self.format_field.index("GT")
+            self.has_gt = True
+
+    def __getitem__(self, i):
+        return self.line[i]
+
+    def __setitem__(self, i, val):
+        self.line[i] = val
+
+    def append_format_flag(self, flag_name):
+        if flag_name not in self.format_field:
+            self.format_field += [flag_name]
+        return self.format_field.index(flag_name)
+
+    def modify_gt_format(self, i, flag_name, val):
+        i += 9
+        gt_mod = self.line[i].split(":")
+        flag_index = self.append_format_flag(flag_name)
+        if len(gt_mod) == flag_index:
+            gt_mod += [val]
+        else:
+            gt_mod[flag_index] = val
+        self.line[i] = ':'.join(gt_mod)
+
+    def __str__(self):
+        self.line[8] = ':'.join(self.format_field)
+        return '\t'.join(self.line)
 
