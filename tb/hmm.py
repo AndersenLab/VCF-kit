@@ -29,26 +29,26 @@ signal(SIGPIPE, SIG_DFL)
 # Setup hmm
 model = Model(name="RIL_GT")
 
-ref = State(DiscreteDistribution({'ref': 0.97, 'alt': 0.03}), name = 'ref')
-alt = State(DiscreteDistribution({'ref': 0.03, 'alt': 0.97}), name = 'alt')
+ref = State(DiscreteDistribution({'ref': 0.90, 'alt': 0.10}), name = 'ref')
+alt = State(DiscreteDistribution({'ref': 0.10, 'alt': 0.90}), name = 'alt')
 
 model.add_transition(model.start, ref, 0.5)
 model.add_transition(model.start, alt, 0.5)
 
 # Transition matrix, with 0.05 subtracted from each probability to add to
 # the probability of exiting the hmm
-model.add_transition(ref, ref, 0.9998)
-model.add_transition(ref, alt, 0.0001)
-model.add_transition(alt, ref, 0.0001)
-model.add_transition(alt, alt, 0.9998)
+model.add_transition(ref, ref, 0.94)
+model.add_transition(ref, alt, 0.005)
+model.add_transition(alt, ref, 0.005)
+model.add_transition(alt, alt, 0.94)
 
-model.add_transition(ref, model.end, 0.0001)
-model.add_transition(alt, model.end, 0.0001)
+model.add_transition(ref, model.end, 0.01)
+model.add_transition(alt, model.end, 0.01)
 
-model.bake(verbose=True)
+model.bake(verbose=False)
 
 to_model = {0: 'ref', 1: 'alt'}
-to_gt = {0: '0/0', 1: '1/1', None: "./."}
+to_gt = {0: '0/0', 1: '1/1'}
 from_model = {True: 1, False: 0}
 
 debug = None
@@ -125,10 +125,6 @@ if __name__ == '__main__':
             else:
                 result_gt = [from_model[x] for x in np.greater(results[:, 0], results[:, 1])]
             results = ((a, b, c, d) for (a, b, c), d in zip(sample_gt, result_gt))
-            # Output results
-            if print_header:
-                print("chrom\tstart\tend\tsample\tgt\tsites")
-                print_header = False
             n = 0
             site_count = 0
             last_contig = "null"
@@ -138,6 +134,10 @@ if __name__ == '__main__':
                 if chrom != last_contig or pred != last_pred:
                     if n > 0:
                         if args["--vcf-out"] is False:
+                            # Output results
+                            if print_header:
+                                print("chrom\tstart\tend\tsample\tgt\tsites")
+                                print_header = False
                             out = '\t'.join(map(str, [contig, start, end, sample, last_pred + 1, site_count]))
                             print(out)
                         else:
@@ -165,5 +165,7 @@ if __name__ == '__main__':
                 for sample_col, sample in enumerate(v.samples):
                     gt_orig = line.fetch_gt_from_index(sample_col)
                     line.modify_gt_format(sample_col, "GT_ORIG", gt_orig)
-                    line.modify_gt_format(sample_col, "GT", to_gt[gtr.get(line.chrom, line.pos, sample)])
+                    new_gt = gtr.get(line.chrom, line.pos, sample)
+                    if new_gt:
+                        line.modify_gt_format(sample_col, "GT", to_gt[new_gt])
                 print(line)
