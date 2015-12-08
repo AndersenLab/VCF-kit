@@ -29,8 +29,8 @@ signal(SIGPIPE, SIG_DFL)
 # Setup hmm
 model = Model(name="RIL_GT")
 
-ref = State(DiscreteDistribution({'ref': 0.97, 'alt': 0.03}))
-alt = State(DiscreteDistribution({'ref': 0.03, 'alt': 0.97}))
+ref = State(DiscreteDistribution({'ref': 0.97, 'alt': 0.03}), name = 'ref')
+alt = State(DiscreteDistribution({'ref': 0.03, 'alt': 0.97}), name = 'alt')
 
 model.add_transition(model.start, ref, 0.5)
 model.add_transition(model.start, alt, 0.5)
@@ -104,7 +104,10 @@ if __name__ == '__main__':
         sequence = [to_model[x[2]] for x in sample_gt]
         if sequence:
             results = model.forward_backward(sequence)[1]
-            result_gt = [from_model[x] for x in np.greater(results[:, 0], results[:, 1])]
+            if model.states[0].name == 'ref':
+                result_gt = [from_model[x] for x in np.greater(results[:, 1], results[:, 0])]
+            else:
+                result_gt = [from_model[x] for x in np.greater(results[:, 0], results[:, 1])]
             results = ((a, b, c, d) for (a, b, c), d in zip(sample_gt, result_gt))
             # Output results
             if args["--vcf-out"] is False:
@@ -138,7 +141,7 @@ if __name__ == '__main__':
                 hmm_gt_set.append(np.vstack([out_list]).astype("int32"))
 
     if args["--vcf-out"]:
-        hmm_gt = np.hstack([hmm_gt_set]).T
+        hmm_gt = np.concatenate(*hmm_gt_set).T
         v = vcf(args["<vcf>"])
         print(v.insert_header_line("##FORMAT=<ID=GT_ORIG,Number=1,Type=String,Description=\"Original Genotype replaced by HMM\">"))
         for n, line in enumerate(v):
@@ -150,4 +153,4 @@ if __name__ == '__main__':
                         sample_col, chrom, pos, orig, pred = gt[0]
                         line.modify_gt_format(sample_col, "GT", to_gt[pred])
                         line.modify_gt_format(sample_col, "GT_ORIG", to_gt[orig])
-                        print(line)
+                print(line)
