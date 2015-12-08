@@ -29,8 +29,8 @@ signal(SIGPIPE, SIG_DFL)
 # Setup hmm
 model = Model(name="RIL_GT")
 
-ref = State(DiscreteDistribution({'ref': 0.90, 'alt': 0.10}), name = 'ref')
-alt = State(DiscreteDistribution({'ref': 0.10, 'alt': 0.90}), name = 'alt')
+ref = State(DiscreteDistribution({'ref': 0.97, 'alt': 0.03}), name = 'ref')
+alt = State(DiscreteDistribution({'ref': 0.03, 'alt': 0.97}), name = 'alt')
 
 model.add_transition(model.start, ref, 0.5)
 model.add_transition(model.start, alt, 0.5)
