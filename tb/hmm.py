@@ -141,16 +141,15 @@ if __name__ == '__main__':
                 hmm_gt_set.append(np.vstack([out_list]).astype("int32"))
 
     if args["--vcf-out"]:
-        hmm_gt = np.concatenate(*hmm_gt_set).T
+        gt = np.concatenate(hmm_gt_set)
         v = vcf(args["<vcf>"])
         print(v.insert_header_line("##FORMAT=<ID=GT_ORIG,Number=1,Type=String,Description=\"Original Genotype replaced by HMM\">"))
         for n, line in enumerate(v):
             line = variant_line(line)
             if line.has_gt and line.chrom in chromosome and line.pos in positions:
-                for gt in hmm_gt:
-                    gt = gt[(chrom_to_factor[line.chrom] == gt[:, 1]) & (gt[:, 2] == line.pos)]
-                    if len(gt) > 0:
-                        sample_col, chrom, pos, orig, pred = gt[0]
-                        line.modify_gt_format(sample_col, "GT", to_gt[pred])
-                        line.modify_gt_format(sample_col, "GT_ORIG", to_gt[orig])
+                out_gt_set = gt[(chrom_to_factor[line.chrom] == gt[:, 1]) & (gt[:, 2] == line.pos)]
+                for out_gt in out_gt_set:
+                    sample_col, chrom, pos, orig, pred = out_gt
+                    line.modify_gt_format(sample_col, "GT", to_gt[pred])
+                    line.modify_gt_format(sample_col, "GT_ORIG", to_gt[orig])
                 print(line)
