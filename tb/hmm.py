@@ -56,11 +56,18 @@ if len(sys.argv) == 1:
     debug = ["hmm", "--alt=CB4856", "--vcf-out",  "../test.vcf.gz"]
 
 class ranges:
+    """
+        Class for storing genomic ranges of genotypes.
+    """
     def __init__(self):
         self.range = defaultdict(list)
 
-    def add(self, chrom, start, end, sample, gt):
-        self.range[sample].append([chrom, int(start), int(end), int(gt)])
+    def add(self, chrom, start, end, sample, gt, site_count, out = False):
+        if out is False:
+            print('\t'.join(map(str, [chrom, start, end, sample, gt + 1, site_count])))
+        else:
+            self.range[sample].append([chrom, int(start), int(end), int(gt)])
+
 
     def get(self, qchrom, qpos, qsample):
         gt_found = [x for x in self.range[sample] if x[0] == qchrom and qpos >= x[1] and qpos <= x[2]]
@@ -111,8 +118,10 @@ if __name__ == '__main__':
     chrom_to_factor = {y: x for x, y in enumerate(set(chromosome))}
     sample_to_factor = {y: x for x, y in enumerate(v.samples)}
     hmm_gt_set = []
-    print_header = True
     gtr = ranges()
+
+    if args["--vcf-out"] is False:
+        print("chrom\tstart\tend\tsample\tgt\tsites")
 
     for sample, column in zip(v.samples, gt_set.T):
         sample_gt = zip(chromosome, positions, column)
@@ -128,20 +137,12 @@ if __name__ == '__main__':
             n = 0
             site_count = 0
             last_contig = "null"
-            last_pred = -1
+            last_pred = -8
             for chrom, pos, orig, pred in results:
                 site_count += 1
                 if chrom != last_contig or pred != last_pred:
                     if n > 0:
-                        if args["--vcf-out"] is False:
-                            # Output results
-                            if print_header:
-                                print("chrom\tstart\tend\tsample\tgt\tsites")
-                                print_header = False
-                            out = '\t'.join(map(str, [contig, start, end, sample, last_pred + 1, site_count]))
-                            print(out)
-                        else:
-                            gtr.add(chrom, start, end, sample, last_pred)
+                        gtr.add(contig, start, end, sample, last_pred, site_count, args["--vcf-out"] )
                         site_count = 0
                     contig = chrom
                     start = pos
@@ -150,11 +151,7 @@ if __name__ == '__main__':
                 last_contig = chrom
                 last_pos = pos
                 n += 1
-            if args["--vcf-out"] is False:
-                out = '\t'.join(map(str, [contig, start, end, sample, last_pred + 1, site_count]))
-                print(out)
-            else:
-                gtr.add(chrom, start, end, sample, last_pred)
+            gtr.add(contig, start, end, sample, last_pred, site_count, args["--vcf-out"] )
 
     if args["--vcf-out"]:
         v = vcf(args["<vcf>"])
@@ -166,6 +163,6 @@ if __name__ == '__main__':
                     gt_orig = line.fetch_gt_from_index(sample_col)
                     line.modify_gt_format(sample_col, "GT_ORIG", gt_orig)
                     new_gt = gtr.get(line.chrom, line.pos, sample)
-                    if new_gt:
+                    if new_gt is not None:
                         line.modify_gt_format(sample_col, "GT", to_gt[new_gt])
                 print(line)
