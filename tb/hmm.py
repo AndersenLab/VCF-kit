@@ -132,7 +132,7 @@ if __name__ == '__main__':
             n = 0
             site_count = 0
             last_contig = "null"
-            last_pred = -1
+            last_pred = -8
             for chrom, pos, orig, pred in results:
                 site_count += 1
                 if chrom != last_contig or pred != last_pred:
@@ -158,6 +158,6 @@ if __name__ == '__main__':
                     gt_orig = line.fetch_gt_from_index(sample_col)
                     line.modify_gt_format(sample_col, "GT_ORIG", gt_orig)
                     new_gt = gtr.get(line.chrom, line.pos, sample)
-                    if new_gt:
+                    if new_gt is not None:
                         line.modify_gt_format(sample_col, "GT", to_gt[new_gt])
                 print(line)
