@@ -3,6 +3,7 @@ from utils import *
 from collections import defaultdict
 from pprint import pprint as pp
 import csv
+from clint.textui import puts_err
 from Bio.Blast import NCBIXML
 from Bio.Seq import Seq
 from cStringIO import StringIO
@@ -40,15 +41,14 @@ def autoconvert(s):
 def compare_fasta(chrom, start, ref, alt):
         for i in range(len(ref)):
             POS = i + start
-            if ref[i] == alt[i]:
-                print chrom, POS,  ref[i]
-            elif ref[i] != alt[i]:
-                print chrom, POS, ref[i], alt[i]
+            #if ref[i] == alt[i]:
+            #    print chrom, POS,  ref[i]
+            if ref[i] != alt[i]:
+                yield chrom, POS, ref[i], alt[i]
             else:
-                print chrom, POS
+                pass
 
-
-class blast_diff:
+class blast_call:
 
     def __init__(self, db):
         self.db = db
@@ -64,16 +64,15 @@ class blast_diff:
                           stdout=PIPE,
                           stderr=PIPE,
                           shell=True).communicate()
-        resp = map(autoconvert, resp.split("\n")[0].split("\t"))
-        resp = dict(zip(self.output_format.split(" "), resp))
-        print resp["sstart"], resp["send"], resp["sseq"]
-        if resp["sstart"] > resp["send"]:
-            print "REVERSAL"
-            resp["sseq"] = Seq(resp["sseq"]).reverse_complement()
-            resp["qseq"] = Seq(resp["qseq"]).reverse_complement()
-            resp["sstart"], resp["send"] = resp["send"], resp["sstart"]
-        print compare_fasta(resp["sacc"], resp["sstart"], resp["sseq"], resp["qseq"])
-        return resp
+        if resp:
+            resp = map(autoconvert, resp.split("\n")[0].split("\t"))
+            resp = dict(zip(self.output_format.split(" "), resp))
+            if resp["sstart"] > resp["send"]:
+                resp["sseq"] = Seq(resp["sseq"]).reverse_complement()
+                resp["qseq"] = Seq(resp["qseq"]).reverse_complement()
+                resp["sstart"], resp["send"] = resp["send"], resp["sstart"]
+            for x in compare_fasta(resp["sacc"], resp["sstart"], resp["sseq"], resp["qseq"]):
+                yield list(x) 
 
 
 class blastn:

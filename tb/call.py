@@ -1,17 +1,17 @@
 #! /usr/bin/env python
 """
 usage:
-  tb call <seq.fasta> [<vcf>] [--ref=<reference>]
+    tb call <seq.fasta> [<vcf>] [--ref=<reference>]
 
 options:
-  -h --help                   Show this screen.
-  --version                   Show version.
+    -h --help                   Show this screen.
+    --version                   Show version.
 
 """
 from docopt import docopt
 import tb
 from Bio import SeqIO
-from utils.blastn import blast_diff
+from utils.blastn import blast_call
 from utils.vcf import *
 from subprocess import Popen
 import sys
@@ -24,13 +24,13 @@ from Bio.Blast.Applications import NcbiblastxCommandline
 
 debug = None
 if len(sys.argv) == 1:
-    debug = ['genome', "test.vcf.gz"]
+        debug = ['genome', "test.vcf.gz"]
 
 if __name__ == '__main__':
     args = docopt(__doc__,
-                  version='VCF-Toolbox v0.1',
-                  argv=debug,
-                  options_first=False) 
+                version='VCF-Toolbox v0.1',
+                argv=debug,
+                options_first=False) 
 
     # Reference path - check that it exists
     module_path = os.path.split(os.path.realpath(__file__))[0]
@@ -38,10 +38,11 @@ if __name__ == '__main__':
 
     # Open fasta and read
     handle = open(args["<seq.fasta>"], "rU")
+    print "chrom\tpos\tref\talt\tsample"
     for record in SeqIO.parse(handle, "fasta") :
-        if record.id == "CB4856":
-          bl = blast_diff(reference)
-          r = bl.blast(record.seq)
+        bl = blast_call(reference)
+        for variant in bl.blast(record.seq):
+            print '\t'.join(map(str, variant + [record.name]))
 
     if args["<vcf>"]:
         concordance = True
