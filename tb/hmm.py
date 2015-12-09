@@ -56,13 +56,18 @@ if len(sys.argv) == 1:
     debug = ["hmm", "--alt=CB4856", "--vcf-out",  "../test.vcf.gz"]
 
 class ranges:
+    """
+        Class for storing genomic ranges of genotypes.
+    """
     def __init__(self):
         self.range = defaultdict(list)
 
     def add(self, chrom, start, end, sample, gt, site_count, out = False):
-        self.range[sample].append([chrom, int(start), int(end), int(gt)])
         if out is False:
             print('\t'.join(map(str, [chrom, start, end, sample, gt + 1, site_count])))
+        else:
+            self.range[sample].append([chrom, int(start), int(end), int(gt)])
+
 
     def get(self, qchrom, qpos, qsample):
         gt_found = [x for x in self.range[sample] if x[0] == qchrom and qpos >= x[1] and qpos <= x[2]]
