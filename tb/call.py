@@ -38,11 +38,11 @@ if __name__ == '__main__':
 
     # Open fasta and read
     handle = open(args["<seq.fasta>"], "rU")
-    print "chrom\tpos\tref\talt\tsample"
+    print "chrom\tpos\tref\talt\tsample\tdescription"
     for record in SeqIO.parse(handle, "fasta") :
         bl = blast_call(reference)
         for variant in bl.blast(record.seq):
-            print '\t'.join(map(str, variant + [record.name]))
+            print '\t'.join(map(str, variant + [record.name, record.description]))
 
     if args["<vcf>"]:
         concordance = True

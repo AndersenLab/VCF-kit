@@ -43,7 +43,7 @@ def compare_fasta(chrom, start, ref, alt):
             POS = i + start
             #if ref[i] == alt[i]:
             #    print chrom, POS,  ref[i]
-            if ref[i] != alt[i]:
+            if ref[i].upper() != alt[i].upper():
                 yield chrom, POS, ref[i], alt[i]
             else:
                 pass
