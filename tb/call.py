@@ -18,6 +18,8 @@ import sys
 from collections import defaultdict
 from clint.textui import colored, puts, indent, puts_err
 import os
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE, SIG_DFL)
 
 from Bio.Blast.Applications import NcbiblastxCommandline
 
@@ -38,7 +40,7 @@ if __name__ == '__main__':
 
     # Open fasta and read
     handle = open(args["<seq.fasta>"], "rU")
-    print "chrom\tpos\tref\talt\tsample\tdescription"
+    print "chrom\tpos\tref\tgt\tvariant_type\tsanger_start\tsanger_end\tsample\tdescription"
     for record in SeqIO.parse(handle, "fasta") :
         bl = blast_call(reference)
         for variant in bl.blast(record.seq):

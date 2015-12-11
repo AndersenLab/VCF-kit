@@ -47,7 +47,7 @@ def compare_fasta(chrom, start, ref, alt, resp, all_sites = False):
         i = 0
         while i < len(ref)-1:
             if alt[i+1] == "-":
-                # DELETION
+                variant_type = "deletion"
                 ref_out = ref[i]
                 alt_out = alt[i]
                 while alt[i+1] == "-":
@@ -55,7 +55,7 @@ def compare_fasta(chrom, start, ref, alt, resp, all_sites = False):
                     ref_out += ref[i]
                     alt_out += alt[i]
             elif ref[i+1] == "-":
-                # INSERTION
+                variant_type = "insertion"
                 ref_out = ref[i]
                 alt_out = alt[i]
                 while ref[i+1] == "-":
@@ -66,9 +66,10 @@ def compare_fasta(chrom, start, ref, alt, resp, all_sites = False):
                 len_insertions += len(ref_out) - 1
             else:
                 ref_out, alt_out = ref[i], alt[i]
+                variant_type = "snp"
             if ref_out != alt_out or (ref_out == alt_out and all_sites):
                 POS = i - len_insertions
-                yield chrom, POS + start, ref_out.strip("-"), alt_out.strip("-")
+                yield chrom, POS + start, ref_out.strip("-"), alt_out.strip("-"), variant_type, start, start + len(ref)
             i += 1
 
 
