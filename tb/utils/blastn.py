@@ -38,7 +38,7 @@ def autoconvert(s):
             pass
     return s
 
-def compare_fasta(chrom, start, ref, alt, resp, all_sites = False):
+def compare_fasta(chrom, start, end, ref, alt, resp, all_sites = False):
         insertion = False
         deletion = False
         ref_out = ""
@@ -62,14 +62,15 @@ def compare_fasta(chrom, start, ref, alt, resp, all_sites = False):
                     i += 1
                     ref_out += ref[i]
                     alt_out += alt[i]
-                # debug - show blast print resp["sseq"][i-20:i+20] + "\n" + resp["qseq"][i-20:i+20]
+                print resp["sseq"] + "\n" + resp["qseq"]
                 len_insertions += len(ref_out) - 1
             else:
                 ref_out, alt_out = ref[i], alt[i]
                 variant_type = "snp"
             if ref_out != alt_out or (ref_out == alt_out and all_sites):
                 POS = i - len_insertions
-                yield chrom, POS + start, ref_out.strip("-"), alt_out.strip("-"), variant_type, start, start + len(ref)
+                print ref, len(ref)
+                yield chrom, POS + start, ref_out.strip("-"), alt_out.strip("-"), variant_type, start, end
             i += 1
 
 
@@ -97,7 +98,7 @@ class blast_call:
                 resp["qseq"] = Seq(resp["qseq"]).reverse_complement()
                 resp["sstart"], resp["send"] = resp["send"], resp["sstart"]
             #print resp, "Y34D9A:19961..20887@620  Psnp=0.8227  VarD2=CG  Verified: No"
-            for x in compare_fasta(resp["sacc"], resp["sstart"], resp["sseq"], resp["qseq"], resp, False):
+            for x in compare_fasta(resp["sacc"], resp["sstart"], resp["send"], resp["sseq"], resp["qseq"], resp, False):
                 yield list(x) 
 
 
