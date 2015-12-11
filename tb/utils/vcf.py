@@ -302,6 +302,10 @@ class variant_line:
             gt_mod[flag_index] = val
         self.line[i] = ':'.join(gt_mod)
 
+    def fetch_gt_from_index(self, i):
+        i += 9
+        return self.line[i].split(":")[self.gt_loc]
+
     def __str__(self):
         self.line[8] = ':'.join(self.format_field)
         return '\t'.join(self.line)

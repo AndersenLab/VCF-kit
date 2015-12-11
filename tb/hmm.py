@@ -37,15 +37,15 @@ model.add_transition(model.start, alt, 0.5)
 
 # Transition matrix, with 0.05 subtracted from each probability to add to
 # the probability of exiting the hmm
-model.add_transition(ref, ref, 0.9998)
-model.add_transition(ref, alt, 0.0001)
-model.add_transition(alt, ref, 0.0001)
-model.add_transition(alt, alt, 0.9998)
+model.add_transition(ref, ref, 0.94)
+model.add_transition(ref, alt, 0.005)
+model.add_transition(alt, ref, 0.005)
+model.add_transition(alt, alt, 0.94)
 
-model.add_transition(ref, model.end, 0.0001)
-model.add_transition(alt, model.end, 0.0001)
+model.add_transition(ref, model.end, 0.01)
+model.add_transition(alt, model.end, 0.01)
 
-model.bake(verbose=True)
+model.bake(verbose=False)
 
 to_model = {0: 'ref', 1: 'alt'}
 to_gt = {0: '0/0', 1: '1/1'}
@@ -53,7 +53,29 @@ from_model = {True: 1, False: 0}
 
 debug = None
 if len(sys.argv) == 1:
-    debug = ["hmm", "--alt=CB4856",  "../test.vcf.gz"]
+    debug = ["hmm", "--alt=CB4856", "--vcf-out",  "../test.vcf.gz"]
+
+class ranges:
+    """
+        Class for storing genomic ranges of genotypes.
+    """
+    def __init__(self):
+        self.range = defaultdict(list)
+
+    def add(self, chrom, start, end, sample, gt, site_count, out = False):
+        if out is False:
+            print('\t'.join(map(str, [chrom, start, end, sample, gt + 1, site_count])))
+        else:
+            self.range[sample].append([chrom, int(start), int(end), int(gt)])
+
+
+    def get(self, qchrom, qpos, qsample):
+        gt_found = [x for x in self.range[sample] if x[0] == qchrom and qpos >= x[1] and qpos <= x[2]]
+        if gt_found:
+            return gt_found[0][3]
+        else:
+            return None
+
 
 if __name__ == '__main__':
     args = docopt(__doc__,
@@ -96,7 +118,10 @@ if __name__ == '__main__':
     chrom_to_factor = {y: x for x, y in enumerate(set(chromosome))}
     sample_to_factor = {y: x for x, y in enumerate(v.samples)}
     hmm_gt_set = []
-    print_header = True
+    gtr = ranges()
+
+    if args["--vcf-out"] is False:
+        print("chrom\tstart\tend\tsample\tgt\tsites")
 
     for sample, column in zip(v.samples, gt_set.T):
         sample_gt = zip(chromosome, positions, column)
@@ -109,47 +134,35 @@ if __name__ == '__main__':
             else:
                 result_gt = [from_model[x] for x in np.greater(results[:, 0], results[:, 1])]
             results = ((a, b, c, d) for (a, b, c), d in zip(sample_gt, result_gt))
-            # Output results
-            if args["--vcf-out"] is False:
-                if print_header:
-                    print("chrom\tstart\tend\tsample\tgt\tsites")
-                    print_header = False
-                n = 0
-                site_count = 0
-                last_contig = "null"
-                last_pred = -1
-                for chrom, pos, orig, pred in results:
-                    site_count += 1
-                    if chrom != last_contig or pred != last_pred:
-                        if n > 0:
-                            out = '\t'.join(map(str, [contig, start, end, sample, last_pred + 1, site_count]))
-                            print(out)
-                            site_count = 0
-                        contig = chrom
-                        start = pos
-                    end = pos
-                    last_pred = pred
-                    last_contig = chrom
-                    last_pos = pos
-                    n += 1
-                out = '\t'.join(map(str, [contig, start, end, sample, last_pred + 1, site_count]))
-                print(out)
-            elif args["--vcf-out"]:
-                out_list = []
-                for chrom, pos, orig, pred in results:
-                    out_list.append([sample_to_factor[sample], chrom_to_factor[chrom], pos, orig, pred])
-                hmm_gt_set.append(np.vstack([out_list]).astype("int32"))
+            n = 0
+            site_count = 0
+            last_contig = "null"
+            last_pred = -8
+            for chrom, pos, orig, pred in results:
+                site_count += 1
+                if chrom != last_contig or pred != last_pred:
+                    if n > 0:
+                        gtr.add(contig, start, end, sample, last_pred, site_count, args["--vcf-out"] )
+                        site_count = 0
+                    contig = chrom
+                    start = pos
+                end = pos
+                last_pred = pred
+                last_contig = chrom
+                last_pos = pos
+                n += 1
+            gtr.add(contig, start, end, sample, last_pred, site_count, args["--vcf-out"] )
 
     if args["--vcf-out"]:
-        gt = np.concatenate(hmm_gt_set)
         v = vcf(args["<vcf>"])
         print(v.insert_header_line("##FORMAT=<ID=GT_ORIG,Number=1,Type=String,Description=\"Original Genotype replaced by HMM\">"))
         for n, line in enumerate(v):
             line = variant_line(line)
             if line.has_gt and line.chrom in chromosome and line.pos in positions:
-                out_gt_set = gt[(chrom_to_factor[line.chrom] == gt[:, 1]) & (gt[:, 2] == line.pos)]
-                for out_gt in out_gt_set:
-                    sample_col, chrom, pos, orig, pred = out_gt
-                    line.modify_gt_format(sample_col, "GT", to_gt[pred])
-                    line.modify_gt_format(sample_col, "GT_ORIG", to_gt[orig])
+                for sample_col, sample in enumerate(v.samples):
+                    gt_orig = line.fetch_gt_from_index(sample_col)
+                    line.modify_gt_format(sample_col, "GT_ORIG", gt_orig)
+                    new_gt = gtr.get(line.chrom, line.pos, sample)
+                    if new_gt is not None:
+                        line.modify_gt_format(sample_col, "GT", to_gt[new_gt])
                 print(line)
