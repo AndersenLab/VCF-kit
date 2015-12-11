@@ -269,8 +269,16 @@ class variant_interval(deque):
     #    interval = self.interval()
     #    return "{0}:{1}-{2}".format(*self.interval()) + " -> " + formatted_variants
 
+class variant_set:
+    def __init__(self, ins, samples):
+        if type(ins) == str:
+            if samples:
+                self.variants = [variant_line(x, samples) for x in ins.splitlines()]
+            else:
+                self.variants =  [variant_line(x) for x in ins.splitlines()]
+
 class variant_line:
-    def __init__(self, line):
+    def __init__(self, line, sample_names = None):
         line = str(line).strip().split("\t")
         self.line = line
         self.chrom = line[0]
@@ -280,6 +288,8 @@ class variant_line:
         if "GT" in self.format_field:
             self.gt_loc = self.format_field.index("GT")
             self.has_gt = True
+        if sample_names:
+            self._sample_to_idx = dict(zip(sample_names, range(9, len(line))))
 
     def __getitem__(self, i):
         return self.line[i]
@@ -305,6 +315,12 @@ class variant_line:
     def fetch_gt_from_index(self, i):
         i += 9
         return self.line[i].split(":")[self.gt_loc]
+
+    def __getitem__(self, sample):
+        return self.line[self._sample_to_idx[sample]]
+
+    def __repr__(self):
+        return self.chrom + ":" + str(self.pos)
 
     def __str__(self):
         self.line[8] = ':'.join(self.format_field)

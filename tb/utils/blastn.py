@@ -38,9 +38,8 @@ def autoconvert(s):
             pass
     return s
 
-def compare_fasta(chrom, start, end, ref, alt, resp, all_sites = False):
-        insertion = False
-        deletion = False
+
+def compare_fasta(chrom, start, end, ref, alt, resp, all_sites=False):
         ref_out = ""
         alt_out = ""
         len_insertions = 0
@@ -62,14 +61,13 @@ def compare_fasta(chrom, start, end, ref, alt, resp, all_sites = False):
                     i += 1
                     ref_out += ref[i]
                     alt_out += alt[i]
-                print resp["sseq"] + "\n" + resp["qseq"]
                 len_insertions += len(ref_out) - 1
             else:
                 ref_out, alt_out = ref[i], alt[i]
                 variant_type = "snp"
             if ref_out != alt_out or (ref_out == alt_out and all_sites):
                 POS = i - len_insertions
-                print ref, len(ref)
+                print resp["sseq"][i-2:i], resp["sseq"][i] , resp["sseq"][i:i+40] + "\n" + resp["qseq"][i-2:i], resp["qseq"][i], resp["qseq"][i:i+40]
                 yield chrom, POS + start, ref_out.strip("-"), alt_out.strip("-"), variant_type, start, end
             i += 1
 
