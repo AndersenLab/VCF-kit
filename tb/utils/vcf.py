@@ -1,10 +1,12 @@
 from cyvcf2 import VCF as cyvcf2
+from cyvcf2 import Variant
 from collections import OrderedDict, deque
 from itertools import islice
 from clint.textui import colored, puts, indent
 import re
 from copy import copy
 import os
+from . import autoconvert
 import numpy as np
 import sys
 import fileinput
@@ -67,6 +69,19 @@ class vcf(cyvcf2):
         header.insert(len(header)-1, header_line)
         self.header = '\n'.join(header)
         return self.header
+
+    def fetch_variants(self, chrom, start, end, samples = ""):
+        """
+            Use bcftools to fetch variants with view or query 
+            from a given interval, optionally subset by sample.
+        """
+        if samples:
+            sample_query = "--samples=" + ','.join(samples)
+        region = "{chrom}:{start}-{end}".format(**locals())
+        comm = filter(len,["bcftools", "view", "-H", sample_query , self.filename, region])
+        comm = Popen(comm, stdout=PIPE, stderr=PIPE)
+        for line in comm.stdout:
+            yield variant_line(line, samples)
 
 
     def window(self, shift_method, window_size, step_size = None):
@@ -156,6 +171,7 @@ class vcf(cyvcf2):
     def fasta(self, region, sample = "", het=False, hom=True):
         """
             Fetch a fasta sequence; spike with variant calls for a given sample
+            !!! - REPLACE THIS WITH PYFASTA:::FastaVariant Conensus - OR samtools
         """
         chrom, start, end = re.split("[:-]", region)
         start, end = int(start), int(end)
@@ -283,6 +299,10 @@ class variant_line:
         self.line = line
         self.chrom = line[0]
         self.pos = int(line[1])
+        self.ref = line[3]
+        self.gt_dict = dict([(n+1,y) for n,y in enumerate(line[4].split(","))] + [(".",".")])
+        self.gt_dict[0] = self.ref
+        self.alt = self.gt_dict[1]
         self.format_field = line[8].split(":")
         self.has_gt = False
         if "GT" in self.format_field:
@@ -316,8 +336,26 @@ class variant_line:
         i += 9
         return self.line[i].split(":")[self.gt_loc]
 
+    def gt(self, sample):
+        if type(sample) == int:
+            return self.fetch_gt_from_index(self._sample_to_idx[sample])
+        else:
+            return self.line[self._sample_to_idx[sample]].split(":")[self.gt_loc]
+
+    def tgt(self, sample, het = True):
+        """
+            Return formatted genotype; Homozygous calls only.
+        """
+        gt = self.line[self._sample_to_idx[sample]].split(":")[self.gt_loc]
+        gt_set = re.split("[/|\|]", gt)
+        genotype = list(set([self.gt_dict[autoconvert(x)] for x in gt_set]))
+        if len(genotype) == 0:
+            return genotype[0]
+        else:
+            return '/'.join(genotype)
+
     def __getitem__(self, sample):
-        return self.line[self._sample_to_idx[sample]]
+        return [self.chrom, self.pos, self.tgt(sample)]
 
     def __repr__(self):
         return self.chrom + ":" + str(self.pos)

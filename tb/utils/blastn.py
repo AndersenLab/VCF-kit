@@ -1,26 +1,12 @@
 from subprocess import Popen, PIPE
 from utils import *
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from pprint import pprint as pp
 import csv
 from clint.textui import puts_err
 from Bio.Blast import NCBIXML
-from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 from cStringIO import StringIO
-
-
-field = ["query_id",
-         "CHROM",
-         "perc_identity",
-         "alignment length",
-         "mismatches",
-         "gap opens",
-         "q_start",
-         "q_end",
-         "s_start",
-         "s_end",
-         "evalue",
-         "bit_score"]
 
 
 def boolify(s):
@@ -38,87 +24,202 @@ def autoconvert(s):
             pass
     return s
 
+def clamp(n, minn, maxn):
+    return max(min(maxn, n), minn)
 
-def compare_fasta(chrom, start, end, ref, alt, resp, all_sites=False):
-        ref_out = ""
-        alt_out = ""
-        len_insertions = 0
-        i = 0
-        while i < len(ref)-1:
-            if alt[i+1] == "-":
-                variant_type = "deletion"
-                ref_out = ref[i]
-                alt_out = alt[i]
-                while alt[i+1] == "-":
-                    i += 1
-                    ref_out += ref[i]
-                    alt_out += alt[i]
-            elif ref[i+1] == "-":
-                variant_type = "insertion"
-                ref_out = ref[i]
-                alt_out = alt[i]
-                while ref[i+1] == "-":
-                    i += 1
-                    ref_out += ref[i]
-                    alt_out += alt[i]
-                len_insertions += len(ref_out) - 1
+def fastq_mean(x):
+    if len(x) > 0:
+        return round(sum(x)*1.0/len(x), 2)
+    else:
+        return 0
+
+class blast:
+    def __init__(self, db, num_alignments=1):
+        self.db = db
+        self.num_alignments = num_alignments
+        self.output_format = ["sacc",
+                              "pident",
+                              "gaps",
+                              "mismatch",
+                              "length",
+                              "qstart",
+                              "qend",
+                              "sstart",
+                              "send",
+                              "evalue",
+                              "bitscore",
+                              "qseq",
+                              "sseq"]
+        self.output_string = ' '.join(self.output_format)
+        self.blastn_query_str = ' '.join(["echo {self.query} | blastn -query - -db={self.db} ",
+                             "-outfmt '6 {self.output_string}'",
+                             "-num_alignments {self.num_alignments}"])
+
+    def print_alignment(self, q, start=0, end=None):
+        """ 
+            Print the alignment with matches
+
+            * [ ] Add qstart/qend; sstart/ssend
+        """
+        blast_result = self.blast_search(q)
+        if end is None:
+            end = len(blast_result["sseq"])
+        sseq = blast_result["sseq"]
+        qseq = blast_result["qseq"]
+        spacer = []
+        for i in xrange(len(sseq)):
+            if qseq[i] == sseq[i]:
+                spacer.append("|")
             else:
-                ref_out, alt_out = ref[i], alt[i]
-                variant_type = "snp"
-            if ref_out != alt_out or (ref_out == alt_out and all_sites):
-                POS = i - len_insertions
-                print resp["sseq"][i-2:i], resp["sseq"][i] , resp["sseq"][i:i+40] + "\n" + resp["qseq"][i-2:i], resp["qseq"][i], resp["qseq"][i:i+40]
-                yield chrom, POS + start, ref_out.strip("-"), alt_out.strip("-"), variant_type, start, end
-            i += 1
+                spacer.append(" ")
+        spacer = ''.join(spacer)
+        print(blast_result["sseq"][start:end])
+        print(spacer[start:end])
+        print(blast_result["qseq"][start:end])
 
+    def blast_search(self, q):
+        """
+            Perform a blast search and store the result
+        """
+        if type(q) == SeqRecord:
+            self.query = q.seq
+            if hasattr(q, "letter_annotations"):
+                if 'phred_quality' in q.letter_annotations.keys():
+                    self.query_qual = q.letter_annotations["phred_quality"]
+                else:
+                    self.query_qual = None
+        else:
+            self.query = q
 
-class blast_call:
-
-    def __init__(self, db):
-        self.db = db
-        self.output_format = "sacc sstart send sstrand evalue mismatch sseq qseq"
-
-    def blast(self, q, chrom = None, pos = None):
-        blastn_query = "echo {q} | blastn -query - -db={self.db} -outfmt '6 {self.output_format}'  -num_alignments 1 ".format(**locals())
-        self.query = q
         self.query_length = len(q)
-        self.chrom = chrom
-        self.pos = pos
-        resp, err = Popen(blastn_query,
-                          stdout=PIPE,
-                          stderr=PIPE,
-                          shell=True).communicate()
-        if resp:
-            resp = map(autoconvert, resp.split("\n")[0].split("\t"))
-            resp = dict(zip(self.output_format.split(" "), resp))
-            if resp["sstart"] > resp["send"]:
-                resp["sseq"] = Seq(resp["sseq"]).reverse_complement()
-                resp["qseq"] = Seq(resp["qseq"]).reverse_complement()
-                resp["sstart"], resp["send"] = resp["send"], resp["sstart"]
-            #print resp, "Y34D9A:19961..20887@620  Psnp=0.8227  VarD2=CG  Verified: No"
-            for x in compare_fasta(resp["sacc"], resp["sstart"], resp["send"], resp["sseq"], resp["qseq"], resp, False):
-                yield list(x) 
-
-
-class blastn:
-
-    def __init__(self, db):
-        self.db = db
-
-    def blast(self, q, chrom = None, pos = None):
-        blastn_query = "echo {q} | blastn -query - -db={self.db} -outfmt=6 -evalue 1 -word_size=7".format(**locals())
-        self.query = q
-        self.query_length = len(q)
-        self.chrom = chrom
-        self.pos = pos
-        resp, err = Popen(blastn_query,
+        self.blastn_query = self.blastn_query_str.format(**locals())
+        resp, err = Popen(self.blastn_query,
                           stdout=PIPE,
                           stderr=PIPE,
                           shell=True).communicate()
 
-        if err != "":
-            raise Exception(err)
+        if not resp:
+           return None
+        if err:
+           raise Exception(err)
 
+        # Format variables
+        resp = map(autoconvert, [x.strip() for x in resp.split("\n")[0].split("\t")])
+        # Convert to dictionary
+        resp = OrderedDict(zip(self.output_format, resp))
+        # Append quality values if available, and insert gaps
+        if self.query_qual:
+            qseq = resp["qseq"]
+            query_qualities = self.query_qual[resp["qstart"] - 1:resp["qend"]]
+            # Add gaps
+            inserted_gaps = 0
+            for i in xrange(len(qseq)):
+                if qseq[i] == "-":
+                    query_qualities.insert(i - inserted_gaps , "NA")
+                    inserted_gaps += 1
+            resp["qqual"] = query_qualities
+        return resp
+
+
+    def call_header(self, qual = False, sample = False):
+        """
+            Print output header for blast_call
+        """
+        self.header = ["CHROM",
+                       "POS",
+                       "ref",
+                       "gt",
+                       "variant_type",
+                       "alignment_start",
+                       "alignment_end",
+                       "gaps",
+                       "mismatch",
+                       "index",
+                       "context"]
+        if sample:
+            self.header += ["sample", "description"]
+        if qual:
+            self.header.insert(7, "quality_window")
+            self.header.insert(7, "quality")
+        print '\t'.join(self.header)
+
+
+    def blast_call(self, q, all_sites = False):
+        """
+            Call variants from blast alignments
+        """
+        r = self.blast_search(q)
+        if r is None:
+            yield None
+        else:
+            chrom = r["sacc"]
+            start = r["sstart"]
+            end = r["send"]
+            ref = r["sseq"]
+            alt = r["qseq"]
+            gaps = r["gaps"]
+            mismatch = r["mismatch"]
+
+            # Compare fasta sites
+            ref_out = ""
+            alt_out = ""
+            len_insertions = 0
+            i = 0
+            while i < len(ref)-1:
+                if alt[i+1] == "-":
+                    variant_type = "deletion"
+                    ref_out = ref[i]
+                    alt_out = alt[i]
+                    while alt[i+1] == "-":
+                        i += 1
+                        ref_out += ref[i]
+                        alt_out += alt[i]
+                elif ref[i+1] == "-":
+                    variant_type = "insertion"
+                    ref_out = ref[i]
+                    alt_out = alt[i]
+                    while ref[i+1] == "-":
+                        i += 1
+                        ref_out += ref[i]
+                        alt_out += alt[i]
+                    len_insertions += len(ref_out) - 1
+                else:
+                    ref_out, alt_out = ref[i], alt[i]
+                    if ref_out != alt_out:
+                        variant_type = "snp"
+                    else:
+                        variant_type = ""
+                if ref_out != alt_out or (ref_out == alt_out and all_sites):
+                    POS = i - len_insertions
+                    context_start = clamp(i-10,0,len(ref))
+                    context_end = clamp(i+10,0,len(ref))
+                    context = alt[context_start:i] + "[" + alt[i] + "]" + alt[i+1:context_end]
+                    context = context.replace("-","")
+                    out_result = [chrom,
+                                  POS + start,
+                                  ref_out.strip("-"),
+                                  alt_out.strip("-"),
+                                  variant_type,
+                                  start,
+                                  end,
+                                  gaps,
+                                  mismatch,
+                                  i,
+                                  context]
+                    if 'qqual' in r:
+                        window_start = clamp(i-6, 0, len(r["qqual"]))
+                        window_end = clamp(i+7, 0, len(r["qqual"]))
+                        window = [x for x in r["qqual"][window_start:window_end] if x != "NA"]
+                        out_result.insert(7, str(fastq_mean(window)))
+                        out_result.insert(7, str(r["qqual"][i]))
+                    yield map(str,out_result)
+                i += 1
+
+
+
+
+"""
+OLD - remove/rewrite for snip-snp
 
         resp = [dict(zip(field,map(autoconvert,x.split("\t")))) for x in resp.strip().split("\n")]
         exact_matches = 0
@@ -156,8 +257,4 @@ class blastn:
         for i in ["perfect_match", "bp_mismatch", "end_mismatch", "perfect_match_same_chrom", "nearby_matches"]:
             self.stats[i] = len([x for x in self.resp if x[i] is True])
         return self.stats
-
-
-#blaster = blastn("reference/WS245/WS245.fa")
-#print pp(blaster.blast("ttaggcttaggcttaggc", chrom = "X", pos = 22))
-#print blaster.query_stat()
+"""
