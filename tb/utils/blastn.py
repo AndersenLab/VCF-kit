@@ -164,6 +164,7 @@ class blast:
             ref_out = ""
             alt_out = ""
             len_insertions = 0
+            len_deletions = 0
             i = 0
             while i < len(ref)-1:
                 if alt[i+1] == "-":
@@ -174,6 +175,7 @@ class blast:
                         i += 1
                         ref_out += ref[i]
                         alt_out += alt[i]
+                    len_deletions += len(alt_out) - 1
                 elif ref[i+1] == "-":
                     variant_type = "insertion"
                     ref_out = ref[i]
@@ -204,7 +206,7 @@ class blast:
                                   end,
                                   gaps,
                                   mismatch,
-                                  i,
+                                  i + r["qstart"] - len_deletions - len(alt_out),
                                   context]
                     if 'qqual' in r:
                         window_start = clamp(i-6, 0, len(r["qqual"]))
