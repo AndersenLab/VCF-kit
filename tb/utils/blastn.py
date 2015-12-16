@@ -6,6 +6,7 @@ import csv
 from clint.textui import puts_err
 from Bio.Blast import NCBIXML
 from Bio.SeqRecord import SeqRecord
+from copy import copy
 from cStringIO import StringIO
 
 
@@ -32,6 +33,81 @@ def fastq_mean(x):
         return round(sum(x)*1.0/len(x), 2)
     else:
         return 0
+
+
+class blast_variant:
+    """
+        Class representing a blast variant
+    """
+    output_order = ["CHROM",
+                    "POS",
+                    "REF",
+                    "gt",
+                    "vcf_gt",
+                    "variant_type",
+                    "index",
+                    "alignment_start",
+                    "alignment_end",
+                    "strand",
+                    "context",
+                    "gaps",
+                    "mismatch",
+                    "evalue",
+                    "bitscore",
+                    "phred_quality",
+                    "phred_quality_window"]
+
+    def __init__(self,
+                 blast_result,
+                 POS,
+                 ref_out,
+                 alt_out,
+                 index,
+                 context,
+                 gaps,
+                 mismatch,
+                 phred_quality = None,
+                 phred_quality_window = None):
+
+        self.CHROM = blast_result["sacc"]
+        self.POS = POS
+        self.REF = ref_out.strip("-")
+        self.gt = alt_out.strip("-")
+        self.is_variant = (self.REF != self.gt)
+        self.vcf_gt = None
+        self.alignment_start = blast_result["sstart"]
+        self.alignment_end = blast_result["send"]
+        self.strand = blast_result["strand"]
+        self.context = context
+        self.gaps = gaps
+        self.mismatch = mismatch
+        self.index = index
+        self.evalue = blast_result["evalue"]
+        self.bitscore = blast_result["bitscore"]
+        if self.REF != self.gt:
+            if len(self.REF) == len(self.gt):
+                self.variant_type = "snp"
+            elif len(self.REF) > len(self.gt):
+                self.variant_type = "deletion"
+            elif len(self.REF) < len(self.gt):
+                self.variant_type = "insertion"
+        else:
+            self.variant_type = ""
+        self.phred_quality = phred_quality
+        self.phred_quality_window = phred_quality_window
+
+    def chrom_pos_allele(self):
+        """
+            Simplified representation of variant
+        """
+        return [self.CHROM, self.POS, self.gt]
+
+    def region(self):
+        return "{self.CHROM}:{self.alignment_start}-{self.alignment_end}".format(**locals())
+
+    def __str__(self):
+        return '\t'.join([str(getattr(self, x)) for x in blast_variant.output_order if getattr(self, x) is not None])
+
 
 class blast:
     def __init__(self, db, num_alignments=1):
@@ -118,57 +194,40 @@ class blast:
                     query_qualities.insert(i - inserted_gaps , "NA")
                     inserted_gaps += 1
             resp["qqual"] = query_qualities
+        # Add strand information
+        if resp["sstart"] > resp["send"]:
+            resp["strand"] = "-"
+            resp["sstart"], resp["send"] = resp["send"], resp["sstart"]
+        else:
+            resp["strand"] = "+"
         return resp
-
-
-    def call_header(self, qual = False, sample = False):
-        """
-            Print output header for blast_call
-        """
-        self.header = ["CHROM",
-                       "POS",
-                       "ref",
-                       "gt",
-                       "variant_type",
-                       "alignment_start",
-                       "alignment_end",
-                       "gaps",
-                       "mismatch",
-                       "index",
-                       "context"]
-        if sample:
-            self.header += ["sample", "description"]
-        if qual:
-            self.header.insert(7, "quality_window")
-            self.header.insert(7, "quality")
-        print '\t'.join(self.header)
-
 
     def blast_call(self, q, all_sites = False):
         """
             Call variants from blast alignments
         """
-        r = self.blast_search(q)
-        if r is None:
+        blast_result = self.blast_search(q)
+        if blast_result is None:
             yield None
         else:
-            chrom = r["sacc"]
-            start = r["sstart"]
-            end = r["send"]
-            ref = r["sseq"]
-            alt = r["qseq"]
-            gaps = r["gaps"]
-            mismatch = r["mismatch"]
+            CHROM = blast_result["sacc"]
+            start = blast_result["sstart"]
+            end = blast_result["send"]
+            ref = blast_result["sseq"]
+            alt = blast_result["qseq"]
+            gaps = blast_result["gaps"]
+            mismatch = blast_result["mismatch"]
 
             # Compare fasta sites
             ref_out = ""
             alt_out = ""
             len_insertions = 0
             len_deletions = 0
+            quality = None
+            fastq_mean_window = None
             i = 0
             while i < len(ref)-1:
                 if alt[i+1] == "-":
-                    variant_type = "deletion"
                     ref_out = ref[i]
                     alt_out = alt[i]
                     while alt[i+1] == "-":
@@ -177,7 +236,6 @@ class blast:
                         alt_out += alt[i]
                     len_deletions += len(alt_out) - 1
                 elif ref[i+1] == "-":
-                    variant_type = "insertion"
                     ref_out = ref[i]
                     alt_out = alt[i]
                     while ref[i+1] == "-":
@@ -187,37 +245,31 @@ class blast:
                     len_insertions += len(ref_out) - 1
                 else:
                     ref_out, alt_out = ref[i], alt[i]
-                    if ref_out != alt_out:
-                        variant_type = "snp"
-                    else:
-                        variant_type = ""
                 if ref_out != alt_out or (ref_out == alt_out and all_sites):
                     POS = i - len_insertions
                     context_start = clamp(i-10,0,len(ref))
                     context_end = clamp(i+10,0,len(ref))
-                    context = alt[context_start:i] + "[" + alt[i] + "]" + alt[i+1:context_end]
+                    context = alt[context_start:i] + "[" + alt_out + "]" + alt[i+1:context_end]
                     context = context.replace("-","")
-                    out_result = [chrom,
-                                  POS + start,
-                                  ref_out.strip("-"),
-                                  alt_out.strip("-"),
-                                  variant_type,
-                                  start,
-                                  end,
-                                  gaps,
-                                  mismatch,
-                                  i + r["qstart"] - len_deletions - len(alt_out),
-                                  context]
-                    if 'qqual' in r:
-                        window_start = clamp(i-6, 0, len(r["qqual"]))
-                        window_end = clamp(i+7, 0, len(r["qqual"]))
-                        window = [x for x in r["qqual"][window_start:window_end] if x != "NA"]
-                        out_result.insert(7, str(fastq_mean(window)))
-                        out_result.insert(7, str(r["qqual"][i]))
-                    yield map(str,out_result)
+                    index = i + blast_result["qstart"] - len_deletions - len(alt_out)
+
+                    if 'qqual' in blast_result:
+                        window_start = clamp(i-6, 0, len(blast_result["qqual"]))
+                        window_end = clamp(i+7, 0, len(blast_result["qqual"]))
+                        fastq_mean_window = fastq_mean([x for x in blast_result["qqual"][window_start:window_end] if x != "NA"])
+                        quality = blast_result["qqual"][i]
+                    variant_out = blast_variant(blast_result=blast_result,
+                                                POS=POS + start,
+                                                ref_out=ref_out,
+                                                alt_out=alt_out,
+                                                index=index,
+                                                context=context,
+                                                gaps=gaps,
+                                                mismatch=mismatch,
+                                                phred_quality=quality,
+                                                phred_quality_window=fastq_mean_window)
+                    yield variant_out
                 i += 1
-
-
 
 
 """

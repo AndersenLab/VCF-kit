@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """
 usage:
-    tb call <seq.fasta> [<vcf>] [--ref=<reference> --all-sites]
-    tb call alignments <seq.fasta>  [--ref=<reference>]
+    tb call <seq> --ref=<reference> [<vcf> --all-sites --vcf-targets]
+    tb call alignments <seq>  [--ref=<reference>]
 
 options:
     -h --help                   Show this screen.
@@ -12,7 +12,7 @@ options:
 from docopt import docopt
 import tb
 from Bio import SeqIO
-from utils.blastn import blast
+from utils.blastn import blast, blast_variant
 from utils.vcf import *
 from subprocess import Popen
 import sys
@@ -23,6 +23,26 @@ from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
 
 from Bio.Blast.Applications import NcbiblastxCommandline
+
+
+def seq_type(filename):
+    filename, ext = os.path.splitext(filename.lower())
+    if ext in [".fasta", ".fa"]:
+        return 'fasta'
+    elif ext in [".fastq",".fq"]:
+        return 'fastq'
+    elif ext in [".ab1"]:
+        return 'ab1'
+    else:
+        raise Exception("Unknown sequence file type: " + filename)
+
+def format_gt(gt):
+    # Return homozygous calls as single bases.
+    gt = list(set(re.split("[\|\/]", gt)))
+    if len(gt) == 1:
+        return gt[0]
+    else:
+        return '/'.join(gt)
 
 
 debug = None
@@ -38,13 +58,7 @@ if __name__ == '__main__':
     # Reference path - check that it exists
     module_path = os.path.split(os.path.realpath(__file__))[0]
     reference = module_path + "/reference/" + args["--ref"] + ".fa.gz"
-    handle = open(args["<seq.fasta>"], "rU")
-
-    # if args["alignments"]:
-    #   for record in SeqIO.parse(handle, "fasta") :
-    #     bl = blast_call(reference)
-    #     for n, variant in enumerate(bl.blast(record.seq)):
-    #         pass
+    handle = open(args["<seq>"], "rU")
 
     if args["<vcf>"]:
         concordance = True
@@ -53,18 +67,33 @@ if __name__ == '__main__':
     # Open fasta and read
     b = blast(reference)
 
-    b.call_header(qual=True, sample=True)
-    for record in SeqIO.parse(handle, "fastq"):
-        sample, description = re.split("[ \|]{1}", record.name, 1)
-        sample = sample.strip(">")
-        blast_results = b.blast_call(record, all_sites = True)
+    # Set file type:
+    sequence_file_type = seq_type(args["<seq>"])
+
+    # Output header
+    print("\t".join(blast_variant.output_order + ["sample", "description"]))
+
+    for record in SeqIO.parse(handle, sequence_file_type):
+        rec_split = re.split("[ \|]{1}", record.name, 1)
+        sample = record.name.strip(">")
+        description = record.description.strip(">")
+        blast_results = b.blast_call(record, all_sites = args["--all-sites"])
         for n, variant in enumerate(blast_results):
             if variant is None:
                 puts_err(colored.red("No Results for " + sample + " " + description))
                 continue
-            if n == 0 and args["<vcf>"]:
-                vcf_variants = []
-                for vcf_variant in v.fetch_variants(variant[0], variant[5], variant[6], samples = [sample]):
-                    vcf_variants.append(vcf_variant[sample])
-            #sanger_variant = [variant[i] for i in [0, 1, 3]]
-            print '\t'.join(map(str, variant + [sample, description]))
+            if args["<vcf>"]:
+                if n == 0:
+                    vcf_variants = []
+                    for vcf_variant in v(variant.region()):
+                        # Deal with phasing
+                        gt = format_gt(vcf_variant.gt_bases[v.samples.index(sample)])
+                        vcf_variants.append([vcf_variant.CHROM,
+                                             vcf_variant.POS,
+                                             gt])
+                if args["--vcf-targets"] and variant.chrom_pos_allele() in vcf_variants:
+                    print '\t'.join([str(variant), sample, description])
+                elif args["--vcf-targets"] is False:
+                    print '\t'.join(map(str, blast_variants + [sample, description]))
+            else:
+                print '\t'.join(map(str, blast_variants + [sample, description]))
