@@ -71,7 +71,7 @@ if __name__ == '__main__':
     sequence_file_type = seq_type(args["<seq>"])
 
     # Output header
-    print("\t".join(blast_variant.output_order + ["sample", "description"]))
+    print("\t".join(blast_variant.output_order + ["classification", "sample", "description"]))
 
     for record in SeqIO.parse(handle, sequence_file_type):
         rec_split = re.split("[ \|]{1}", record.name, 1)
@@ -91,9 +91,25 @@ if __name__ == '__main__':
                         vcf_variants.append([vcf_variant.CHROM,
                                              vcf_variant.POS,
                                              gt])
-                if args["--vcf-targets"] and variant.chrom_pos_allele() in vcf_variants:
-                    print '\t'.join([str(variant), sample, description])
+                        vcf_variant_positions = [x[0:2] for x in vcf_variants]
+
+                chrom_pos =  variant.chrom_pos_allele()[0:2]
+                vcf_variant_match = [x for x in vcf_variants if x[0:2] == chrom_pos]
+                if vcf_variant_match:
+                    vcf_variant_match = vcf_variant_match[0]
+                    variant.vcf_gt = vcf_variant_match[2]
+                    if variant.REF == vcf_variant_match[2]:
+                        classification = "TN"
+                    elif variant.gt == vcf_variant_match[2]:
+                        classification = "TP" 
+                    elif variant.gt != vcf_variant_match[2]:
+                        classification = "TP"
+                else:
+                    classification = "FN"
+
+                if (args["--vcf-targets"] and variant.chrom_pos_allele()[0:2] in vcf_variant_positions) or variant.is_variant:
+                    print '\t'.join([str(variant), classification, sample, description])
                 elif args["--vcf-targets"] is False:
-                    print '\t'.join(map(str, blast_variants + [sample, description]))
+                    print '\t'.join([str(variant), classification, sample, description])
             else:
-                print '\t'.join(map(str, blast_variants + [sample, description]))
+                print '\t'.join([str(variant), classification, sample, description])

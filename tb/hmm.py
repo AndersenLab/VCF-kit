@@ -155,12 +155,11 @@ if __name__ == '__main__':
 
     if args["--vcf-out"]:
         v = vcf(args["<vcf>"])
-        print(v.insert_header_line("##FORMAT=<ID=GT_ORIG,Number=1,Type=String,Description=\"Original Genotype replaced by HMM\">"))
         for n, line in enumerate(v):
             line = variant_line(line)
             if line.has_gt and line.chrom in chromosome and line.pos in positions:
                 for sample_col, sample in enumerate(v.samples):
-                    gt_orig = line.fetch_gt_from_index(sample_col)
+                    gt_orig = line[sample]
                     line.modify_gt_format(sample_col, "GT_ORIG", gt_orig)
                     new_gt = gtr.get(line.chrom, line.pos, sample)
                     if new_gt is not None:

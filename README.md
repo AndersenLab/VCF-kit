@@ -62,6 +62,7 @@ Perform variant calling using blast. Useful for validating variants using sanger
 
 * __seqs.fasta__
 
+
 ### tajima
 
 Generate a Tajima's D statistic using a sliding window or across bins. 
@@ -178,6 +179,11 @@ Suite of tools for genotyping: via sanger sequencing, using snip-SNPs, and indel
 	* [ ] snip-SNP
 	* [ ] Indels
 
+### hmm
+
+* [ ] Replace variant_line with better alternative.
+
+
 ### phylo
 
 ###### Generate a fasta-alignment for variant calls
@@ -198,6 +204,8 @@ AGAGATCCCTGGG...
 >DL200
 AGAGA-CCCTGG-...
 ```
+
+* [ ] Use more efficient data structure for sequence (e.g. bio string), when generating.
 
 ###### Generate a phylogenetic tree (newick format)
 
@@ -309,4 +317,10 @@ tb vcf2tsv (wide|long) [--print-header --snpeff] <vcf>
 
 * [ ] Upload to UCSC
 * [ ] Annotate variants (track-based search)
+
+
+## To Do (Broad)
+
+* [ ] Replace `insert_header_line()` vcf function with cyvcf2 `add_info_to_header`
+* [ ] Replace iterators with for line in vcf("I:1-1000"); replace `variant_line`
 
