@@ -66,8 +66,8 @@ class blast_variant:
                  context,
                  gaps,
                  mismatch,
-                 phred_quality = None,
-                 phred_quality_window = None):
+                 phred_quality = "",
+                 phred_quality_window = ""):
 
         self.CHROM = blast_result["sacc"]
         self.POS = POS
@@ -106,7 +106,7 @@ class blast_variant:
         return "{self.CHROM}:{self.alignment_start}-{self.alignment_end}".format(**locals())
 
     def __str__(self):
-        return '\t'.join([str(getattr(self, x)) for x in blast_variant.output_order if getattr(self, x) is not None])
+        return '\t'.join([str(getattr(self, x)) for x in blast_variant.output_order])
 
 
 class blast:
@@ -202,7 +202,7 @@ class blast:
             resp["strand"] = "+"
         return resp
 
-    def blast_call(self, q, all_sites = False):
+    def blast_call(self, q):
         """
             Call variants from blast alignments
         """
@@ -223,8 +223,8 @@ class blast:
             alt_out = ""
             len_insertions = 0
             len_deletions = 0
-            quality = None
-            fastq_mean_window = None
+            phred_quality = ""
+            phred_quality_window = ""
             i = 0
             while i < len(ref)-1:
                 if alt[i+1] == "-":
@@ -245,30 +245,32 @@ class blast:
                     len_insertions += len(ref_out) - 1
                 else:
                     ref_out, alt_out = ref[i], alt[i]
-                if ref_out != alt_out or (ref_out == alt_out and all_sites):
-                    POS = i - len_insertions
-                    context_start = clamp(i-10,0,len(ref))
-                    context_end = clamp(i+10,0,len(ref))
-                    context = alt[context_start:i] + "[" + alt_out + "]" + alt[i+1:context_end]
-                    context = context.replace("-","")
-                    index = i + blast_result["qstart"] - len_deletions - len(alt_out)
+                
 
-                    if 'qqual' in blast_result:
-                        window_start = clamp(i-6, 0, len(blast_result["qqual"]))
-                        window_end = clamp(i+7, 0, len(blast_result["qqual"]))
-                        fastq_mean_window = fastq_mean([x for x in blast_result["qqual"][window_start:window_end] if x != "NA"])
-                        quality = blast_result["qqual"][i]
-                    variant_out = blast_variant(blast_result=blast_result,
-                                                POS=POS + start,
-                                                ref_out=ref_out,
-                                                alt_out=alt_out,
-                                                index=index,
-                                                context=context,
-                                                gaps=gaps,
-                                                mismatch=mismatch,
-                                                phred_quality=quality,
-                                                phred_quality_window=fastq_mean_window)
-                    yield variant_out
+                POS = i - len_insertions
+                context_start = clamp(i-10,0,len(ref))
+                context_end = clamp(i+10,0,len(ref))
+                context = alt[context_start:i] + "[" + alt_out + "]" + alt[i+1:context_end]
+                context = context.replace("-","")
+                index = i + blast_result["qstart"] - len_deletions - len(alt_out)
+
+                if 'qqual' in blast_result:
+                    window_start = clamp(i-6, 0, len(blast_result["qqual"]))
+                    window_end = clamp(i+7, 0, len(blast_result["qqual"]))
+                    phred_quality_window = fastq_mean([x for x in blast_result["qqual"][window_start:window_end] if x != "NA"])
+                    phred_quality = blast_result["qqual"][i]
+
+                variant_out = blast_variant(blast_result=blast_result,
+                                            POS=POS + start,
+                                            ref_out=ref_out,
+                                            alt_out=alt_out,
+                                            index=index,
+                                            context=context,
+                                            gaps=gaps,
+                                            mismatch=mismatch,
+                                            phred_quality=phred_quality,
+                                            phred_quality_window=phred_quality_window)
+                yield variant_out
                 i += 1
 
 

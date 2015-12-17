@@ -55,13 +55,16 @@ vcf-toolbox
 ### call
 
 ```
-tb call <seqs.fasta> <vcf>
+    tb call <seq> --ref=<reference> [--all-sites --vcf-targets <vcf>]
+    tb call alignments <seq>  [--ref=<reference>]
 ```
 
-Perform variant calling using blast. Useful for validating variants using sanger sequencing or other methods. 
+Perform variant calling using blast. Useful for validating variants using sanger sequencing.  
 
-* __seqs.fasta__
+* __<seq>__ - Fasta (fa), Fastq (fq, fastq), or ab1 format, determined by file extension containing sanger reads.
+* __--ref__
 
+* [ ] Add option to output INFO and FORMAT data for every variant.
 
 ### tajima
 

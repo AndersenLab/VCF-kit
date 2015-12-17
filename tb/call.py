@@ -87,9 +87,10 @@ if __name__ == '__main__':
         rec_split = re.split("[ \|]{1}", record.name, 1)
         sample = record.name.strip(">")
         description = record.description.strip(">")
-        blast_results = b.blast_call(record, all_sites = args["--all-sites"])
+        blast_results = b.blast_call(record)
         classification = ""
         for n, variant in enumerate(blast_results):
+            output_line = False
             if variant is None:
                 puts_err(colored.red("No Results for " + sample + " " + description))
                 continue
@@ -118,12 +119,20 @@ if __name__ == '__main__':
                     elif variant.REF != variant.gt and variant.gt != variant.vcf_gt:
                         classification = "FN"
                 else:
-                    classification = ""
+                    if variant.REF != variant.gt:
+                        classification = "FN"
+                    else:
+                        classification = ""
 
                 #print args["--vcf-targets"] and variant.chrom_pos_allele()[0:2] in vcf_variant_positions
-                if (args["--vcf-targets"] and variant.chrom_pos_allele()[0:2] in vcf_variant_positions) or variant.is_variant:
-                    print '\t'.join([str(variant), classification, sample, description])
-                elif args["--vcf-targets"] is True:
-                    print '\t'.join([str(variant), classification, sample, description])
+                if args["--vcf-targets"] and classification != "":
+                    output_line = True
+                elif args["--all-sites"] is True:
+                    output_line = True
             else:
+                if args["--all-sites"]:
+                    output_line = True
+                elif variant.is_variant:
+                    output_line = True
+            if output_line:
                 print '\t'.join([str(variant), classification, sample, description])
