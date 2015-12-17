@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-    tb call <seq> --ref=<reference> [<vcf> --all-sites --vcf-targets]
+    tb call <seq> --ref=<reference> [--all-sites --vcf-targets <vcf>]
     tb call alignments <seq>  [--ref=<reference>]
 
 options:
@@ -44,15 +44,20 @@ def format_gt(gt):
     else:
         return '/'.join(gt)
 
+def format_args(args, add_missing_stdin = False):
+    if add_missing_stdin:
+        pass # Test for vcf
 
 debug = None
 if len(sys.argv) == 1:
     debug = ['tb','call', "test.vcf.gz"]
 
 if __name__ == '__main__':
+    args = sys.argv
+    args = args[1:]
     args = docopt(__doc__,
                   version='VCF-Toolbox v0.1',
-                  argv=debug,
+                  argv=args,
                   options_first=False)
 
     # Reference path - check that it exists
@@ -64,6 +69,12 @@ if __name__ == '__main__':
         concordance = True
         v = vcf(args["<vcf>"])
         samples = v.samples
+
+
+    if args["--vcf-targets"] and args["<vcf>"] is None:
+        with indent(4):
+            exit(puts_err(colored.red("\nMust specify <vcf> with --vcf-targets\n")))
+
     # Open fasta and read
     b = blast(reference)
 
@@ -72,12 +83,12 @@ if __name__ == '__main__':
 
     # Output header
     print("\t".join(blast_variant.output_order + ["classification", "sample", "description"]))
-
     for record in SeqIO.parse(handle, sequence_file_type):
         rec_split = re.split("[ \|]{1}", record.name, 1)
         sample = record.name.strip(">")
         description = record.description.strip(">")
         blast_results = b.blast_call(record, all_sites = args["--all-sites"])
+        classification = ""
         for n, variant in enumerate(blast_results):
             if variant is None:
                 puts_err(colored.red("No Results for " + sample + " " + description))
@@ -98,18 +109,21 @@ if __name__ == '__main__':
                 if vcf_variant_match:
                     vcf_variant_match = vcf_variant_match[0]
                     variant.vcf_gt = vcf_variant_match[2]
-                    if variant.REF == vcf_variant_match[2]:
+                    if variant.REF == variant.gt and variant.gt == variant.vcf_gt:
                         classification = "TN"
-                    elif variant.gt == vcf_variant_match[2]:
-                        classification = "TP" 
-                    elif variant.gt != vcf_variant_match[2]:
+                    elif variant.REF != variant.gt and variant.gt == variant.vcf_gt:
                         classification = "TP"
+                    elif variant.REF == variant.gt and variant.gt != variant.vcf_gt:
+                        classification = "FP" 
+                    elif variant.REF != variant.gt and variant.gt != variant.vcf_gt:
+                        classification = "FN"
                 else:
-                    classification = "FN"
+                    classification = ""
 
+                #print args["--vcf-targets"] and variant.chrom_pos_allele()[0:2] in vcf_variant_positions
                 if (args["--vcf-targets"] and variant.chrom_pos_allele()[0:2] in vcf_variant_positions) or variant.is_variant:
                     print '\t'.join([str(variant), classification, sample, description])
-                elif args["--vcf-targets"] is False:
+                elif args["--vcf-targets"] is True:
                     print '\t'.join([str(variant), classification, sample, description])
             else:
                 print '\t'.join([str(variant), classification, sample, description])

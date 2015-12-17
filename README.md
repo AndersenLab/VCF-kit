@@ -321,6 +321,8 @@ tb vcf2tsv (wide|long) [--print-header --snpeff] <vcf>
 
 ## To Do (Broad)
 
+* [ ] Handle missing '-' input if stdin
+* [ ] Error function 
 * [ ] Replace `insert_header_line()` vcf function with cyvcf2 `add_info_to_header`
 * [ ] Replace iterators with for line in vcf("I:1-1000"); replace `variant_line`
 

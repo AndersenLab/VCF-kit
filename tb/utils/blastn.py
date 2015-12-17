@@ -74,7 +74,7 @@ class blast_variant:
         self.REF = ref_out.strip("-")
         self.gt = alt_out.strip("-")
         self.is_variant = (self.REF != self.gt)
-        self.vcf_gt = None
+        self.vcf_gt = ""
         self.alignment_start = blast_result["sstart"]
         self.alignment_end = blast_result["send"]
         self.strand = blast_result["strand"]
