@@ -18,6 +18,7 @@ commands:
   freq
   geno
   vcf2tsv
+  vcf2sql
 
 """
 from docopt import docopt
@@ -53,7 +54,7 @@ def main():
             Use Homebrew to install programs!
         """
         program_installed = program_list.keys()
-        for install_name, program in program_list.items():
+        for install_name, program in progtbram_list.items():
             check_output(["brew", "tap", "homebrew/science"])
             try:
                 with indent(4):
@@ -84,7 +85,7 @@ def main():
                 with indent(4):
                     puts(
                         colored.red(prog + " not installed. Use a package manager to install or try using 'tb.py setup'\n"))
-    elif args['<command>'] in ['tajima', 'hmm', 'filter', 'call', 'primer', 'genome', 'rename', 'phylo', 'freq', "geno", "vcf2tsv"]:
+    elif args['<command>'] in ['tajima', 'hmm', 'filter', 'call', 'primer', 'genome', 'rename', 'phylo', 'freq', "geno", "vcf2tsv", "vcf2sql"]:
         comm = ['python', getScriptPath() + '/' + args["<command>"] + ".py"] + argv
         exit(call(comm))
 
