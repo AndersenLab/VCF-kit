@@ -323,6 +323,7 @@ tb vcf2sql (bigquery|postgres|mysql|sqlite) <vcf>
 * [ ] Sqlite
 * [ ] Support for SNPeff annotations.
 * [ ] Break load job for bigquery into multiple files if filesize > 4GB
+* [ ] Output TGT (bases), allele 1, allele 2 for genotypes.
 
 ### Additional Features
 
