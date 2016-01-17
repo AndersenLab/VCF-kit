@@ -322,6 +322,7 @@ tb vcf2sql (bigquery|postgres|mysql|sqlite) <vcf>
 * [ ] Postgres
 * [ ] Sqlite
 * [ ] Support for SNPeff annotations.
+* [ ] Break load job for bigquery into multiple files if filesize > 4GB
 
 ### Additional Features
 

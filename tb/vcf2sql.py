@@ -15,6 +15,7 @@ import sys
 import os
 import re
 import itertools
+import gzip
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
 
@@ -26,7 +27,7 @@ load_bigquery = r"""
 
 # [ ] Add instructions on getting set up...
 
-gsutil cp {tsv_out} gs://andersen/annotation/{tsv_out} 
+gsutil cp {tsv_out} gs://andersen/annotation/{tsv_out}
 
 # Load on bigquery
 bq load --field_delimiter "\t" andersen-lab:Variation.{vcf_safe} gs://andersen/{tsv_out} {bigquery_schema}
@@ -135,7 +136,7 @@ if __name__ == '__main__':
     module_path = os.path.split(os.path.realpath(__file__))[0]
     v = vcf(args["<vcf>"])
     vcf_safe = v.filename.replace(".","_")
-    tsv_out = v.filename.replace("vcf","tsv").replace("bcf","tsv").replace(".gz","")
+    tsv_out = v.filename.replace("vcf","tsv").replace("bcf","tsv").replace(".gz","") + ".gz"
 
     info_cols = [list(x) + ["INFO"] for x in r_info.findall(v.raw_header)]
     format_cols = [list(x) + ["FORMAT"] for x in r_format.findall(v.raw_header)]
@@ -146,11 +147,11 @@ if __name__ == '__main__':
         # Generate bigquery schema
         bigquery_schema = ','.join([':'.join(x) for x in bigquery_schema(var_set)]) 
 
-        script_filename = tsv_out.replace("tsv", "bigquery_load.sh")
+        script_filename = tsv_out.replace("tsv", "bigquery_load.sh") 
 
         alert_script(script_filename, load_bigquery.format(**locals()))
         #Generate bcftools query
-        with open(tsv_out, "w") as f:
+        with gzip.open(tsv_out, "wb") as f:
             for line in bcftools_query(var_set):
                 f.write(line + "\n")
     with indent(4):
