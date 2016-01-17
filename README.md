@@ -49,6 +49,7 @@ vcf-toolbox
 	  freq
 	  geno
 	  vcf2tsv
+    vcf2sql
 
 ## Commands
 
@@ -309,6 +310,21 @@ tb vcf2tsv (wide|long) [--print-header --snpeff] <vcf>
 * [ ] generate bigquery schema and output script
 * [ ] import into sqlite database
 
+
+### vcf2sql
+
+Prepares a VCF for import into an sql database. Bigquery, Postgres, Mysql, and sqlite will be supported. Data is loaded denormalized and
+indices are added to enable easy querying.
+
+```
+tb vcf2sql (bigquery|postgres|mysql|sqlite) <vcf>
+```
+
+* [X] Bigquery
+* [ ] Mysql
+* [ ] Postgres
+* [ ] Sqlite
+* [ ] Support for SNPeff annotations.
 
 ### Additional Features
 
