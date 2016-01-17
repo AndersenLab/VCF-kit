@@ -306,9 +306,6 @@ tb vcf2tsv (wide|long) [--print-header --snpeff] <vcf>
 * [X] Long
 * [X] Parse ANN Fields (e.g. snpeff)
 * [ ] Read from stdin
-* [ ] set fields to output (INFO / FORMAT)
-* [ ] generate bigquery schema and output script
-* [ ] import into sqlite database
 
 
 ### vcf2sql
