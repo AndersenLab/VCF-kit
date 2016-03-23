@@ -321,7 +321,9 @@ tb vcf2sql (bigquery|postgres|mysql|sqlite) <vcf>
 * [ ] Mysql
 * [ ] Postgres
 * [ ] Sqlite
+* [ ] Automatically load (use peewee?)
 * [ ] Support for SNPeff annotations.
+* [ ] Support for multi-column types
 * [ ] Break load job for bigquery into multiple files if filesize > 4GB
 * [ ] Output TGT (bases), allele 1, allele 2 for genotypes.
 
