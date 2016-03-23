@@ -7,6 +7,8 @@ options:
   -h --help                   Show this screen.
   --version                   Show version.
   --filename=<filename>       SQLite Filename
+  --table-prefix              Append a prefix to table names
+  --vcf-version               Create a column indicating VCF version
 
 """
 from docopt import docopt
@@ -127,6 +129,9 @@ r_format = re.compile(r'''\#\#FORMAT=<
 
 index_fields = ["CHROM", "POS"]
 
+def snpeff_fields(snpeff_line):
+    [zip(snpeff_fieldlist, x.split("|")) for x in snpeff_line.split(",")]
+
 debug = None
 if len(sys.argv) == 1:
     debug = ['vcf2sql', "test.vcf.gz"]
@@ -165,6 +170,35 @@ if __name__ == '__main__':
             class Meta:
                 database = db
 
+        class annotation(Model):
+            site = ForeignKeyField(site)
+            allele = CharField(index = True)
+            annotation = CharField(index = True)
+            putative_impact = CharField(null = True)
+            gene_name = CharField(index = True, null = True)
+            gene_id = CharField(null = True)
+            feature_type = CharField(null = True)
+            feature_id = CharField(null = True)
+            transcript_biotype = CharField(null = True)
+            rank_total = CharField(null = True)
+            hgvs_c = CharField(null = True)
+            hgvs_p = CharField(null = True)
+            cdna_position = CharField(null = True)
+            cds_position = CharField(null = True)
+            protein_position = CharField(null = True)
+            distance_to_feature = CharField(null = True)
+            errors = CharField(null = True)
+
+            class Meta:
+                database = db
+
+        ann_fields = annotation._meta.sorted_field_names[2:]
+        peewee_field_types = {CharField: str,
+                              FloatField: float,
+                              IntegerField: int,
+                              BooleanField: bool}
+        ann_field_types = [peewee_field_types[type(x)] for x in annotation._meta.sorted_fields[2:]]
+
         class call(Model):
             site = ForeignKeyField(site)
             sample = CharField(index = True, help_text = "Sample Name")
@@ -202,8 +236,10 @@ if __name__ == '__main__':
             pass
         db.create_table(site)
         db.create_table(call)
+        db.create_table(annotation)
         for loc in v:
             site_fields = {}
+            annotation_record_set = []
             # Propogate standard fields
             for x in standard:
                 if x[0] == "_ID":
@@ -216,15 +252,29 @@ if __name__ == '__main__':
                 site_fields[x[0]] = attr
             # Propogate INFO fields
             for x in info_cols:
-                if x[0] in dict(loc.INFO):
-                    attr = loc.INFO[x[0]]
-                    if type(attr) == tuple or type(attr) == list:
-                        attr = ','.join(map(str,attr))
-                    site_fields[x[0]] = attr
+                # Add Annotation Fields
+                if x[0] == "ANN":
+                    annotation_record = {}
+                    for ann in loc.INFO["ANN"].split(","):
+                        for field_name, field_type, field_value in zip(ann_fields, ann_field_types, ann.split("|")):
+                            if not field_value:
+                                annotation_record[field_name] = None
+                            else:
+                                annotation_record[field_name] = field_type(field_value)
+                        annotation_record_set.append(annotation_record)
                 else:
-                    site_fields[x[0]] = None
-            print site_fields
-            site_id = site(**site_fields).save()
+                    try:
+                        attr = loc.INFO[x[0]]
+                        if type(attr) == tuple or type(attr) == list:
+                            attr = ','.join(map(str,attr))
+                        site_fields[x[0]] = attr
+                    except:
+                        site_fields[x[0]] = None
+            site_id = site(**site_fields)
+            site_id.save()
+            # Add site id to annotation records
+            [x.update({"site": site_id}) for x in annotation_record_set]
+            annotation.insert_many(annotation_record_set).execute()
         #print info_cols
         #print format_cols
     with indent(4):
