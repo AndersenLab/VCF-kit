@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 """
 usage:
-  tb vcf2sql (bigquery|postgres|mysql|sqlite) <vcf>
+  tb vcf2sql (bigquery|postgres|mysql|sqlite|datastore|dynamodb) [options] <vcf>
 
 options:
   -h --help                   Show this screen.
   --version                   Show version.
+  --filename=<filename>       SQLite Filename
 
 """
 from docopt import docopt
@@ -16,6 +17,7 @@ import os
 import re
 import itertools
 import gzip
+from peewee import *
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
 
@@ -100,7 +102,7 @@ def alert_script(script_name, script):
 # Standard Columns
 standard = (("CHROM", 1, "String", "Chromosome/Contig", "STANDARD"),
             ("POS", 1, "Integer", "Chromosome/Contig Position", "STANDARD"),
-            ("ID", 1, "String", "Variant ID", "STANDARD"),
+            ("_ID", 1, "String", "Variant ID", "STANDARD"),
             ("REF", 1, "String", "Reference Allele", "STANDARD"),
             ("ALT", 1, "String", "Alternative Alleles (list)", "STANDARD"),
             ("QUAL", 1, "Float", "Variant Quality", "STANDARD"),
@@ -123,6 +125,7 @@ r_format = re.compile(r'''\#\#FORMAT=<
   Description="(?P<desc>.*)".*
   >''', re.VERBOSE)
 
+index_fields = ["CHROM", "POS"]
 
 debug = None
 if len(sys.argv) == 1:
@@ -154,5 +157,75 @@ if __name__ == '__main__':
         with gzip.open(tsv_out, "wb") as f:
             for line in bcftools_query(var_set):
                 f.write(line + "\n")
+    elif args["sqlite"]:
+        db = SqliteDatabase(args["--filename"])
+        # Database
+        class site(Model):
+
+            class Meta:
+                database = db
+
+        class call(Model):
+            site = ForeignKeyField(site)
+            sample = CharField(index = True, help_text = "Sample Name")
+
+            class Meta:
+                database = db
+
+        # Add in site fields
+        site_fields = list(standard)
+        site_fields.extend(list(info_cols))
+        for i in site_fields:
+            if i[1] > 1:
+                i[2] = "String"
+            if i[2] == "String":
+                index_field = i[1] in index_fields
+                CharField(index=index_field, null=True, help_text = i[3]).add_to_class(site, i[0])
+            elif i[2] == "Integer":
+                IntegerField(index=index_field, null=True, help_text = i[3]).add_to_class(site, i[0])
+            elif i[2] == "Float":
+                FloatField(index=index_field, null=True, help_text = i[3]).add_to_class(site, i[0])
+        
+        # Add in format fields
+        for i in format_cols:
+            if i[2] == "String":
+                index_field = i[1] in index_fields
+                CharField(index=index_field, null=True, help_text = i[3]).add_to_class(call, i[0])
+            elif i[2] == "Integer":
+                IntegerField(index=index_field, null=True, help_text = i[3]).add_to_class(call, i[0])
+            elif i[2] == "Float":
+                FloatField(index=index_field, null=True, help_text = i[3]).add_to_class(call, i[0])
+        try:
+            import os
+            os.remove("test.db")
+        except:
+            pass
+        db.create_table(site)
+        db.create_table(call)
+        for loc in v:
+            site_fields = {}
+            # Propogate standard fields
+            for x in standard:
+                if x[0] == "_ID":
+                    attr_name = "ID"
+                else:
+                    attr_name = x[0]
+                attr = getattr(loc, attr_name)
+                if type(attr) == list:
+                    attr = ','.join(attr)
+                site_fields[x[0]] = attr
+            # Propogate INFO fields
+            for x in info_cols:
+                if x[0] in dict(loc.INFO):
+                    attr = loc.INFO[x[0]]
+                    if type(attr) == tuple or type(attr) == list:
+                        attr = ','.join(map(str,attr))
+                    site_fields[x[0]] = attr
+                else:
+                    site_fields[x[0]] = None
+            print site_fields
+            site_id = site(**site_fields).save()
+        #print info_cols
+        #print format_cols
     with indent(4):
         puts(colored.blue("\nTSV Output Complete\n"))
