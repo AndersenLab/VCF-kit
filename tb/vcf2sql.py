@@ -7,12 +7,15 @@ options:
   -h --help                   Show this screen.
   --version                   Show version.
   --filename=<filename>       SQLite Filename
+
   --db=<db>                   Database Name for MySQL, Postgres
   --user=<user>               User for MySQL, Postgres
   --password=<pw>             Password for MySQL, Postgres  
   --host=<host>               Host for MySQL, Postgres
+
   --table-prefix              Append a prefix to table names
   --vcf-version               Create a column indicating VCF version
+  --simple                    Use Reduced Field Set
 
 """
 from docopt import docopt
@@ -153,20 +156,13 @@ r_format = re.compile(r'''\#\#FORMAT=<
   >''', re.VERBOSE)
 
 
-def fix_np_infinite(val):
-    if val < -21474836:
-        return None
-    else:
-        return val
-
 try:
-    import os
     os.remove("test.db")
 except:
     pass
 
-index_fields = ["CHROM", "POS"]
-
+index_fields = ["CHROM", "POS", "SAMPLE", "FT", "GT", "_ID"]
+simple_fields = ["FT", "GT", "TGT", "INDEL", "ANN"]
 format_field_conversion = {"Integer": int, "String": str, "Float": float}
 
 
@@ -183,6 +179,12 @@ def remove_missing_fields(val):
         if k in [x[0] for x in format_cols]:
             ret_fields.append((k, v))
     return ret_fields
+
+def format_tgt(val, gt_dict):
+    if val["GT"] == "./.":
+        return "./."
+    tgt = '/'.join([gt_dict[int(x)] for x in re.split("[\|/]", val["GT"])])
+    return tgt
 
 debug = None
 if len(sys.argv) == 1:
@@ -204,6 +206,10 @@ if __name__ == '__main__':
                  for x in r_info.findall(v.raw_header)]
     format_cols = [map(autoconvert, list(x)) + ["FORMAT"]
                    for x in r_format.findall(v.raw_header)]
+
+    if args["--simple"]:
+        info_cols = [x for x in info_cols if x[0] in simple_fields]
+        format_cols = [x for x in format_cols if x[0] in simple_fields]
 
     if args["bigquery"]:
         # Combine variable sets
@@ -240,7 +246,7 @@ if __name__ == '__main__':
         annotation = CharField(index=True)
         putative_impact = CharField(null=True)
         gene_name = CharField(index=True, null=True)
-        gene_id = CharField(null=True)
+        gene_id = CharField(index=True, null=True)
         feature_type = CharField(null=True)
         feature_id = CharField(null=True)
         transcript_biotype = CharField(null=True)
@@ -266,8 +272,8 @@ if __name__ == '__main__':
 
     class call(Model):
         site = ForeignKeyField(site)
-        sample = CharField(index=True, help_text="Sample Name")
-
+        SAMPLE = CharField(index=True, help_text="Sample Name")
+        TGT = CharField(index=True)
         class Meta:
             database = db
 
@@ -278,7 +284,7 @@ if __name__ == '__main__':
         if i[1] > 1:
             i[2] = "String"
         if i[2] == "String":
-            index_field = i[1] in index_fields
+            index_field = i[0] in index_fields
             CharField(index=index_field, null=True,
                       help_text=i[3]).add_to_class(site, i[0])
         elif i[2] == "Integer":
@@ -289,11 +295,10 @@ if __name__ == '__main__':
                        help_text=i[3]).add_to_class(site, i[0])
 
     for i in format_cols:
-        print i
         if i[1] > 1:
             i[2] = "String"
         if i[2] == "String":
-            index_field = i[1] in index_fields
+            index_field = i[0] in index_fields
             CharField(index=index_field, null=True,
                       help_text=i[3]).add_to_class(call, i[0])
         elif i[2] == "Integer":
@@ -302,10 +307,11 @@ if __name__ == '__main__':
         elif i[2] == "Float":
             FloatField(index=index_field, null=True,
                        help_text=i[3]).add_to_class(call, i[0])
-
-    db.create_table(site)
-    db.create_table(call)
-    db.create_table(annotation)
+    try:
+        db.drop_tables([site, call, annotation], safe = True, cascade = True)
+    except:
+        pass
+    db.create_tables([site, call, annotation])
     for loc in v:
         site_fields = {}
         annotation_record_set = []
@@ -347,13 +353,16 @@ if __name__ == '__main__':
             site_id.save()
 
             # Insert genotypes
+            gt_dict = {0: loc.REF}
+            alt_gt = dict(list(enumerate([0] + loc.ALT))[1:])
+            gt_dict.update(alt_gt)
             loc_s = str(loc).strip().split("\t")
             format_str = loc_s[8].strip().split(":")
             # gt calls
             gt_set = [dict(remove_missing_fields(
                 zip(format_str, map(filter_format_null, x.split(":"))))) for x in loc_s[9:]]
             # add sample names
-            [x.update({"sample": sample, "site": site_id})
+            [x.update({"SAMPLE": sample, "site": site_id, "TGT": format_tgt(x, gt_dict)})
              for sample, x in zip(v.samples, gt_set)]
             # Add site id to annotation records
             [x.update({"site": site_id}) for x in annotation_record_set]
