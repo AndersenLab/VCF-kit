@@ -13,9 +13,10 @@ options:
   --password=<pw>             Password for MySQL, Postgres  
   --host=<host>               Host for MySQL, Postgres
 
-  --table-prefix              Append a prefix to table names
+  --table-name                Append a prefix to table names
   --vcf-version               Create a column indicating VCF version
   --simple                    Use Reduced Field Set
+  --ann                    Parse snpeff fields
 
 """
 from docopt import docopt
@@ -29,6 +30,7 @@ import gzip
 from peewee import *
 from pprint import pprint as pp
 from signal import signal, SIGPIPE, SIG_DFL
+from slugify import slugify
 signal(SIGPIPE, SIG_DFL)
 
 
@@ -233,66 +235,63 @@ if __name__ == '__main__':
                            user = args["--user"],
                            password = args["--password"],
                            host = args["--host"])
-    # Database
 
-    class site(Model):
+    # Set table name
+    tbl_name = slugify(args["<vcf>"])
+    if args["--table-name"]:
+        tbl_name = args["--table-name"]
 
-        class Meta:
-            database = db
+    class vcf_table(Model):
 
-    class annotation(Model):
-        site = ForeignKeyField(site)
-        allele = CharField(index=True)
-        annotation = CharField(index=True)
-        putative_impact = CharField(null=True)
-        gene_name = CharField(index=True, null=True)
-        gene_id = CharField(index=True, null=True)
-        feature_type = CharField(null=True)
-        feature_id = CharField(null=True)
-        transcript_biotype = CharField(null=True)
-        rank_total = CharField(null=True)
-        hgvs_c = CharField(null=True)
-        hgvs_p = CharField(null=True)
-        cdna_position = CharField(null=True)
-        cds_position = CharField(null=True)
-        protein_position = CharField(null=True)
-        distance_to_feature = CharField(null=True)
-        errors = CharField(null=True)
-
-        class Meta:
-            database = db
-
-    ann_fields = annotation._meta.sorted_field_names[2:]
-    peewee_field_types = {CharField: str,
-                          FloatField: float,
-                          IntegerField: int,
-                          BooleanField: bool}
-    ann_field_types = [peewee_field_types[
-        type(x)] for x in annotation._meta.sorted_fields[2:]]
-
-    class call(Model):
-        site = ForeignKeyField(site)
+        CHROM = CharField(index = True)
+        POS = IntegerField(index = True)
+        _ID = CharField(index = True, null = True)
+        REF = CharField(index = True)
+        ALT = CharField(index = True, null = True)
+        QUAL = FloatField(null = True)
+        FILTER = CharField(null = True)
         SAMPLE = CharField(index=True, help_text="Sample Name")
-        TGT = CharField(index=True)
+        TGT = CharField(index=True) 
+
+        if args["--ann"]:
+            allele = CharField(index=True)
+            annotation = CharField(index=True)
+            putative_impact = CharField(null=True)
+            gene_name = CharField(index=True, null=True)
+            gene_id = CharField(index=True, null=True)
+            feature_type = CharField(null=True)
+            feature_id = CharField(null=True)
+            transcript_biotype = CharField(null=True)
+            rank_total = CharField(null=True)
+            hgvs_c = CharField(null=True)
+            hgvs_p = CharField(null=True)
+            cdna_position = CharField(null=True)
+            cds_position = CharField(null=True)
+            protein_position = CharField(null=True)
+            distance_to_feature = CharField(null=True)
+            errors = CharField(null=True)
+
         class Meta:
             database = db
+            db_table = tbl_name
 
-    # Add in site fields
-    site_fields = list(standard)
-    site_fields.extend(list(info_cols))
-    for i in site_fields:
+    #ann_field_types = [peewee_field_types[
+    #    type(x)] for x in annotation._meta.sorted_fields[2:]]
+
+    # Add in INFO Cols
+    for i in info_cols:
+        index_field = i[0] in index_fields
         if i[1] > 1:
             i[2] = "String"
         if i[2] == "String":
-            index_field = i[0] in index_fields
             CharField(index=index_field, null=True,
-                      help_text=i[3]).add_to_class(site, i[0])
+                      help_text=i[3]).add_to_class(vcf_table, i[0])
         elif i[2] == "Integer":
             IntegerField(index=index_field, null=True,
-                         help_text=i[3]).add_to_class(site, i[0])
+                         help_text=i[3]).add_to_class(vcf_table, i[0])
         elif i[2] == "Float":
             FloatField(index=index_field, null=True,
-                       help_text=i[3]).add_to_class(site, i[0])
+                       help_text=i[3]).add_to_class(vcf_table, i[0])
 
     for i in format_cols:
         if i[1] > 1:
@@ -300,18 +299,18 @@ if __name__ == '__main__':
         if i[2] == "String":
             index_field = i[0] in index_fields
             CharField(index=index_field, null=True,
-                      help_text=i[3]).add_to_class(call, i[0])
+                      help_text=i[3]).add_to_class(vcf_table, i[0])
         elif i[2] == "Integer":
             IntegerField(index=index_field, null=True,
-                         help_text=i[3]).add_to_class(call, i[0])
+                         help_text=i[3]).add_to_class(vcf_table, i[0])
         elif i[2] == "Float":
             FloatField(index=index_field, null=True,
-                       help_text=i[3]).add_to_class(call, i[0])
+                       help_text=i[3]).add_to_class(vcf_table, i[0])
     try:
-        db.drop_tables([site, call, annotation], safe = True, cascade = True)
+        db.drop_tables([vcf_table], safe = True, cascade = True)
     except:
         pass
-    db.create_tables([site, call, annotation])
+    db.create_tables([vcf_table])
     for loc in v:
         site_fields = {}
         annotation_record_set = []
@@ -349,7 +348,7 @@ if __name__ == '__main__':
                 except:
                     site_fields[x[0]] = None
         with db.atomic():
-            site_id = site(**site_fields)
+            site_id = vcf_table(**site_fields)
             site_id.save()
 
             # Insert genotypes
@@ -362,7 +361,7 @@ if __name__ == '__main__':
             gt_set = [dict(remove_missing_fields(
                 zip(format_str, map(filter_format_null, x.split(":"))))) for x in loc_s[9:]]
             # add sample names
-            [x.update({"SAMPLE": sample, "site": site_id, "TGT": format_tgt(x, gt_dict)})
+            [x.update({"SAMPLE": sample, "TGT": format_tgt(x, gt_dict)})
              for sample, x in zip(v.samples, gt_set)]
             # Add site id to annotation records
             [x.update({"site": site_id}) for x in annotation_record_set]
