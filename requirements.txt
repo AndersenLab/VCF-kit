@@ -1,4 +1,5 @@
 setuptools
+awesome-slugify
 numpy
 cython
 cyvcf2>=0.1.9
