@@ -329,9 +329,11 @@ if __name__ == '__main__':
                         use_modifier = (args["--modifier"] and ann["putative_impact"] == "MODIFIER")
                         if gt["TGT"] is not None:
                             allele_gt = (ann["allele"] in re.split(r"[\|/]+", gt["TGT"]))
+                            if ann["putative_impact"] != "MODIFIER":
+                                print ann["putative_impact"]
                             if ((ann["putative_impact"] != "MODIFIER") or use_modifier) and allele_gt:
                                 site_fields.update(ann)
-                                insert_set.append(site_fields)
+                                insert_set.append(copy.copy(site_fields))
                                 record_inserted = True
                     if record_inserted is False:
                         record_inserted = True
