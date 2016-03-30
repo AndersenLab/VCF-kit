@@ -270,86 +270,75 @@ if __name__ == '__main__':
                     attr = ','.join(attr)
                 site_fields[x[0]] = attr
 
-        annotation_record_set = []
-        # Propogate INFO fields
-        for x in info_cols:
-            # Add Annotation Fields
-            if x[0] == "ANN":
-                annotation_record = {}
-                for ann in loc.INFO["ANN"].split(","):
-                    for field_name, field_type, field_value in zip(ann_fields, ann_field_types, ann.split("|")):
-                        if not field_value:
-                            annotation_record[field_name] = None
-                        else:
-                            annotation_record[field_name] = field_type(field_value)
-                    if ((annotation_record["putative_impact"] != "MODIFIER") or args["--modifier"]):
-                        annotation_record_set.append(copy.copy(annotation_record))
-            else:
-                        attr = loc.INFO[x[0]]
-                        if type(attr) == tuple or type(attr) == list:
-                            attr = ','.join(map(str, attr))
-                        site_fields[x[0]] = attr
-                    except:
-                        site_fields[x[0]] = None
+            annotation_record_set = []
+            # Propogate INFO fields
+            for x in info_cols:
+                # Add Annotation Fields
+                if x[0] == "ANN":
+                    annotation_record = {}
+                    for ann in loc.INFO["ANN"].split(","):
+                        for field_name, field_type, field_value in zip(ann_fields, ann_field_types, ann.split("|")):
+                            if not field_value:
+                                annotation_record[field_name] = None
+                            else:
+                                annotation_record[field_name] = field_type(field_value)
+                        if ((annotation_record["putative_impact"] != "MODIFIER") or args["--modifier"]):
+                            annotation_record_set.append(copy.copy(annotation_record))
+                else:
+                        try:
+                            attr = loc.INFO[x[0]]
+                            if type(attr) == tuple or type(attr) == list:
+                                attr = ','.join(map(str, attr))
+                            site_fields[x[0]] = attr
+                        except:
+                            site_fields[x[0]] = None
 
-        # Insert genotypes
-        gt_dict = {0: loc.REF}
-        alt_gt = dict(list(enumerate([0] + loc.ALT))[1:])
-        gt_dict.update(alt_gt)
-        loc_s = str(loc).strip().split("\t")
-        format_str = loc_s[8].strip().split(":")
+            # Insert genotypes
+            gt_dict = {0: loc.REF}
+            alt_gt = dict(list(enumerate([0] + loc.ALT))[1:])
+            gt_dict.update(alt_gt)
+            loc_s = str(loc).strip().split("\t")
+            format_str = loc_s[8].strip().split(":")
 
-        # Process genotype calls
-        # gt calls
-        gt_set = [dict(remove_missing_fields(
-            zip(format_str, map(filter_format_null, x.split(":"))))) for x in loc_s[9:]]
+            # Process genotype calls
+            # gt calls
+            gt_set = [dict(remove_missing_fields(
+                zip(format_str, map(filter_format_null, x.split(":"))))) for x in loc_s[9:]]
 
-        # add sample names
-        [x.update({"SAMPLE": sample, "TGT": format_tgt(x, gt_dict)})
-         for sample, x in zip(v.samples, gt_set)]
+            # add sample names
+            [x.update({"SAMPLE": sample, "TGT": format_tgt(x, gt_dict)})
+             for sample, x in zip(v.samples, gt_set)]
 
-        # Insert Data
-        for gt in gt_set:
-            sample_fields = {}
-            sample_fields.update(site_fields)
-            sample_fields.update(gt)
-            if args["--ANN"]:
-                record_inserted = False # Ensure at least one record inserted
-                for i in annotation_record_set:
-                    if gt["TGT"] is not None:
-                        allele_gt = (i["allele"] in re.split(r"[\|/]+", gt["TGT"]))
-                        if allele_gt:
-                            sample_fields.update(i)
-                            insert_set.append(copy.copy(sample_fields))
-                            record_inserted = True
-                if record_inserted is False:
-                    sample_fields.update({k: None for k in ann_fields})
-                    insert_set.append(copy.copy(sample_fields))
-                    record_inserted = True
-            else:
-                insert_set.append(copy.copy(sample_fields))
-
-        if c % 100 == 0:
-            #print pp(insert_set)
-                            if ((ann["putative_impact"] != "MODIFIER") or (use_modifier)) and allele_gt:
-                                site_fields.update(copy.copy(ann))
-                                insert_set.append(copy.copy(site_fields))
+            # Insert Data
+            for gt in gt_set:
+                sample_fields = {}
+                sample_fields.update(site_fields)
+                sample_fields.update(gt)
+                if args["--ANN"]:
+                    record_inserted = False # Ensure at least one record inserted
+                    for i in annotation_record_set:
+                        if gt["TGT"] is not None:
+                            allele_gt = (i["allele"] in re.split(r"[\|/]+", gt["TGT"]))
+                            if allele_gt:
+                                sample_fields.update(i)
+                                insert_set.append(copy.copy(sample_fields))
                                 record_inserted = True
                     if record_inserted is False:
+                        sample_fields.update({k: None for k in ann_fields})
+                        insert_set.append(copy.copy(sample_fields))
                         record_inserted = True
-                        insert_set.append(copy.copy(site_fields))
                 else:
-                    insert_set.append(copy.copy(site_fields))
-        
-            field_names = vcf_table._meta.sorted_field_names[1:]
-            for rec in insert_set:
-                for k in field_names:
-                    if k not in rec:
-                        rec[k] = ""
-                    elif rec[k] is None:
-                        rec[k] = ""
-                csv_writer.writerow([str(rec[x]) for x in field_names])
-            insert_set = []
+                    insert_set.append(copy.copy(sample_fields))
+            
+                field_names = vcf_table._meta.sorted_field_names[1:]
+                for rec in insert_set:
+                    for k in field_names:
+                        if k not in rec:
+                            rec[k] = ""
+                        elif rec[k] is None:
+                            rec[k] = ""
+                    csv_writer.writerow([str(rec[x]) for x in field_names])
+                insert_set = []
         db.close()
         db.connect()
         load_csv(vcf_table, csv_out.name, field_names = field_names, has_header = False, quoting=csv.QUOTE_MINIMAL)
