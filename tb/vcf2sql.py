@@ -22,19 +22,19 @@ options:
 """
 from docopt import docopt
 from utils.vcf import *
-from subprocess import Popen, PIPE
 import sys
 import os
 import re
-import itertools
-import gzip
 from peewee import *
-from pprint import pprint as pp
 from signal import signal, SIGPIPE, SIG_DFL
 from slugify import slugify
 import datetime
 import copy
+import tempfile
+import csv
+from playhouse.csv_loader import load_csv
 signal(SIGPIPE, SIG_DFL)
+
 
 def boolify(s):
     if s == 'True':
@@ -117,21 +117,7 @@ ann_fields = ["allele",
               "distance_to_feature",
               "errors"]
 
-ann_field_types = [str, 
-              str,
-              str,
-              str,
-              str,
-              str,
-              str,
-              str,
-              str,
-              str,
-              str,
-              str,
-              str,
-              str,
-              str]
+ann_field_types = [str]*14
 
 def filter_format_null(val):
     if val == ".":
@@ -265,43 +251,46 @@ if __name__ == '__main__':
     db.create_tables([vcf_table])
     c = 0
     insert_set = []
-    for loc in v:
-        c += 1
-        site_fields = {}
-        annotation_record_set = []
+    csv_out = tempfile.NamedTemporaryFile('w', prefix = "vcf2sql_", dir = '.', delete = False)
+    with open(csv_out.name, 'w') as f:
+        csv_writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
+        for loc in v:
+            c += 1
+            site_fields = {}
+            annotation_record_set = []
 
-        # Propogate standard fields
-        for x in standard:
-            if x[0] == "_ID":
-                attr_name = "ID"
-            else:
-                attr_name = x[0]
-            attr = getattr(loc, attr_name)
-            if type(attr) == list:
-                attr = ','.join(attr)
-            site_fields[x[0]] = attr
+            # Propogate standard fields
+            for x in standard:
+                if x[0] == "_ID":
+                    attr_name = "ID"
+                else:
+                    attr_name = x[0]
+                attr = getattr(loc, attr_name)
+                if type(attr) == list:
+                    attr = ','.join(attr)
+                site_fields[x[0]] = attr
 
-        # Propogate INFO fields
-        for x in info_cols:
-            # Add Annotation Fields
-            if x[0] == "ANN":
-                annotation_record = {}
-                for ann in loc.INFO["ANN"].split(","):
-                    for field_name, field_type, field_value in zip(ann_fields, ann_field_types, ann.split("|")):
-                        if not field_value:
-                            annotation_record[field_name] = None
-                        else:
-                            annotation_record[field_name] = field_type(field_value)
-                    annotation_record_set.append(annotation_record)
-            else:
-                try:
-                    attr = loc.INFO[x[0]]
-                    if type(attr) == tuple or type(attr) == list:
-                        attr = ','.join(map(str, attr))
-                    site_fields[x[0]] = attr
-                except:
-                    site_fields[x[0]] = None
-        with db.atomic():
+            # Propogate INFO fields
+            for x in info_cols:
+                # Add Annotation Fields
+                if x[0] == "ANN":
+                    annotation_record = {}
+                    for ann in loc.INFO["ANN"].split(","):
+                        for field_name, field_type, field_value in zip(ann_fields, ann_field_types, ann.split("|")):
+                            if not field_value:
+                                annotation_record[field_name] = None
+                            else:
+                                annotation_record[field_name] = field_type(field_value)
+                        annotation_record_set.append(annotation_record)
+                else:
+                    try:
+                        attr = loc.INFO[x[0]]
+                        if type(attr) == tuple or type(attr) == list:
+                            attr = ','.join(map(str, attr))
+                        site_fields[x[0]] = attr
+                    except:
+                        site_fields[x[0]] = None
+
             # Insert genotypes
             gt_dict = {0: loc.REF}
             alt_gt = dict(list(enumerate([0] + loc.ALT))[1:])
@@ -329,8 +318,8 @@ if __name__ == '__main__':
                         use_modifier = (args["--modifier"] and ann["putative_impact"] == "MODIFIER")
                         if gt["TGT"] is not None:
                             allele_gt = (ann["allele"] in re.split(r"[\|/]+", gt["TGT"]))
-                            if ((ann["putative_impact"] != "MODIFIER") or use_modifier) and allele_gt:
-                                site_fields.update(ann)
+                            if ((ann["putative_impact"] != "MODIFIER") or (use_modifier)) and allele_gt:
+                                site_fields.update(copy.copy(ann))
                                 insert_set.append(copy.copy(site_fields))
                                 record_inserted = True
                     if record_inserted is False:
@@ -338,11 +327,19 @@ if __name__ == '__main__':
                         insert_set.append(copy.copy(site_fields))
                 else:
                     insert_set.append(copy.copy(site_fields))
-            
-            if c % 100 == 0:
-                vcf_table.insert_many(insert_set).execute()
-                insert_set = []
-                print("{loc.CHROM}\t{loc.POS}\t{c} records inserted".format(**locals()))
-    
+        
+            field_names = vcf_table._meta.sorted_field_names[1:]
+            for rec in insert_set:
+                for k in field_names:
+                    if k not in rec:
+                        rec[k] = ""
+                    elif rec[k] is None:
+                        rec[k] = ""
+                csv_writer.writerow([str(rec[x]) for x in field_names])
+            insert_set = []
+        db.close()
+        db.connect()
+        load_csv(vcf_table, csv_out.name, field_names = field_names, has_header = False, quoting=csv.QUOTE_MINIMAL)
+
 with indent(4):
     puts(colored.blue("\nDB Setup Complete\n"))
