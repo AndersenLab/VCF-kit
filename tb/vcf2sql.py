@@ -253,7 +253,7 @@ if __name__ == '__main__':
     insert_set = []
     csv_out = tempfile.NamedTemporaryFile('w', prefix = "vcf2sql_", dir = '.', delete = False)
     with open(csv_out.name, 'w') as f:
-        csv_writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
+        csv_writer = csv.writer(sys.stdout, quoting=csv.QUOTE_MINIMAL)
         for loc in v:
             c += 1
             site_fields = {}
@@ -337,11 +337,8 @@ if __name__ == '__main__':
                             rec[k] = ""
                         elif rec[k] is None:
                             rec[k] = ""
-                    csv_writer.writerow([str(rec[x]) for x in field_names])
+                    csv_writer.writerow(["0"] + [str(rec[x]) for x in field_names])
                 insert_set = []
-        db.close()
-        db.connect()
-        load_csv(vcf_table, csv_out.name, field_names = field_names, has_header = False, quoting=csv.QUOTE_MINIMAL)
 
 with indent(4):
     puts(colored.blue("\nDB Setup Complete\n"))
