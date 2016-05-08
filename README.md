@@ -187,6 +187,7 @@ Suite of tools for genotyping: via sanger sequencing, using snip-SNPs, and indel
 * [ ] Primer Design 
 	* [ ] snip-SNP
 	* [ ] Indels
+  * [ ] Use bcftools consensus
 
 ### hmm
 
@@ -312,6 +313,9 @@ tb vcf2tsv (wide|long) [--print-header --snpeff] <vcf>
 * [X] Parse ANN Fields (e.g. snpeff)
 * [ ] Read from stdin
 
+### vcfcompare
+
+Tool for comparing concordance across genome.
 
 ### vcf2sql
 
@@ -323,11 +327,12 @@ indices are added to enable easy querying.
 ```
 
 * [X] Bigquery
-* [ ] Mysql
-* [ ] Postgres
-* [ ] Sqlite
-* [ ] Automatically load (use peewee?)
-* [x] Support for SNPeff annotations.
+* [X] Mysql
+* [X] Postgres
+* [X] Sqlite
+* [X] Automatically load
+* [X] Support for SNPeff annotations
+* [ ] Reorder columns
 * [ ] Support for multi-column types
 * [ ] Break load job for bigquery into multiple files if filesize > 4GB
 * [ ] Output TGT (bases), allele 1, allele 2 for genotypes.
