@@ -16,6 +16,7 @@ options:
   --table-prefix              Append a prefix to table names
   --vcf-version               Create a column indicating VCF version
   --simple                    Use Reduced Field Set
+  --unnormalized              Use a single table
 
 """
 from docopt import docopt

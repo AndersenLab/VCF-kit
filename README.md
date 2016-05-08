@@ -33,23 +33,28 @@ vcf-toolbox
 
 ## Usage
 
-	VCF-Toolbox 0.1
+```
+  VCF-Toolbox 0.1
 
-	usage:
-	  tb <command> [<args>...]
-	  tb -h | --help
-	  tb --version
+  usage:
+    tb <command> [<args>...]
+    tb -h | --help
+    tb --version
 
-	commands:
-	  call
-	  primer
-	  tajima
-	  genome
-	  phylo
-	  freq
-	  geno
-	  vcf2tsv
-    vcf2sql
+  commands:
+  tajima
+  hmm
+  filter
+  call
+  primer
+  genome
+  rename
+  phylo
+  freq
+  geno
+  vcf2tsv
+  vcf2sql
+```
 
 ## Commands
 
@@ -149,7 +154,7 @@ Manages genomes used for generating primers and other tasks. Performs indexing f
 * [ ] Add UCSC genome source
 * [ ] Add wormbase genome source
 * [ ] Add custom genome directory
-
+* [ ] Setup user environmental variables (e.g. `REFERENCE GENOME`) and location in home folder.
 
 
 The __genome__ utility can be used to download genomes from NCBI, <wormbase?>, etc. Downloaded genomes are indexed with bwa, samtools (faidx) and blast. 
@@ -192,7 +197,7 @@ Suite of tools for genotyping: via sanger sequencing, using snip-SNPs, and indel
 
 ###### Generate a fasta-alignment for variant calls
 
-The `phylo fasta` command can be used to generate a fasta file. Every base corresponds with a SNP. creating an alignment that can be fed into tools to produce phylogenies. Alternatively, you can use the `phylo tree` command.
+The `phylo fasta` command can be used to generate a fasta file. Every base corresponds with a SNP. creating an alignment that can be fed into tools to produce phylogenies. Alternatively, you can use the `phylo tree` command to generate a phylogeny directly.
 
 ```
 tb phylo fasta <vcf>
@@ -246,7 +251,7 @@ tb phylo tree nj --plot <vcf>
 tb geno transfer-filter <vcf>
 ```
 
-Generate a FORMAT field filter column (GF) and transfer filters applied within the FILTER column to the GF field. This utility is useful if variants are called individually (producing a single VCF) for samples and then later merged into a multi-sample VCF. It enables you to track which variant filters were applied to a specific sample rather than across a population. The following header line is added:
+Generate a FORMAT field filter column (FT) and transfer filters applied within the FILTER column to the FT field. This utility is useful if variants are called individually (producing a single VCF) for samples and then later merged into a multi-sample VCF. It enables you to track which variant filters were applied to a specific sample rather than across a population. The following header line is added:
 
 `##FORMAT=<ID=GF,Number=1,Type=String,Description="Genotype Filter">`
 
@@ -314,7 +319,7 @@ Prepares a VCF for import into an sql database. Bigquery, Postgres, Mysql, and s
 indices are added to enable easy querying.
 
 ```
-tb vcf2sql (bigquery|postgres|mysql|sqlite) <vcf>
+  tb vcf2sql (bigquery|postgres|mysql|sqlite) <vcf>
 ```
 
 * [X] Bigquery
@@ -322,10 +327,18 @@ tb vcf2sql (bigquery|postgres|mysql|sqlite) <vcf>
 * [ ] Postgres
 * [ ] Sqlite
 * [ ] Automatically load (use peewee?)
-* [ ] Support for SNPeff annotations.
+* [x] Support for SNPeff annotations.
 * [ ] Support for multi-column types
 * [ ] Break load job for bigquery into multiple files if filesize > 4GB
 * [ ] Output TGT (bases), allele 1, allele 2 for genotypes.
+
+### vcf2bigquery
+
+* [ ] Split bigquery into its own tool
+
+### google datastore / amazon 
+
+* [ ] Split out into separate tools.
 
 ### Additional Features
 
