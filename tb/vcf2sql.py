@@ -18,10 +18,11 @@ options:
   --simple                    Use Reduced Field Set
   --ANN                       Parse snpeff fields
   --modifier                  Include modifier annotation records.
+  --print                     Print CSV to stdout instead of loading.
 
 """
 from docopt import docopt
-from utils.vcf import *
+from utils.vcf import * 
 import sys
 import os
 import re
@@ -32,6 +33,7 @@ import datetime
 import copy
 import tempfile
 import csv
+import json
 from playhouse.csv_loader import load_csv
 signal(SIGPIPE, SIG_DFL)
 
@@ -97,7 +99,7 @@ try:
 except:
     pass
 
-index_fields = ["CHROM", "POS", "SAMPLE", "FT", "GT", "_ID"]
+index_fields = ["CHROM", "POS", "SAMPLE", "FT", "_ID", "REF", "ALT", "gene_name", "gene_id", "putative_impact", "feature_type"]
 simple_fields = ["FT", "GT", "TGT", "INDEL", "ANN"]
 format_field_conversion = {"Integer": int, "String": str, "Float": float}
 
@@ -120,6 +122,7 @@ ann_fields = ["allele",
 
 ann_field_types = [str]*14
 
+
 def filter_format_null(val):
     if val == ".":
         return None
@@ -133,6 +136,7 @@ def remove_missing_fields(val):
         if k in [x[0] for x in format_cols]:
             ret_fields.append((k, v))
     return ret_fields
+
 
 def format_tgt(val, gt_dict):
     if val["GT"] == "./.":
@@ -179,6 +183,7 @@ if __name__ == '__main__':
     if args["--table-name"]:
         tbl_name = args["--table-name"]
 
+
     class vcf_table(Model):
         CHROM = CharField(index = True)
         POS = IntegerField(index = True)
@@ -187,8 +192,7 @@ if __name__ == '__main__':
         ALT = CharField(index = True, null = True)
         QUAL = FloatField(null = True)
         FILTER = CharField(null = True)
-        SAMPLE = CharField(index=True, help_text="Sample Name")
-        TGT = CharField(index=True, null = True)
+        GT = TextField(null = True)
 
         if args["--ANN"]:
             allele = CharField(index=True, null = True)
@@ -215,6 +219,8 @@ if __name__ == '__main__':
     # Add in INFO Cols
     for i in info_cols:
         index_field = i[0] in index_fields
+        if i[0] == "ANN":
+            break
         if i[1] > 1:
             i[2] = "String"
         if i[2] == "String":
@@ -229,116 +235,103 @@ if __name__ == '__main__':
         elif i[2] == "Flag":
             BooleanField(null = True).add_to_class(vcf_table, i[0])
 
-    for i in format_cols:
-        if i[1] > 1:
-            i[2] = "String"
-        if i[2] == "String":
-            index_field = i[0] in index_fields
-            CharField(index=index_field, null=True,
-                      help_text=i[3]).add_to_class(vcf_table, i[0])
-        elif i[2] == "Integer":
-            IntegerField(index=index_field, null=True,
-                         help_text=i[3]).add_to_class(vcf_table, i[0])
-        elif i[2] == "Float":
-            FloatField(index=index_field, null=True,
-                       help_text=i[3]).add_to_class(vcf_table, i[0])
-        elif i[2] == "Flag":
-            BooleanField(null = True).add_to_class(vcf_table, i[0])
-    try:
-        db.drop_tables([vcf_table], safe = True, cascade = True)
-    except:
-        pass
     db.create_tables([vcf_table])
     c = 0
-    insert_set = []
-    csv_out = tempfile.NamedTemporaryFile('w', prefix = "vcf2sql_", dir = '.', delete = False)
-    with open(csv_out.name, 'w') as f:
-        csv_writer = csv.writer(sys.stdout, quoting=csv.QUOTE_MINIMAL)
-        for loc in v:
-            c += 1
-            site_fields = {}
-            annotation_record_set = []
+    loc_set = [] # 
+    insert_set = [] # 
+    csv_writer = csv.writer(sys.stdout, quoting=csv.QUOTE_MINIMAL)
+    for loc in v:
+        c += 1
+        site_fields = {}
+        annotation_record_set = []
 
-            # Propogate standard fields
-            for x in standard:
-                if x[0] == "_ID":
-                    attr_name = "ID"
-                else:
-                    attr_name = x[0]
-                attr = getattr(loc, attr_name)
-                if type(attr) == list:
-                    attr = ','.join(attr)
-                site_fields[x[0]] = attr
+        # Propogate standard fields
+        for x in standard:
+            if x[0] == "_ID":
+                attr_name = "ID"
+            else:
+                attr_name = x[0]
+            attr = getattr(loc, attr_name)
+            if type(attr) == list:
+                attr = ','.join(attr)
+            site_fields[x[0]] = attr
 
-            annotation_record_set = []
-            # Propogate INFO fields
-            for x in info_cols:
-                # Add Annotation Fields
-                if x[0] == "ANN":
-                    annotation_record = {}
-                    for ann in loc.INFO["ANN"].split(","):
-                        for field_name, field_type, field_value in zip(ann_fields, ann_field_types, ann.split("|")):
-                            if not field_value:
-                                annotation_record[field_name] = None
-                            else:
-                                annotation_record[field_name] = field_type(field_value)
-                        if ((annotation_record["putative_impact"] != "MODIFIER") or args["--modifier"]):
-                            annotation_record_set.append(copy.copy(annotation_record))
-                else:
-                        try:
-                            attr = loc.INFO[x[0]]
-                            if type(attr) == tuple or type(attr) == list:
-                                attr = ','.join(map(str, attr))
-                            site_fields[x[0]] = attr
-                        except:
-                            site_fields[x[0]] = None
+        annotation_record_set = []
+        # Propogate INFO fields
+        for x in info_cols:
+            # Add Annotation Fields
+            if x[0] == "ANN":
+                annotation_record = {}
+                for ann in loc.INFO["ANN"].split(","):
+                    for field_name, field_type, field_value in zip(ann_fields, ann_field_types, ann.split("|")):
+                        if not field_value:
+                            annotation_record[field_name] = None
+                        else:
+                            annotation_record[field_name] = field_type(field_value)
+                    if ((annotation_record["putative_impact"] != "MODIFIER") or args["--modifier"]):
+                        annotation_record_set.append(copy.copy(annotation_record))
+            else:
+                try:
+                    attr = loc.INFO[x[0]]
+                    if type(attr) == tuple or type(attr) == list:
+                        attr = ','.join(map(str, attr))
+                    site_fields[x[0]] = attr
+                except:
+                    site_fields[x[0]] = None
 
-            # Insert genotypes
-            gt_dict = {0: loc.REF}
-            alt_gt = dict(list(enumerate([0] + loc.ALT))[1:])
-            gt_dict.update(alt_gt)
-            loc_s = str(loc).strip().split("\t")
-            format_str = loc_s[8].strip().split(":")
+        # Insert genotypes
+        gt_dict = {0: loc.REF}
+        alt_gt = dict(list(enumerate([0] + loc.ALT))[1:])
+        gt_dict.update(alt_gt)
+        loc_s = str(loc).strip().split("\t")
+        format_str = loc_s[8].strip().split(":")
 
-            # Process genotype calls
-            # gt calls
-            gt_set = [dict(remove_missing_fields(
-                zip(format_str, map(filter_format_null, x.split(":"))))) for x in loc_s[9:]]
+        # Process genotype calls
+        # gt calls
+        gt_set = [dict(remove_missing_fields(
+            zip(format_str, map(filter_format_null, x.split(":"))))) for x in loc_s[9:]]
 
-            # add sample names
-            [x.update({"SAMPLE": sample, "TGT": format_tgt(x, gt_dict)})
-             for sample, x in zip(v.samples, gt_set)]
+        # add sample names
+        [x.update({"SAMPLE": sample, "TGT": format_tgt(x, gt_dict)})
+         for sample, x in zip(v.samples, gt_set)]
 
-            # Insert Data
-            for gt in gt_set:
-                sample_fields = {}
-                sample_fields.update(site_fields)
-                sample_fields.update(gt)
-                if args["--ANN"]:
-                    record_inserted = False # Ensure at least one record inserted
-                    for i in annotation_record_set:
-                        if gt["TGT"] is not None:
-                            allele_gt = (i["allele"] in re.split(r"[\|/]+", gt["TGT"]))
-                            if allele_gt:
-                                sample_fields.update(i)
-                                insert_set.append(copy.copy(sample_fields))
-                                record_inserted = True
-                    if record_inserted is False:
-                        sample_fields.update({k: None for k in ann_fields})
-                        insert_set.append(copy.copy(sample_fields))
-                        record_inserted = True
-                else:
-                    insert_set.append(copy.copy(sample_fields))
-            
-                field_names = vcf_table._meta.sorted_field_names[1:]
-                for rec in insert_set:
-                    for k in field_names:
-                        if k not in rec:
-                            rec[k] = ""
-                        elif rec[k] is None:
-                            rec[k] = ""
-                    csv_writer.writerow(["0"] + [str(rec[x]) for x in field_names])
-                insert_set = []
+        # Insert Data
+        if args["--ANN"]:
+            record_inserted = False # Ensure at least one record inserted
+            for i in annotation_record_set:
+                loc_set.append(copy.copy(i))
+                record_inserted = True
+            if not record_inserted:
+                loc_set.append({})
+        else:
+            loc_set.append({})
+        
+        field_names = vcf_table._meta.sorted_field_names[1:]
+        for rec in loc_set:
+            rec["CHROM"] = loc.CHROM
+            rec["POS"] = loc.POS
+            rec["_ID"] = loc.ID
+            rec["REF"] = loc.REF
+            rec["ALT"] = '|'.join(loc.ALT)
+            rec["QUAL"] = loc.QUAL
+            rec["FILTER"] = loc.FILTER
+            rec["GT"] = json.dumps(gt_set)
+            for k in field_names:
+                if k not in rec:
+                    rec[k] = ""
+                elif rec[k] is None:
+                    rec[k] = ""
+            if args["--print"]:
+                csv_writer.writerow(["0"] + [str(rec[x]) for x in field_names])
+            else:
+                insert_set.append(rec)
+            loc_set = []
+        if c % 1000 == 0 and not args["--print"]:
+            print("Inserted {c} records".format(c=c))
+            vcf_table.insert_many(insert_set).execute()
+            insert_set = []
+    if not args["--print"]:
+        vcf_table.insert_many(insert_set).execute() 
 
 with indent(4):
     puts(colored.blue("\nDB Setup Complete\n"))
