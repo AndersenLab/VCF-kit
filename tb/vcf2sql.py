@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  tb vcf2sql (bigquery|postgres|mysql|sqlite|datastore|dynamodb) [options] <vcf>
+  tb vcf2sql (postgres|mysql|sqlite) [options] <vcf>
 
 options:
   -h --help                   Show this screen.
@@ -178,6 +178,7 @@ if __name__ == '__main__':
                            password = args["--password"],
                            host = args["--host"])
 
+    db.connect()
     # Set table name
     tbl_name = slugify(args["<vcf>"])
     if args["--table-name"]:
@@ -235,7 +236,7 @@ if __name__ == '__main__':
         elif i[2] == "Flag":
             BooleanField(null = True).add_to_class(vcf_table, i[0])
 
-    db.create_tables([vcf_table])
+    db.create_tables([vcf_table], safe = True)
     c = 0
     loc_set = [] # 
     insert_set = [] # 
@@ -326,12 +327,14 @@ if __name__ == '__main__':
             else:
                 insert_set.append(rec)
             loc_set = []
-        if c % 1000 == 0 and not args["--print"]:
+        if c % 15000 == 0 and not args["--print"]:
+            with db.atomic():
+                vcf_table.insert_many(insert_set).execute()
             print("Inserted {c} records".format(c=c))
-            vcf_table.insert_many(insert_set).execute()
             insert_set = []
     if not args["--print"]:
-        vcf_table.insert_many(insert_set).execute() 
+        with db.atomic():
+                vcf_table.insert_many(insert_set).execute()
 
 with indent(4):
-    puts(colored.blue("\nDB Setup Complete\n"))
+    puts_err(colored.blue("\nDB Setup Complete\n"))
