@@ -109,6 +109,7 @@ ann_fields = ["allele",
               "gene_name",
               "gene_id",
               "feature_type",
+              "feature_id",
               "transcript_biotype",
               "rank_total",
               "hgvs_c",
@@ -178,11 +179,12 @@ if __name__ == '__main__':
                            password = args["--password"],
                            host = args["--host"])
 
-    db.connect()
-    # Set table name
-    tbl_name = slugify(args["<vcf>"])
-    if args["--table-name"]:
-        tbl_name = args["--table-name"]
+    if not args["--print"]:
+        db.connect()
+        # Set table name
+        tbl_name = slugify(args["<vcf>"])
+        if args["--table-name"]:
+            tbl_name = args["--table-name"]
 
 
     class vcf_table(Model):
@@ -213,9 +215,10 @@ if __name__ == '__main__':
             distance_to_feature = CharField(null=True)
             errors = CharField(null=True)
 
-        class Meta:
-            database = db
-            db_table = tbl_name
+        if not args["--print"]:
+            class Meta:
+                database = db
+                db_table = tbl_name
 
     # Add in INFO Cols
     for i in info_cols:
