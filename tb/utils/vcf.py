@@ -52,7 +52,6 @@ class vcf(cyvcf2):
             >''', re.VERBOSE)
         self.filter_set = {x["id"]: x for x in [m.groupdict() for m in r.finditer(self.raw_header)]}
 
-
         # Format
         r = re.compile(r'''\#\#FORMAT=<
             ID=(?P<id>.+),
@@ -64,11 +63,13 @@ class vcf(cyvcf2):
 
         self.header = copy(self.raw_header)
 
+
     def insert_header_line(self, header_line):
         header = self.header.splitlines()
         header.insert(len(header)-1, header_line)
         self.header = '\n'.join(header)
         return self.header
+
 
     def fetch_variants(self, chrom, start, end, samples = ""):
         """
