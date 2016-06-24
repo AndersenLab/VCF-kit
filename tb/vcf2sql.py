@@ -12,6 +12,7 @@ options:
   --user=<user>               User for MySQL, Postgres
   --password=<pw>             Password for MySQL, Postgres  
   --host=<host>               Host for MySQL, Postgres
+  --compress                  Compress GT data.
 
   --table-name=<table-name>   Append a prefix to table names
   --vcf-version               Create a column indicating VCF version
@@ -34,6 +35,7 @@ import copy
 import tempfile
 import csv
 import json
+import zlib, cPickle, base64
 from playhouse.csv_loader import load_csv
 signal(SIGPIPE, SIG_DFL)
 
@@ -319,7 +321,10 @@ if __name__ == '__main__':
             rec["ALT"] = '|'.join(loc.ALT)
             rec["QUAL"] = loc.QUAL
             rec["FILTER"] = loc.FILTER
-            rec["GT"] = json.dumps(gt_set)
+            if args["--compress"]:
+                rec["GT"] = base64.b64encode(zlib.compress(cPickle.dumps(gt_set).encode("utf-8")))
+            else:
+                rec["GT"] = json.dumps(gt_set)
             for k in field_names:
                 if k not in rec:
                     rec[k] = ""
