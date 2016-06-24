@@ -7,6 +7,7 @@ usage:
   tb --version
 
 commands:
+  annotate
   tajima
   hmm
   filter
@@ -85,7 +86,7 @@ def main():
                 with indent(4):
                     puts(
                         colored.red(prog + " not installed. Use a package manager to install or try using 'tb.py setup'\n"))
-    elif args['<command>'] in ['tajima', 'hmm', 'filter', 'call', 'primer', 'genome', 'rename', 'phylo', 'freq', 'geno', 'vcf2tsv', 'vcf2sql', 'stat', 'datastore']:
+    elif args['<command>'] in ['tajima', 'hmm', 'filter', 'call', 'primer', 'genome', 'rename', 'phylo', 'freq', 'geno', 'vcf2tsv', 'vcf2sql', 'stat', 'annotate']:
         comm = ['python', getScriptPath() + '/' + args["<command>"] + ".py"] + argv
         exit(call(comm))
 
