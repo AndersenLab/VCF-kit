@@ -3,7 +3,7 @@ import glob
 
 setup(name='vcf-toolbox',
       version='0.0.1',
-      packages=['tb','tb.utils'],
+      packages=['vk','vk.utils'],
       description='Tools for working with VCF files',
       url='https://github.com/AndersenLab/vcf-toolbox',
       author='Daniel Cook',
@@ -11,7 +11,7 @@ setup(name='vcf-toolbox',
       license='MIT',
       entry_points="""
       [console_scripts]
-      tb = tb.tb:main
+      vk = vk.vk:main
       """,
       install_requires=["cython","docopt", "cyvcf2", "biopython", "clint", "requests"],
       zip_safe=False)
