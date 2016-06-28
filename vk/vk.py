@@ -27,7 +27,7 @@ from subprocess import call, check_output, CalledProcessError
 from utils.vcf import *
 from clint.textui import colored, puts, indent
 import sys
-import tb
+import vk
 import os
 
 
@@ -37,7 +37,7 @@ if len(sys.argv) == 1:
 
 
 def getScriptPath():
-    return os.path.dirname(tb.__file__)
+    return os.path.dirname(vk.__file__)
 
 
 def main():

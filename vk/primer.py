@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  vk primer [--ref=<reference> --sample=<sample>] <vcf>
+  vk primer sanger [--ref=<reference> --sample=<sample>] <vcf>
   vk primer snipsnp [options] [--ref=<reference> --sample=<sample>] <vcf>
   vk primer indel   [options] [--ref=<reference> --sample=<sample>] <vcf>
 
@@ -116,8 +116,8 @@ if __name__ == '__main__':
     if args["indel"]:
         reference = resolve_reference_genome(args["--ref"])
         v = vcf(args["<vcf>"], reference = args["--ref"])
-        seq = v.consensus(chrom, start, end)
-        print(seq)
+        seq = v.fetch_variants_w_consensus("I", 1, 500000)
+        print(list(seq))
         exit()
 
     # Locate Reference

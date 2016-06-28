@@ -10,7 +10,7 @@ options:
 
 """
 from docopt import docopt
-import tb
+import vk
 from Bio import SeqIO
 from utils.blastn import blast, blast_variant
 from utils.vcf import *
