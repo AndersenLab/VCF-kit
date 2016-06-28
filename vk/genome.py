@@ -4,18 +4,18 @@ usage:
   vk genome location [<path>]
   vk genome list
   vk genome --search=<term>
-  vk genome --download=<asm_name> [--accession-chrom-names]
-  vk genome wormbase (--species)
+  vk genome [options] --download=<asm_name> [--accession-chrom-names]
+  vk genome [options] wormbase (--species)
 
 options:
   -h --help                   Show this screen.
   --version                   Show version.
-  --directory                 Set Genome Directory
+  --directory=<dir>           Set Genome Directory
 
 """
 from docopt import docopt
 from utils.vcf import *
-from utils import *
+from utils.reference import *
 import sys
 from clint.textui import colored, puts, indent, progress
 import gzip
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     # Setup Genomes Directory
     if args["location"] and args["<path>"]:
         with open(get_genome_directory_file(), "w") as f:
-            genome_directory=os.path.realpath(args["<path>"]) 
+            genome_directory=os.path.realpath(args["<path>"])
             with indent(2):
                 puts(colored.blue("\nSet genome location to: " + genome_directory + "/\n"))
             f.write(genome_directory)
@@ -52,28 +52,27 @@ if __name__ == '__main__':
                 os.makedirs(genome_directory)
             exit()
 
-    if "--directory" in args:
-        genome_directory = args["--directory"]
+    if args["--directory"]:
+        genome_directory = os.path.realpath(args["--download"])
     else:
         genome_directory = get_genome_directory()
 
-        with indent(2):
-            puts(colored.blue("\nGenome Directory: " + genome_directory + "/\n"))
+    with indent(2):
+        puts(colored.blue("\nGenome Directory: " + genome_directory + "/\n"))
     
+    genome_db = get_genome_directory() + "/genomes.db"
 
-    genome_db = genome_directory + "/genomes.db"
-
-    #==============#
+    ################
     # List Genomes #
-    #==============#
+    ################
     if args["list"]:
         genome_list = get_genome_list()
         with indent(2):
             exit(puts(colored.blue("\n".join(genome_list) + "\n")))
 
-    #================#
+    ##################
     # Search Genomes #
-    #================#
+    ##################
     elif args["--search"]:
         # Download and cache a list of genomes from NCBI for searching
         if os.path.isfile(genome_db):
@@ -126,7 +125,10 @@ if __name__ == '__main__':
                 puts(colored.red('\nError: Genome not found\n'))
         else:
             reference_download = results[0]
-            reference_directory = genome_directory + "/" + args["--download"] + "/"
+            if not args["--directory"]:
+                reference_directory = genome_directory + "/" + args["--download"] + "/"
+            else:
+                reference_directory = genome_directory + "/"
             if not os.path.exists(reference_directory):
                 os.makedirs(reference_directory)
             url = reference_download[4].replace("ftp://", "http://") + "/" + os.path.split(reference_download[4])[1] + "_genomic.fna.gz"
@@ -159,13 +161,15 @@ if __name__ == '__main__':
                                 chrom_name = re.match(".*[c|C]hromosome ([A-Za-z0-9]+)[W]*", line)
                                 if chrom_name is not None:
                                     outline = ">" + chrom_name.group(1) + "\n"
-                                    puts(colored.blue(line.strip("\n>")) + " --> " + colored.blue(outline.strip("\n>")))
+                                elif line.lower().find("mitochon") > 0:
+                                    outline = ">MtDNA\n"
+                                puts(colored.blue(line.strip("\n>")) + " --> " + colored.blue(outline.strip("\n>")))
                             outfa.write(outline)
 
             with indent(2):
                 puts(colored.green('\nSwitching from gzip to bgzip\n'))
             # Convert to bgzip
-            if not args["--accession-chrom-names"]:
+            if args["--accession-chrom-names"]:
                 call(["gunzip", "-f", ref_filename])
             comm_bgzip = "bgzip --stdout {ref_filename} > {ref_out}"
             comm_bgzip = comm_bgzip.format(ref_filename = ref_filename.replace(".fa.gz",".fa"),
@@ -192,6 +196,10 @@ if __name__ == '__main__':
             # Remove temp files
             if args["--accession-chrom-names"]:
                 os.remove(ref_filename.replace(".fa.gz",".tmp.fa.gz"))
+            puts(colored.red(ref_filename.replace(".fa.gz",".tmp.fa")))
+
+            # Remove temporary files
+            os.remove(ref_filename.replace(".fa.gz",".tmp.fa.gz"))
             os.remove(ref_filename.replace(".fa.gz",".tmp.fa"))
 
             # Add error checking here...
