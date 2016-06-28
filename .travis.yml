@@ -13,4 +13,4 @@ addons:
     - samtools
 
 script: 
-  - py.test test.py
+  - py.test 
