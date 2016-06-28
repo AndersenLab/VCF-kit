@@ -14,6 +14,19 @@ from subprocess import Popen, PIPE, check_output
 from reference import resolve_reference_genome
 np.set_printoptions(threshold=np.nan)
 
+class cvariant:
+    """
+    Variant with surrounding region.
+    """
+    def __init__(self, variant, sample, reference_seq, consensus_seq):
+        self.variant = variant
+        self.reference_seq = reference_seq
+        self.consensus_seq = consensus_seq
+        self.sample = sample
+
+    def __repr__(self):
+        return "{self.variant.CHROM}:{self.variant.POS} [{self.sample}, {self.consensus_seq}]".format(**locals())
+
 
 class vcf(cyvcf2):
     def __init__(self, filename, reference=None):
@@ -38,15 +51,8 @@ class vcf(cyvcf2):
             re.compile("##contig=<ID=(.*?),").findall(self.raw_header),
             map(int, re.compile("##contig.*length=(.*?)>").findall(self.raw_header))
         ))
-        # Info
-        r = re.compile(r'''\#\#INFO=<
-            ID=(?P<id>[^,]+),
-            Number=(?P<number>-?\d+|\.|[AG]),
-            Type=(?P<type>Integer|Float|Flag|Character|String),
-            Description="(?P<desc>[^"]*)"
-            >''', re.VERBOSE)
-        self.info_set = {x["id"]: x for x in [m.groupdict() for m in r.finditer(self.raw_header)]}
 
+        self.info_set   = [x for x in self.header_iter() if x.type == "INFO"]
         self.filter_set = [x for x in self.header_iter() if x.type == "FILTER"]
         self.format_set = [x for x in self.header_iter() if x.type == "FORMAT"]
         self.header = copy(self.raw_header)
@@ -59,28 +65,48 @@ class vcf(cyvcf2):
         return self.header
 
 
-    def fetch_variants(self, chrom, start, end, samples = ""):
+    def fetch_variants(self, chrom, start, end):
         """
-            Use bcftools to fetch variants with view or query 
-            from a given interval, optionally subset by sample.
+            Fetch variants by specifying chrom, start, and end.
         """
-        if samples:
-            sample_query = "--samples=" + ','.join(samples)
         region = "{chrom}:{start}-{end}".format(**locals())
-        comm = filter(len,["bcftools", "view", "-H", sample_query , self.filename, region])
-        comm = Popen(comm, stdout=PIPE, stderr=PIPE)
-        for line in comm.stdout:
-            yield variant_line(line, samples)
+        for i in self(region):
+            yield i
 
 
-    def consensus(self, chrom, start, end, sample = None):
+    def variant_region(self, chrom, start, end, sample = None):
         """
-            Use samtools to fetch consensus; 
+            Use samtools to fetch the variant region
+            with optional consensus of variants.
+
+            Use sample = "ref" to return the reference
+            Omit sample, or set sample = "alt" to return alternative genotypes.
+            Or set sample = <sample name> to return a consensus sequence
+            for a specific sample.
         """
-        command = "samtools faidx {self.reference_file} {chrom}:{start}-{end} | bcftools consensus {self.filename}"
+        sample_flag = ""
+        if sample == "ref":
+            command = "samtools faidx {self.reference_file} {chrom}:{start}-{end}"
+        elif sample == "alt" or sample is None:
+            command = "samtools faidx {self.reference_file} {chrom}:{start}-{end} | bcftools consensus {self.filename}"
+        else:
+            sample_flag = "--sample=" + sample 
+            command = "samtools faidx {self.reference_file} {chrom}:{start}-{end} | bcftools consensus {sample_flag} {self.filename}"
         command = command.format(**locals())
         seq = check_output(command, shell = True)
         return ''.join(seq.splitlines()[1:])
+
+
+    def fetch_variants_w_consensus(self, chrom, start, end, samples = None, size = 100):
+        """
+            Return a variant with the sequence surrounding it; Both reference
+            and alternate or for a set of specified samples..
+        """
+        if samples is None:
+            for variant in self.fetch_variants(chrom, start, end):
+                reference_seq = self.variant_region(chrom, variant.POS - size, variant.POS + size, sample = "ref")
+                consensus_seq = self.variant_region(chrom, variant.POS - size, variant.POS + size, sample = "alt")
+                yield cvariant(variant, reference_seq, consensus_seq, "alt")
 
 
     def window(self, shift_method, window_size, step_size = None):
