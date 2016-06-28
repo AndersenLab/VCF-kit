@@ -26,7 +26,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-[![Build Status](https://travis-ci.org/AndersenLab/vcf-toolbox.svg?branch=master)](https://travis-ci.org/AndersenLab/vcf-toolbox)
+[![Build Status](https://travis-ci.org/AndersenLab/vcf-kit.svg?branch=master)](https://travis-ci.org/AndersenLab/vcf-kit)
 
 vcf-toolbox
 ===========
