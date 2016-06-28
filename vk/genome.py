@@ -42,15 +42,20 @@ if __name__ == '__main__':
     print(args)
     # Setup Genomes Directory
     if args["location"] and args["<path>"]:
-        with open(get_genome_directory_file(), "w") as f:
-            genome_directory=os.path.realpath(args["<path>"])
-            with indent(2):
-                puts(colored.blue("\nSet genome location to: " + genome_directory + "/\n"))
-            f.write(genome_directory)
-            # create directory if not exists
-            if not os.path.exists(genome_directory):
-                os.makedirs(genome_directory)
-            exit()
+        if args["<path>"] == "-":
+            genome_directory = get_genome_directory_file()
+            os.remove(genome_directory)
+            get_genome_directory_file()
+        else:
+            with open(get_genome_directory_file(), "w") as f:
+                genome_directory=os.path.realpath(args["<path>"])
+                with indent(2):
+                    puts(colored.blue("\nSet genome location to: " + genome_directory + "/\n"))
+                f.write(genome_directory)
+                # create directory if not exists
+                if not os.path.exists(genome_directory):
+                    os.makedirs(genome_directory)
+                exit()
 
     if args["--directory"]:
         genome_directory = os.path.realpath(args["--download"])
@@ -58,7 +63,7 @@ if __name__ == '__main__':
         genome_directory = get_genome_directory()
 
     with indent(2):
-        puts(colored.blue("\nGenome Directory: " + genome_directory + "/\n"))
+        puts(colored.blue("\nGenome Directory: " + genome_directory + "\n"))
     
     genome_db = get_genome_directory() + "/genomes.db"
 
@@ -196,7 +201,6 @@ if __name__ == '__main__':
             # Remove temp files
             if args["--accession-chrom-names"]:
                 os.remove(ref_filename.replace(".fa.gz",".tmp.fa.gz"))
-            puts(colored.red(ref_filename.replace(".fa.gz",".tmp.fa")))
 
             # Remove temporary files
             os.remove(ref_filename.replace(".fa.gz",".tmp.fa.gz"))
