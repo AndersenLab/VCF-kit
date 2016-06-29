@@ -176,7 +176,7 @@ if __name__ == '__main__':
                 # Convert to bgzip
                 if args["--accession-chrom-names"]:
                     call(["gunzip", "-f", ref_filename])
-                comm_bgzip = "bgzip --stdout {ref_filename} > {ref_out}"
+                comm_bgzip = "bgzip -f --stdout {ref_filename} > {ref_out}"
                 comm_bgzip = comm_bgzip.format(ref_filename = ref_filename.replace(".fa.gz",".fa"),
                                   ref_out = ref_filename.replace(".tmp",""))
                 call(comm_bgzip, shell = True)
