@@ -183,7 +183,7 @@ if __name__ == '__main__':
                 ref_filename = ref_filename.replace(".tmp","")
             else:
                 puts_err(colored.red("Please install bgzip."))
-
+                exit()
 
             if which("bwa"):
                 with indent(2):
