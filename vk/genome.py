@@ -14,10 +14,11 @@ options:
 
 """
 from docopt import docopt
+from utils import which
 from utils.vcf import *
 from utils.reference import *
 import sys
-from clint.textui import colored, puts, indent, progress
+from clint.textui import colored, puts, puts_err, indent, progress
 import gzip
 from subprocess import call
 from time import time
@@ -38,8 +39,6 @@ if __name__ == '__main__':
                   argv=debug,
                   options_first=False)
 
-    # Show genome location
-    print(args)
     # Setup Genomes Directory
     if args["location"] and args["<path>"]:
         if args["<path>"] == "-":
@@ -171,32 +170,36 @@ if __name__ == '__main__':
                                 puts(colored.blue(line.strip("\n>")) + " --> " + colored.blue(outline.strip("\n>")))
                             outfa.write(outline)
 
-            with indent(2):
-                puts(colored.green('\nSwitching from gzip to bgzip\n'))
-            # Convert to bgzip
-            if args["--accession-chrom-names"]:
-                call(["gunzip", "-f", ref_filename])
-            comm_bgzip = "bgzip --stdout {ref_filename} > {ref_out}"
-            comm_bgzip = comm_bgzip.format(ref_filename = ref_filename.replace(".fa.gz",".fa"),
-                              ref_out = ref_filename.replace(".tmp",""))
-            call(comm_bgzip, shell = True)
-            ref_filename = ref_filename.replace(".tmp","")
+            if which("bgzip"):
+                with indent(2):
+                    puts(colored.green('\nSwitching from gzip to bgzip\n'))
+                # Convert to bgzip
+                if args["--accession-chrom-names"]:
+                    call(["gunzip", "-f", ref_filename])
+                comm_bgzip = "bgzip --stdout {ref_filename} > {ref_out}"
+                comm_bgzip = comm_bgzip.format(ref_filename = ref_filename.replace(".fa.gz",".fa"),
+                                  ref_out = ref_filename.replace(".tmp",""))
+                call(comm_bgzip, shell = True)
+                ref_filename = ref_filename.replace(".tmp","")
+            else:
+                puts_err(colored.red("Please install bgzip."))
 
-            with indent(2):
-                puts(colored.green("\nCreating bwa index\n"))
 
-            call(["bwa", "index", ref_filename])
+            if which("bwa"):
+                with indent(2):
+                    puts(colored.green("\nCreating bwa index\n"))
+                call(["bwa", "index", ref_filename])
 
-            with indent(2):
-                puts(colored.green("\nCreating samtools index\n"))
+            if which("samtools"):
+                with indent(2):
+                    puts(colored.green("\nCreating samtools index\n"))
+                call(["samtools", "faidx", ref_filename])
 
-            call(["samtools", "faidx", ref_filename])
-
-            with indent(2):
-                puts(colored.green("\nCreating blast index\n"))
-
-            comm = "gunzip -c {ref} | makeblastdb -in - -dbtype=nucl -title={ref} -out={ref}".format(ref=ref_filename)
-            call(comm, shell = True)
+            if which("makeblastdb"):
+                with indent(2):
+                    puts(colored.green("\nCreating blast index\n"))
+                comm = "gunzip -c {ref} | makeblastdb -in - -dbtype=nucl -title={ref} -out={ref}".format(ref=ref_filename)
+                call(comm, shell = True)
 
             # Remove temp files
             if args["--accession-chrom-names"]:
