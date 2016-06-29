@@ -1,4 +1,5 @@
 setuptools
+tabulate
 awesome-slugify
 numpy
 cython
