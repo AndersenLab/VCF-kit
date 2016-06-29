@@ -182,7 +182,8 @@ if __name__ == '__main__':
                 call(comm_bgzip, shell = True)
                 ref_filename = ref_filename.replace(".tmp","")
             else:
-                puts_err(colored.red("Please install bgzip."))
+                with indent(2):
+                    puts_err(colored.red("Please install bgzip."))
                 exit()
 
             if which("bwa"):
@@ -190,14 +191,16 @@ if __name__ == '__main__':
                     puts(colored.green("\nCreating bwa index\n"))
                 call(["bwa", "index", ref_filename])
             else:
-                puts(colored.blue("\nSkipping bwa index; bwa not installed\n"))
+                with indent(2):
+                    puts(colored.blue("\nSkipping bwa index; bwa not installed\n"))
 
             if which("samtools"):
                 with indent(2):
                     puts(colored.green("\nCreating samtools index\n"))
                 call(["samtools", "faidx", ref_filename])
             else:
-                puts(colored.blue("\nSkipping samtools index; Samtools not installed\n"))
+                with indent(2):
+                    puts(colored.blue("\nSkipping samtools index; Samtools not installed\n"))
 
             if which("makeblastdb"):
                 with indent(2):
@@ -205,7 +208,8 @@ if __name__ == '__main__':
                 comm = "gunzip -c {ref} | makeblastdb -in - -dbtype=nucl -title={ref} -out={ref}".format(ref=ref_filename)
                 call(comm, shell = True)
             else:
-                puts(colored.blue("\nSkipping creation of blast database; blast is not installed\n"))
+                with indent(2):
+                    puts(colored.blue("\nSkipping creation of blast database; blast is not installed\n"))
 
             # Remove temp files
             if args["--accession-chrom-names"]:
