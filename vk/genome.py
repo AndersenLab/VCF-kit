@@ -189,17 +189,23 @@ if __name__ == '__main__':
                 with indent(2):
                     puts(colored.green("\nCreating bwa index\n"))
                 call(["bwa", "index", ref_filename])
+            else:
+                puts(colored.blue("\nSkipping bwa index; bwa not installed\n"))
 
             if which("samtools"):
                 with indent(2):
                     puts(colored.green("\nCreating samtools index\n"))
                 call(["samtools", "faidx", ref_filename])
+            else:
+                puts(colored.blue("\nSkipping samtools index; Samtools not installed\n"))
 
             if which("makeblastdb"):
                 with indent(2):
-                    puts(colored.green("\nCreating blast index\n"))
+                    puts(colored.green("\nCreating blast database\n"))
                 comm = "gunzip -c {ref} | makeblastdb -in - -dbtype=nucl -title={ref} -out={ref}".format(ref=ref_filename)
                 call(comm, shell = True)
+            else:
+                puts(colored.blue("\nSkipping creation of blast database; blast is not installed\n"))
 
             # Remove temp files
             if args["--accession-chrom-names"]:
