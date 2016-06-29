@@ -19,6 +19,9 @@ def get_genome_directory():
         with open(genome_directory_file, "w") as f:
             genome_directory = os.path.expanduser("~/.genome/")
             f.write(genome_directory)
+    # Create directory if not exists
+    if not os.path.isdir(genome_directory):
+        os.mkdir(genome_directory)
     return genome_directory
 
 
