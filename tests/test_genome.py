@@ -40,6 +40,6 @@ def test_download_genome():
 def test_download_genome_files():
     genome_files = [expanduser("~/.genome/F1L3/") + x for x in listdir(expanduser("~/.genome/F1L3"))]
     # Hash files
-    hashed_files = sorted([(os.path.split(fname)[1], hashlib.sha256(open(fname, 'rb').read()).digest()) for fname in genome_files])
+    hashed_files = set([(os.path.split(fname)[1], hashlib.sha256(open(fname, 'rb').read()).digest()) for fname in genome_files])
     m = hashlib.sha256(str(hashed_files)).hexdigest()
     assert m == "ffef1336ec82212f2b2f10aa9bc5386af92646f53c576f0480270c092d770648"
