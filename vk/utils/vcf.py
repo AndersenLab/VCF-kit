@@ -2,30 +2,58 @@ from cyvcf2 import VCF as cyvcf2
 from cyvcf2 import Variant
 from collections import OrderedDict, deque
 from itertools import islice
-from clint.textui import colored, puts, indent
+from clint.textui import colored, puts, puts_err, indent
 import re
 from copy import copy
 import os
-from . import autoconvert
+from . import autoconvert, lev
 import numpy as np
 import sys
 import fileinput
 from subprocess import Popen, PIPE, check_output
 from reference import resolve_reference_genome
 np.set_printoptions(threshold=np.nan)
+from collections import defaultdict
+from Bio import pairwise2
 
 class cvariant:
     """
     Variant with surrounding region.
     """
-    def __init__(self, variant, sample, reference_seq, consensus_seq):
+    def __init__(self, variant, reference_seq, consensus_seq, template, gt_collection = None):
         self.variant = variant
         self.reference_seq = reference_seq
         self.consensus_seq = consensus_seq
-        self.sample = sample
+        self.edit_distance = lev(self.reference_seq.lower(), self.consensus_seq.lower())
+        if template in [None, "ALT"]:
+            self.output = self.consensus_seq
+            self.sample = "ALT"
+        elif template in ["REF"]:
+            self.output = self.reference_seq
+            self.sample = "REF"
+        else:
+            self.output = self.consensus_seq
+            self.sample = template
+        self.sample_gt = False  # Show sample genotypes.
+        if gt_collection:
+            self.gt_collection = gt_collection
+            self.homozygous_ref = ','.join(self.gt_collection[0])
+            self.heterozygous = ','.join(self.gt_collection[1])
+            self.homozygous_alt = ','.join(self.gt_collection[3])
+            self.missing = ','.join(self.gt_collection[2])
 
     def __repr__(self):
-        return "{self.variant.CHROM}:{self.variant.POS} [{self.sample}, {self.consensus_seq}]".format(**locals())
+        CHROM_POS = "{self.variant.CHROM}:{self.variant.POS}".format(**locals())
+        return "\t".join([CHROM_POS,
+                          self.variant.REF,
+                          ','.join(self.variant.ALT),
+                          self.sample,
+                          str(self.edit_distance),
+                          self.output,
+                          self.homozygous_ref,
+                          self.heterozygous,
+                          self.homozygous_alt,
+                          self.missing])
 
 
 class vcf(cyvcf2):
@@ -52,7 +80,7 @@ class vcf(cyvcf2):
             map(int, re.compile("##contig.*length=(.*?)>").findall(self.raw_header))
         ))
 
-        self.info_set   = [x for x in self.header_iter() if x.type == "INFO"]
+        self.info_set = [x for x in self.header_iter() if x.type == "INFO"]
         self.filter_set = [x for x in self.header_iter() if x.type == "FILTER"]
         self.format_set = [x for x in self.header_iter() if x.type == "FORMAT"]
         self.header = copy(self.raw_header)
@@ -74,39 +102,76 @@ class vcf(cyvcf2):
             yield i
 
 
-    def variant_region(self, chrom, start, end, sample = None):
+    def variant_region(self, chrom, start, end, template = None):
         """
             Use samtools to fetch the variant region
             with optional consensus of variants.
 
-            Use sample = "ref" to return the reference
-            Omit sample, or set sample = "alt" to return alternative genotypes.
-            Or set sample = <sample name> to return a consensus sequence
+            Use template = "ref" to return the reference
+            Omit template, or set sample = "alt" to return alternative genotypes.
+            Or set template = <sample name> to return a consensus sequence
             for a specific sample.
         """
         sample_flag = ""
-        if sample == "ref":
+        if template == "REF":
             command = "samtools faidx {self.reference_file} {chrom}:{start}-{end}"
-        elif sample == "alt" or sample is None:
+        elif template == "ALT" or template is None:
             command = "samtools faidx {self.reference_file} {chrom}:{start}-{end} | bcftools consensus {self.filename}"
         else:
-            sample_flag = "--sample=" + sample 
+            sample_flag = "--sample=" + template # Get template for sample.
             command = "samtools faidx {self.reference_file} {chrom}:{start}-{end} | bcftools consensus {sample_flag} {self.filename}"
         command = command.format(**locals())
         seq = check_output(command, shell = True)
         return ''.join(seq.splitlines()[1:])
 
 
-    def fetch_variants_w_consensus(self, chrom, start, end, samples = None, size = 100):
+    def fetch_variants_w_consensus(self, chrom, start, end, size = 100, template = None, samples = "ALL"):
         """
             Return a variant with the sequence surrounding it; Both reference
-            and alternate or for a set of specified samples..
+            and alternate or for a set of specified samples.
         """
-        if samples is None:
-            for variant in self.fetch_variants(chrom, start, end):
-                reference_seq = self.variant_region(chrom, variant.POS - size, variant.POS + size, sample = "ref")
-                consensus_seq = self.variant_region(chrom, variant.POS - size, variant.POS + size, sample = "alt")
-                yield cvariant(variant, reference_seq, consensus_seq, "alt")
+        if chrom:
+            variant_iterator = self.fetch_variants(chrom, start, end)
+        else:
+            variant_iterator = self
+
+        for variant in variant_iterator:
+            start = variant.POS - size
+            end = variant.POS + size
+            reference_seq = self.variant_region(variant.CHROM,
+                                                start,
+                                                end,
+                                                template="REF")
+            if template in ["ALT", "REF"] and samples is None:
+                # If template set to REF/ALT and no samples, return template.
+                consensus_seq = self.variant_region(variant.CHROM,
+                                                    start,
+                                                    end,
+                                                    template="ALT")
+                yield cvariant(variant, reference_seq, consensus_seq, template)
+            else:
+                # Check that template is sample
+                if template not in self.samples + ["REF", "ALT"]:
+                    with indent(4):
+                        err_msg = "\n" + template + " template not found.\n"
+                        puts_err(colored.red(err_msg))
+                        exit()
+                gt_collection = defaultdict(list)
+                if samples != "-":
+                    pass
+
+                for vcf_sample, gt in zip(samples, variant.gt_types):
+                    gt_collection[gt].append(vcf_sample)
+
+                consensus_seq = self.variant_region(variant.CHROM,
+                                                    variant.POS - size,
+                                                    variant.POS + size,
+                                                    template=template)
+                yield cvariant(variant,
+                               reference_seq,
+                               consensus_seq,
+                               template=template,
+                               gt_collection=gt_collection)
 
 
     def window(self, shift_method, window_size, step_size = None):
