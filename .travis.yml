@@ -12,6 +12,7 @@ addons:
     - build-essential
     - curl
     - ncbi-blast+
+    - muscle
 
 before_install:
   - git clone https://github.com/Linuxbrew/brew.git ~/.linuxbrew
@@ -19,7 +20,7 @@ before_install:
   - export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
   - export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
   - brew tap homebrew/science
-  - brew install bwa samtools muscle 
+  - brew install bwa samtools
 
 install: 
   - pip install Cython
