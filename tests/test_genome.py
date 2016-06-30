@@ -40,6 +40,7 @@ def test_download_genome():
 
 def test_samtools_idx():
     out = check_output("samtools faidx ~/.genome/F1L3/F1L3.fa.gz NZ_FCPC01000094.1:1-20", shell=True)
+    print(out)
     seq = out.splitlines()[1]
     assert seq == "CCTCACCGGATAACGCCGGC"
 
