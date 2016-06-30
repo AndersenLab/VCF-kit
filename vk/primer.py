@@ -1,17 +1,21 @@
 #! /usr/bin/env python
 """
 usage:
-  vk primer sanger [--ref=<reference> --sample=<sample>] <vcf>
-  vk primer snipsnp [options] [--ref=<reference> --sample=<sample>] <vcf>
-  vk primer indel   [options] [--ref=<reference> --sample=<sample>] <vcf>
+  vk primer template [options] <vcf> 
+  vk primer sanger   [options] <vcf>
+  vk primer snipsnp  [options] <vcf>
+  vk primer indel    [options] <vcf>
 
 Example
 
 options:
   -h --help                   Show this screen.
   --version                   Show version.
+  --ref=<reference>           Reference Genome
   --region=<region>           Restrict to region.
-
+  --samples=<samples>         Output genotypes for a sample or set of samples. [default: ALL]
+  --template=<sample>         Sequence to use for template. Use REF, ALT, or sample name. [default: ALT]
+  --size=<int>                Amplicon size/2 (Upstream and downstream length) [default: 50]
 
 
 """
@@ -28,6 +32,9 @@ from glob import glob
 from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
 from Bio.Restriction import AllEnzymes
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE, SIG_DFL)
+
 
 debug = None
 if len(sys.argv) == 1:
@@ -107,24 +114,52 @@ if __name__ == '__main__':
     args = docopt(__doc__, 
                   argv = debug,
                   options_first=False)
-    print args
-
+    print(args)
+    reference = resolve_reference_genome(args["--ref"])
+    v = vcf(args["<vcf>"], reference = args["--ref"])
+    
     if args["--region"]:
         chrom, start, end = parse_region(args["--region"])
-    # Check for std. input
+    else:
+        chrom, start, end = [None]*3
+    
+    if args["--samples"]:
+        if args["--samples"] == "ALL":
+            samples = v.samples
+        else:
+            samples = args["--samples"].split(",")
+            for sample in samples:
+                if sample not in v.samples:
+                    with indent(4):
+                        puts_err(colored.red("\n" + sample + " Not found in VCF\n"))
+                        exit()
+    else:
+        samples = None
 
-    if args["indel"]:
-        reference = resolve_reference_genome(args["--ref"])
-        v = vcf(args["<vcf>"], reference = args["--ref"])
-        seq = v.fetch_variants_w_consensus("I", 1, 500000)
+    # Check for std. input
+    if args["template"]:
+        print('\t'.join(["CHROM_POS",
+                         "REF",
+                         "ALT",
+                         "SAMPLE",
+                         "EDIT_DISTANCE",
+                         "SEQUENCE",
+                         "0/0",
+                         "0/1",
+                         "1/1",
+                         "./."]))
+        for cvariant in v.fetch_variants_w_consensus(chrom, start, end, int(args["--size"]), args["--template"], samples):
+            print(cvariant)
+
+
+    elif args["indel"]:
+        seq = v.fetch_variants_w_consensus(chrom, start, end)
         print(list(seq))
         exit()
 
-    # Locate Reference
-    v = seq_vcf(args["<vcf>"], args["--ref"])
-    print dir(seq_vcf)
-    if args["snpsnp"] == True:
+    elif args["snpsnp"]:
         for primer, restriction_sites, start, end in v.extract_restriction():
             #print primer
             print restriction_sites
             print start, end
+
