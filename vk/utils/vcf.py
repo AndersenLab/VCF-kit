@@ -160,8 +160,9 @@ class vcf(cyvcf2):
                 if samples != "-":
                     pass
 
-                for vcf_sample, gt in zip(samples, variant.gt_types):
-                    gt_collection[gt].append(vcf_sample)
+                for vcf_sample, gt in zip(self.samples, variant.gt_types):
+                    if vcf_sample in samples:
+                        gt_collection[gt].append(vcf_sample)
 
                 consensus_seq = self.variant_region(variant.CHROM,
                                                     variant.POS - size,
