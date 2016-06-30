@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
-- [vcf-toolbox](#vcf-toolbox)
+- [vcf-kit](#vcf-kit)
   - [Usage](#usage)
   - [Commands](#commands)
     - [call](#call)
@@ -12,6 +12,7 @@
           - [Calculate Tajima's D using a bins](#calculate-tajimas-d-using-a-bins)
     - [primer](#primer)
     - [genome](#genome)
+    - [hmm](#hmm)
     - [phylo](#phylo)
           - [Generate a fasta-alignment for variant calls](#generate-a-fasta-alignment-for-variant-calls)
           - [Generate a phylogenetic tree (newick format)](#generate-a-phylogenetic-tree-newick-format)
@@ -21,14 +22,19 @@
           - [het-polarization](#het-polarization)
     - [freq](#freq)
     - [vcf2tsv](#vcf2tsv)
+    - [vcfcompare](#vcfcompare)
+    - [vcf2sql](#vcf2sql)
+    - [vcf2bigquery](#vcf2bigquery)
+    - [google datastore / amazon](#google-datastore--amazon)
     - [Additional Features](#additional-features)
       - [Possible additions?](#possible-additions)
+  - [To Do (Broad)](#to-do-broad)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 [![Build Status](https://travis-ci.org/AndersenLab/vcf-kit.svg?branch=master)](https://travis-ci.org/AndersenLab/vcf-kit)
 
-vcf-toolbox
+vcf-kit
 ===========
 
 ## Usage
