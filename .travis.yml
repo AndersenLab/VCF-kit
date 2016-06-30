@@ -19,7 +19,7 @@ before_install:
   - export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
   - export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
   - brew tap homebrew/science
-  - brew install bwa samtools tabix blast muscle 
+  - brew install bwa samtools blast muscle 
 
 install: 
   - pip install Cython
