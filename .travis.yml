@@ -3,17 +3,15 @@ language: python
 python:
   - "2.7"
 cache:
-  - directories:
-    - ~/.linuxbrew
-  - pip
-  
+  pip
+ 
 
 addons:
   apt:
     packages:
-      - build-essential
-      - curl
-      - glibc
+    - build-essential
+    - curl
+    - glibc
 
 before_install:
   - git clone https://github.com/Linuxbrew/brew.git ~/.linuxbrew
