@@ -34,6 +34,7 @@ def test_search_genome():
 def test_download_genome():
     call(["vk", "genome", "--download", "F1L3"])
     genome_files = listdir(expanduser("~/.genome/F1L3"))
+    print(genome_files)
     assert len(genome_files) == 11
 
 
