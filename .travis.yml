@@ -5,18 +5,26 @@ cache:
   - pip
   
 
+addons:
+  apt:
+    packages:
+      - build-essential
+      - curl
+      - glibc
+
 before_install:
   - git clone https://github.com/Linuxbrew/brew.git ~/.linuxbrew
   - export PATH="$HOME/.linuxbrew/bin:$PATH"
   - export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
   - export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
   - brew tap homebrew/science
-  - brew install bwa samtools bcftools blast muscle
+  - brew install bwa samtools tabix blast muscle 
 
 install: 
   - pip install Cython
   - pip install -r requirements.txt
   - python setup.py install
+
 
 script: 
   - py.test 
