@@ -40,7 +40,7 @@ vcf-kit
 ## Usage
 
 ```
-  VCF-Toolbox 0.1
+  VCF-Kit 0.1
 
   usage:
     vk <command> [<args>...]
