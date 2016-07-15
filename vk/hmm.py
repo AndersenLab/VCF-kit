@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  tb hmm [--alt=<alt_sample> --vcf-out] <vcf>
+  vk hmm [--alt=<alt_sample> --vcf-out] <vcf>
 
 Example
 

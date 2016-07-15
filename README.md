@@ -43,9 +43,9 @@ vcf-kit
   VCF-Toolbox 0.1
 
   usage:
-    tb <command> [<args>...]
-    tb -h | --help
-    tb --version
+    vk <command> [<args>...]
+    vk -h | --help
+    vk --version
 
   commands:
   tajima
@@ -67,8 +67,8 @@ vcf-kit
 ### call
 
 ```
-    tb call <seq> --ref=<reference> [--all-sites --vcf-targets <vcf>]
-    tb call alignments <seq>  [--ref=<reference>]
+    vk call <seq> --ref=<reference> [--all-sites --vcf-targets <vcf>]
+    vk call alignments <seq>  [--ref=<reference>]
 ```
 
 Perform variant calling using blast. Useful for validating variants using sanger sequencing.  
@@ -95,7 +95,7 @@ __Parameters__:
 When run, the code below will calculate Tajima's D across a 100,000 bp sliding window that moves 1,000 bp with each iteratino.
 
 ```
-tb tajima 100000 1000 <vcf>
+vk tajima 100000 1000 <vcf>
 ```
 
 | CHROM   |   BIN_START |   BIN_END |   N_Sites |   N_SNPs |   TajimaD |
@@ -116,7 +116,7 @@ tb tajima 100000 1000 <vcf>
 When run, the code below will calculate Tajima's D across a 100,000 bp sliding window that captures every unique bin of variants that fall within 100,000 bp of one another.
 
 ```
-tb tajima 100000 --sliding <vcf>
+vk tajima 100000 --sliding <vcf>
 ```
 
 | CHROM   |   BIN_START |   BIN_END |   N_Sites |   N_SNPs |    TajimaD |
@@ -131,7 +131,7 @@ tb tajima 100000 --sliding <vcf>
 ###### Calculate Tajima's D using a bins
 
 ```
-tb tajima 1000 1000 <vcf>
+vk tajima 1000 1000 <vcf>
 ```
 
 The code above will calculate Tajima's D using 100,000 bp bins across the genome.
@@ -156,7 +156,7 @@ Manages genomes used for generating primers and other tasks. Performs indexing f
 * [ ] Check that tools (bwa/samtools/blast) are available.
 	* [ ] Skip bwa if not available
 * [ ] Error Checking
-* [ ] List genomes; List by invoking `tb` also.
+* [ ] List genomes; List by invoking `vk` also.
 * [ ] Add UCSC genome source
 * [ ] Add wormbase genome source
 * [ ] Add custom genome directory
@@ -168,13 +168,13 @@ The __genome__ utility can be used to download genomes from NCBI, <wormbase?>, e
 __Output reference filename for a given VCF__
 
 ```
-  tb genome <vcf>
+  vk genome <vcf>
 ```
 
 __Search for genomes__
 
 ```
-  tb genome --search=<term>
+  vk genome --search=<term>
 ```
 
 Search NCBI, etc. for genomes.
@@ -182,7 +182,7 @@ Search NCBI, etc. for genomes.
 __Download genomes__
 
 ```
-  tb genome --download=<asm_name> [--fix-chrom-names]
+  vk genome --download=<asm_name> [--fix-chrom-names]
 ```
 
 To download a genome, specify its assembly name (`asm_name`) as provided from search results. Use `--fix-chrom-names` to replace NCBI chromosome names with more appropriate roman numeral or numeric chromosome names.
@@ -207,7 +207,7 @@ Suite of tools for genotyping: via sanger sequencing, using snip-SNPs, and indel
 The `phylo fasta` command can be used to generate a fasta file. Every base corresponds with a SNP. creating an alignment that can be fed into tools to produce phylogenies. Alternatively, you can use the `phylo tree` command to generate a phylogeny directly.
 
 ```
-tb phylo fasta <vcf>
+vk phylo fasta <vcf>
 ```
 
 __Output__:
@@ -228,7 +228,7 @@ AGAGA-CCCTGG-...
 The `phylo tree` command produces an alignment using SNPs which is fed into [MUSCLE](http://nar.oxfordjournals.org/content/32/5/1792.full) to produce a phylogeny in [Newick format](http://evolution.genetics.washington.edu/phylip/newicktree.html). Both neighbor joining and UPGMA trees can be constructed.
 
 ```
-tb phylo tree nj <vcf>
+vk phylo tree nj <vcf>
 ```
 
 ```
@@ -242,7 +242,7 @@ Generate fasta sequences from variant data. This is useful for generating phylog
 `phylo tree` can be used to generate a plot of a phylogeny by adding the `--plot` flag. 
 
 ```
-tb phylo tree nj --plot <vcf>
+vk phylo tree nj --plot <vcf>
 ```
 
 ![phylogeny example](https://github.com/AndersenLab/vcf-toolbox/raw/img/tb_phylo.png)
@@ -255,7 +255,7 @@ tb phylo tree nj --plot <vcf>
 ###### transfer-filter
 
 ```
-tb geno transfer-filter <vcf>
+vk geno transfer-filter <vcf>
 ```
 
 Generate a FORMAT field filter column (FT) and transfer filters applied within the FILTER column to the FT field. This utility is useful if variants are called individually (producing a single VCF) for samples and then later merged into a multi-sample VCF. It enables you to track which variant filters were applied to a specific sample rather than across a population. The following header line is added:
@@ -266,7 +266,7 @@ Generate a FORMAT field filter column (FT) and transfer filters applied within t
 ###### het-polarization
 
 ```
-tb geno het-polarization <vcf>
+vk geno het-polarization <vcf>
 ```
 
 Creates a new FORMAT field (HP) and "polarizes" or switches heterozygous genotypes based on genotype likelyhoods (GL) or Phred-scaled genotype likelihoods (PL). For example, a variant with 7 reads supporting a reference call and 1 read supporting an alternate allele might be called as a heterozygous genotype. However, in hermaphroditic species (_e.g. C. elegans_) where limited or no heterozygosity exists, it is much more likely that the genotype is homozygous reference. The HP FORMAT field will list one of the following depending on the change made:
@@ -285,7 +285,7 @@ The following header line is added:
 Calculates the frequency of homozygous genotypes by sample (e.g. number of singletons, doubletons, tripletons, etc. by sample)
 
 ```
-tb freq <vcf>
+vk freq <vcf>
 ```
 
 Output from this utility appears as the table below. The first line indicates that the sample __ED3052__ has 2 singletons (private alleles). The second line indicates there are 3 doubltons.
@@ -307,7 +307,7 @@ Output from this utility appears as the table below. The first line indicates th
 Converts a VCF into a tsv - in wide or long format, and taking into account annotation fields (ANN) added by programs such as SNPeff.
 
 ```
-tb vcf2tsv (wide|long) [--print-header --snpeff] <vcf>
+vk vcf2tsv (wide|long) [--print-header --snpeff] <vcf>
 ```
 
 * __wide | long__ - Select one of __wide__ or __long__ to set the output format. 
@@ -329,7 +329,7 @@ Prepares a VCF for import into an sql database. Bigquery, Postgres, Mysql, and s
 indices are added to enable easy querying.
 
 ```
-  tb vcf2sql (bigquery|postgres|mysql|sqlite) <vcf>
+  vk vcf2sql (bigquery|postgres|mysql|sqlite) <vcf>
 ```
 
 * [X] Bigquery

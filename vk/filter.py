@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  tb filter (REF|HET|ALT|MISSING) [--min=<min> --max=<max> --soft-filter=<soft> --mode=<mode>] <vcf>
+  vk filter (REF|HET|ALT|MISSING) [--min=<min> --max=<max> --soft-filter=<soft> --mode=<mode>] <vcf>
 
 Example
 

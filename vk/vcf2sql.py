@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  tb vcf2sql (postgres|mysql|sqlite) [options] <vcf>
+  vk vcf2sql (postgres|mysql|sqlite) [options] <vcf>
 
 options:
   -h --help                   Show this screen.

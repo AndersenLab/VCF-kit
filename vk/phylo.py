@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """
 usage:
-  tb.py phylo fasta <vcf>
-  tb.py phylo tree (nj|upgma) [--plot] <vcf>
+  vk phylo fasta <vcf>
+  vk phylo tree (nj|upgma) [--plot] <vcf>
 
 options:
   -h --help                   Show this screen.

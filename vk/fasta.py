@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """
 usage:
-  tb tajima [--no-header --extra] <window-size> <step-size> <vcf> 
-  tb tajima [--no-header --extra] <window-size> --sliding <vcf> 
+  vk tajima [--no-header --extra] <window-size> <step-size> <vcf> 
+  vk tajima [--no-header --extra] <window-size> --sliding <vcf> 
 
 options:
   -h --help                   Show this screen.

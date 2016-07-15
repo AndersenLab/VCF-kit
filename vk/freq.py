@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """
 usage:
-  tb freq sample_hom_gt <vcf>
-  tb freq spectrum (alleles|genotypes) [--rate] <vcf>
+  vk freq sample_hom_gt <vcf>
+  vk freq spectrum (alleles|genotypes) [--rate] <vcf>
 
 Example
 

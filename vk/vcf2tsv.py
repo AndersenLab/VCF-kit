@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  tb vcf2tsv (wide|long) [--print-header --ANN] <vcf>
+  vk vcf2tsv (wide|long) [--print-header --ANN] <vcf>
 
 options:
   -h --help                   Show this screen.

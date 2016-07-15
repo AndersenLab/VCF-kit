@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """
 usage:
-    tb call <seq> --ref=<reference> [--all-sites --vcf-targets <vcf>]
-    tb call alignments <seq>  [--ref=<reference>]
+    vk call <seq> --ref=<reference> [--all-sites --vcf-targets <vcf>]
+    vk call alignments <seq>  [--ref=<reference>]
 
 options:
     -h --help                   Show this screen.

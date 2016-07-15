@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """
 usage:
-  tb geno transfer-filter <vcf>
-  tb geno het-polarization <vcf>
+  vk geno transfer-filter <vcf>
+  vk geno het-polarization <vcf>
 
 
 tb.py geno transfer-filter

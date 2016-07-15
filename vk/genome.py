@@ -126,7 +126,7 @@ if __name__ == '__main__':
                         results.append(line)
         if len(results) == 0:
             with indent(2):
-                puts(colored.red('\nError: Genome not found\n'))
+                puts(colored.red('\nError: Genome ' + args["--download"] + ' not found\n'))
         else:
             reference_download = results[0]
             if not args["--directory"]:
@@ -143,7 +143,7 @@ if __name__ == '__main__':
 
             # stack overflow: 15644964; 
             r = requests.get(url, stream = True)
-            ref_filename = reference_directory + "/" + reference_download[3] + ".tmp.fa.gz"
+            ref_filename = reference_directory + reference_download[3] + ".tmp.fa.gz"
             with open(ref_filename , 'wb') as f:
                 total_length = int(r.headers.get('content-length'))
                 for chunk in progress.bar(r.iter_content(chunk_size=1024), expected_size=(total_length/1024) + 1): 

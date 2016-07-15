@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  tb rename [--prefix=<prefix> --suffix=<suffix> --subst=<subst>] <vcf> 
+  vk rename [--prefix=<prefix> --suffix=<suffix> --subst=<subst>] <vcf> 
 
 options:
   -h --help                   Show this screen.
