@@ -6,9 +6,8 @@ usage:
 options:
   -h --help                   Show this screen.
   --version                   Show version.
-  --filename=<filename>       SQLite Filename
 
-  --db=<db>                   Database Name for MySQL, Postgres
+  --db=<db>                   Database Name for MySQL, Postgres OR filename for sqlite
   --user=<user>               User for MySQL, Postgres
   --password=<pw>             Password for MySQL, Postgres  
   --host=<host>               Host for MySQL, Postgres
@@ -37,7 +36,6 @@ import csv
 import json
 import zlib, cPickle, base64
 from playhouse.csv_loader import load_csv
-from playhouse import JSONField
 signal(SIGPIPE, SIG_DFL)
 
 
@@ -175,7 +173,7 @@ if __name__ == '__main__':
         format_cols = [x for x in format_cols if x[0] in simple_fields]
 
     if args["sqlite"]:
-        db = SqliteDatabase(args["--filename"])
+        db = SqliteDatabase(args["--db"])
     elif args["mysql"]:
         db = MySQLDatabase(args["--db"],
                            user = args["--user"],
@@ -200,9 +198,9 @@ if __name__ == '__main__':
         QUAL = FloatField(null = True)
         FILTER = CharField(null = True)
         if args["--compress"]:
-            GT = TextField(null = True)
+            GT = BlobField(null = True)
         else:
-            GT = JSONField()
+            GT = TextField(null = True)
 
         if args["--ANN"]:
             allele = CharField(index=True, null = True)
@@ -221,7 +219,6 @@ if __name__ == '__main__':
             protein_position = CharField(null=True)
             distance_to_feature = CharField(null=True)
             errors = CharField(null=True)
-
         if not args["--print"]:
             class Meta:
                 database = db
@@ -331,10 +328,8 @@ if __name__ == '__main__':
             rec["ALT"] = '|'.join(loc.ALT)
             rec["QUAL"] = loc.QUAL
             rec["FILTER"] = loc.FILTER
-            if args["--compress"]:
-                rec["GT"] = base64.b64encode(zlib.compress(cPickle.dumps(gt_set).encode("utf-8")))
-            else:
-                rec["GT"] = json.dumps(gt_set)
+            rec["GT"] = json.dumps(gt_set)
+            
             for k in field_names:
                 if k not in rec:
                     rec[k] = ""
