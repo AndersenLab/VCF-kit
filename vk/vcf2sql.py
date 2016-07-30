@@ -37,6 +37,7 @@ import csv
 import json
 import zlib, cPickle, base64
 from playhouse.csv_loader import load_csv
+from playhouse import JSONField
 signal(SIGPIPE, SIG_DFL)
 
 
@@ -190,6 +191,7 @@ if __name__ == '__main__':
 
 
     class vcf_table(Model):
+        Variant = IntegerField(index = True)
         CHROM = CharField(index = True)
         POS = IntegerField(index = True)
         _ID = CharField(index = True, null = True)
@@ -197,7 +199,10 @@ if __name__ == '__main__':
         ALT = CharField(index = True, null = True)
         QUAL = FloatField(null = True)
         FILTER = CharField(null = True)
-        GT = TextField(null = True)
+        if args["--compress"]:
+            GT = TextField(null = True)
+        else:
+            GT = JSONField()
 
         if args["--ANN"]:
             allele = CharField(index=True, null = True)
@@ -241,12 +246,16 @@ if __name__ == '__main__':
         elif i[2] == "Flag":
             BooleanField(null = True).add_to_class(vcf_table, i[0])
 
+    # Output Schema
+    with open("schema.sql", "w") as f:
+        f.write("".join(vcf_table.sqlall()))
+
     db.create_tables([vcf_table], safe = True)
     c = 0
     loc_set = [] # 
     insert_set = [] # 
     csv_writer = csv.writer(sys.stdout, quoting=csv.QUOTE_MINIMAL)
-    for loc in v:
+    for variant_index, loc in enumerate(v):
         c += 1
         site_fields = {}
         annotation_record_set = []
@@ -314,6 +323,7 @@ if __name__ == '__main__':
         
         field_names = vcf_table._meta.sorted_field_names[1:]
         for rec in loc_set:
+            rec["Variant"] = variant_index
             rec["CHROM"] = loc.CHROM
             rec["POS"] = loc.POS
             rec["_ID"] = loc.ID
