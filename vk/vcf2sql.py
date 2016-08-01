@@ -197,10 +197,7 @@ if __name__ == '__main__':
         ALT = CharField(index = True, null = True)
         QUAL = FloatField(null = True)
         FILTER = CharField(null = True)
-        if args["--compress"]:
-            GT = BlobField(null = True)
-        else:
-            GT = TextField(null = True)
+        GT = TextField(null = True)
 
         if args["--ANN"]:
             allele = CharField(index=True, null = True)
@@ -328,7 +325,11 @@ if __name__ == '__main__':
             rec["ALT"] = '|'.join(loc.ALT)
             rec["QUAL"] = loc.QUAL
             rec["FILTER"] = loc.FILTER
-            rec["GT"] = json.dumps(gt_set)
+            if args["--compress"]:
+                rec["GT"] = base64.b64encode(zlib.compress(cPickle.dumps(gt_set).encode("utf-8")))
+            else:
+                rec["GT"] = json.dumps(gt_set)
+
             
             for k in field_names:
                 if k not in rec:
