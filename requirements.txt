@@ -3,6 +3,7 @@ tabulate
 awesome-slugify
 numpy
 cython
+numpy
 cyvcf2>=0.1.9
 docopt
 biopython
