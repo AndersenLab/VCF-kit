@@ -18,7 +18,6 @@ def test_set_genome_location():
     out, err = Popen(["vk","genome","location", "."], stdout = PIPE).communicate()
     if err:
         raise Exception(err)
-    print(out[out.find("Set genome location"):].split(" ")[3])
     directory = out[out.find("Set genome location"):].split(" ")[4].strip()
     assert directory == os.getcwd() + "/"
     # Set genome location back to default
@@ -32,7 +31,7 @@ def test_search_genome():
 
 
 def test_download_genome():
-    call(["vk", "genome", "--download", "F1L3"])
+    call(["vk", "genome", "--ref", "F1L3"])
     genome_files = listdir(expanduser("~/.genome/F1L3"))
     print(genome_files)
     assert len(genome_files) == 11

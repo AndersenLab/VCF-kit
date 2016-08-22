@@ -1,4 +1,4 @@
-# Usage
+# Overview
 
 The `vk genome` command can be used to download and prepare reference genomes for use with other tools within `vcf-kit`. `vcf-kit` will do the following when downloading a reference genome:
 
@@ -12,7 +12,7 @@ The `vk genome` command can be used to download and prepare reference genomes fo
 1. Remove temporary file names.
 
 
-## Setup Genomes
+## Setup
 
 ### View/set genome directory
 
@@ -36,7 +36,7 @@ A list of downloaded genomes can be viewed using:
 vk genome list
 ```
 
-## NCBI Genomes
+## NCBI
 
 `vcf-kit` makes it easy to obtain and prepare genomes from the [NCBI genome database](http://www.ncbi.nlm.nih.gov/genome/). To do this, it downloads a text file containing a list of all available genomes and uses this for searching purposes. To search for a genome, you can type:
 
@@ -71,7 +71,9 @@ As the instructions illustrate, you can download the genome by providing the `as
 vk genome --ref=ViralProj209365
 ```
 
-## Wormbase Genomes
+## Wormbase
+
+### Downloading Genomes from Wormbase
 
 Reference genomes can also be obtained from wormbase. 
 
