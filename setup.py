@@ -1,7 +1,7 @@
 from setuptools import setup
 import glob
 
-setup(name='vcf-kit',
+setup(name='vcfkit',
       version='0.0.1',
       packages=['vk','vk.utils'],
       description='Tools for working with VCF files',
