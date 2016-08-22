@@ -1,6 +1,16 @@
 # Usage
 
-The `vk genome` command can be used to download and prepare reference genomes for use with other tools within `vcf-kit`. 
+The `vk genome` command can be used to download and prepare reference genomes for use with other tools within `vcf-kit`. `vcf-kit` will do the following when downloading a reference genome:
+
+
+1. Download the reference genome.
+1. If downloaded from NCBI, `vcf-kit` will attempt to replace chromosomes names with shorthand descriptors of if possible (_e.g._ Chromosome I).
+1. Unzip the gzipped reference and re-compress using `bgzip`.
+1. Create a `bwa` index.
+1. Create a `samtools` index.
+1. Create a `blast` database.
+1. Remove temporary file names.
+
 
 ## Setup Genomes
 
@@ -15,7 +25,7 @@ vk genome location
 Similarly, you can change the location by adding a path:
 
 ```
-vk genome /path/to/my/new/genome/directory
+vk genome /path-to-my-new-genome-directory
 ```
 
 ### List genomes
@@ -53,17 +63,6 @@ The results of the search will be output in a table:
     vk genome --ref=<asm_name>
 ```
 
-```.python
-
-def great():
-    1 + 1
-
-```
-
-~~~~.html
-<p>HTML Document</p>
-~~~~
-
 As the instructions illustrate, you can download the genome by providing the `asm_name` (assembly name).
 
 ### Downloading Genomes from RefSeq
@@ -72,9 +71,9 @@ As the instructions illustrate, you can download the genome by providing the `as
 vk genome --ref=ViralProj209365
 ```
 
-### Download referecence from wormbase
+## Wormbase Genomes
 
-Reference genomes can be obtained from wormbase by specifying the wormbase version.
+Reference genomes can also be obtained from wormbase. 
 
 ```
 vk genome wormbase --ref=WS245
