@@ -24,9 +24,14 @@ before_install:
 
 install: 
   - pip install Cython
+  - pip install coveralls
   - pip install -r requirements.txt
   - python setup.py install
 
 
 script: 
-  - py.test 
+  - coverage run --source=vcf-kit py.test
+
+
+after_success:
+  - coveralls
