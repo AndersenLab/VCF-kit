@@ -30,7 +30,7 @@ install:
 
 
 script: 
-  - coverage run --source=vcf-kit py.test
+  - coverage run --source=vcf-kit setup.py test
 
 
 after_success:
