@@ -1,5 +1,7 @@
 # vcf-kit
 
+![logo.png](logo.png)
+
 For full documentation visit [mkdocs.org](http://mkdocs.org).
 
 Great!

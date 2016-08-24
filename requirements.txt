@@ -1,6 +1,8 @@
 setuptools
 tabulate
 awesome-slugify
+matplotlib
+yahmm
 numpy
 cython
 cyvcf2>=0.1.9
