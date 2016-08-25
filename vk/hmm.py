@@ -24,6 +24,8 @@ import itertools
 import numpy as np
 from pprint import pprint as pp
 from signal import signal, SIGPIPE, SIG_DFL
+from itertools import groupby
+from operator import itemgetter
 signal(SIGPIPE, SIG_DFL)
 
 # Setup hmm
@@ -56,37 +58,49 @@ if len(sys.argv) == 1:
     debug = ["hmm", "--alt=CB4856", "--vcf-out", "../test.vcf.gz"]
 
 
+def generate_cigar(arr):
+    grouped = [(k, sum(1 for i in g)) for k,g in groupby(arr)]   
+    return "".join([{0: "R", 1: "A"}[x] + str(y) for x,y in grouped]), len(grouped) - 1
+
+
 class ranges:
     """
         Class for storing genomic ranges of genotypes.
     """
 
-    def __init__(self):
-        self.range = defaultdict(list)
-
-    def add(self, chrom, start, end, sample, gt, site_count, supporting_site_count, dp_sum, out=False):
+    def process_results(self, results, out=False):
         if out is False:
+            n, self.dp_sum, self.site_count, self.supporting_site_count = 0, 0, 0, 0
             dp_avg = ""
-            if site_count > 0:
-                dp_avg = dp_sum * 1.0 / supporting_site_count
-            print('\t'.join(map(str, [chrom,
-                                      start,
-                                      end,
-                                      sample, 
-                                      gt + 1,
-                                      supporting_site_count,
-                                      site_count,
-                                      dp_avg])))
-        else:
-            self.range[sample].append([chrom, int(start), int(end), int(gt)])
+            last_contig = "null"
+            last_pred = -8
+            for chrom in [list(g) for k, g in groupby(results, itemgetter(0))]:
+                chrom = chrom[0][0]
+                for interval in [list(g) for k, g in groupby(results, itemgetter(3))]:
+                    orig = [x[2] for x in interval]
+                    pred = [x[3] for x in interval]
+                    gt = pred[0]
+                    orig_cigar, switches = generate_cigar(orig)
+                    supporting_sites = len([x for x in interval if x[2] == x[3]])
+                    dp_avg = sum([x[4] for x in interval if x[2] == x[3]])*1.0/supporting_sites
+                    gt = interval[0][3]
+                    start = min([x[1] for x in interval])
+                    end = max([x[1] for x in interval])
+                    sites = len(interval)
+                
+                    output = [chrom,
+                              start,
+                              end,
+                              sample,
+                              gt,
+                              supporting_sites,
+                              sites,
+                              dp_avg, 
+                              switches,
+                              orig_cigar]
+                    out_line = "\t".join(map(str,output))
+                    print(out_line)
 
-    def get(self, qchrom, qpos, qsample):
-        gt_found = [x for x in self.range[sample] if x[0]
-                    == qchrom and qpos >= x[1] and qpos <= x[2]]
-        if gt_found:
-            return gt_found[0][3]
-        else:
-            return None
 
 
 if __name__ == '__main__':
@@ -136,13 +150,14 @@ if __name__ == '__main__':
     gtr = ranges()
 
     if args["--vcf-out"] is False:
-        print("chrom\tstart\tend\tsample\tgt\tsupporting_sites\tsites\tDP\tDV")
+        print("chrom\tstart\tend\tsample\tgt\tsupporting_sites\tsites\tDP\tswitches\tCIGAR")
 
     s = 0
     for sample, column in zip(v.samples, gt_set):
         sample_gt = zip(chromosome, positions, column)
         sample_gt = [x for x in sample_gt if x[2] in [0, 1]]
         sequence = [to_model[x[2]] for x in sample_gt]
+        gtr.sample = sample
         if sequence:
             results = model.forward_backward(sequence)[1]
             if model.states[0].name == 'ref':
@@ -151,34 +166,14 @@ if __name__ == '__main__':
             else:
                 result_gt = [from_model[x]
                              for x in np.greater(results[:, 0], results[:, 1])]
+            gtr.result_gt = result_gt
             dp_s = dp_set[0][s]
             dp_s = dp_s[dp_s > 0]
             results = ((a, b, c, d, e)
                        for (a, b, c), d, e in zip(sample_gt, result_gt, dp_s))
-            n = 0
-            site_count, supporting_site_count, dp_sum = 0, 0, 0
-            last_contig = "null"
-            last_pred = -8
-            for chrom, pos, orig, pred, dp in results:
-                site_count += 1
-                if orig == pred:
-                    supporting_site_count += 1
-                    dp_sum += dp
-                if chrom != last_contig or pred != last_pred:
-                    if n > 0 and site_count > 0:
-                        gtr.add(contig, start, end, sample, last_pred, site_count,
-                                supporting_site_count, dp_sum, args["--vcf-out"])
-                        site_count, supporting_site_count, dp_sum = 0, 0, 0
-                    contig = chrom
-                    start = pos
-                end = pos
-                last_pred = pred
-                last_contig = chrom
-                last_pos = pos
-                n += 1
-            if n > 0 and site_count > 0:
-                gtr.add(contig, start, end, sample, last_pred, site_count,
-                        supporting_site_count, dp_sum, args["--vcf-out"])
+            results = list(results)
+            gtr.s = s
+            gtr.process_results(results, args["--vcf-out"])
         s += 1
 
     if args["--vcf-out"]:
