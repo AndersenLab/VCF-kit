@@ -25,6 +25,7 @@ import re
 import requests
 import os
 import urllib
+from sys import exit # Used by exit(); don't remove.
 
 
 def main(debug=None):
@@ -37,7 +38,7 @@ def main(debug=None):
         if args["<path>"] == "-":
             genome_directory = get_genome_directory_file()
             os.remove(genome_directory)
-            get_genome_directory_file()
+            return get_genome_directory_file()
         else:
             with open(get_genome_directory_file(), "w") as f:
                 genome_directory = os.path.realpath(args["<path>"])
@@ -47,7 +48,7 @@ def main(debug=None):
                 # create directory if not exists
                 if not os.path.exists(genome_directory):
                     os.makedirs(genome_directory)
-                exit()
+                return genome_directory
 
     if args["--directory"]:
         genome_directory = os.path.realpath(args["--ref"])
@@ -56,6 +57,9 @@ def main(debug=None):
 
     with indent(2):
         puts(colored.blue("\nGenome Directory: " + genome_directory + "\n"))
+
+    if args["location"] and not args["<path>"]:
+        return genome_directory
 
     genome_db = get_genome_directory() + "/genomes.db"
 
@@ -108,6 +112,7 @@ def main(debug=None):
             puts(colored.blue('\nTo download a genome and setup for use:'))
         with indent(4):
             puts(colored.green("\nvk genome --ref=<asm_name>\n"))
+        return results
     elif args["--ref"]:
         # reference name.
         reference_name = args["--ref"]

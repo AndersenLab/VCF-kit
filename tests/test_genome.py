@@ -5,41 +5,35 @@ import os
 from os.path import expanduser
 from os import listdir
 import re
+from vcfkit import genome
+
 
 def test_genome_location():
-    out, err = Popen(["vk","genome","location"], stdout = PIPE).communicate()
-    if err:
-        raise Exception(err)
-    directory = out[out.find("Genome Directory"):].split(" ")[2].strip()
-    assert os.path.exists(directory)
+    directory = genome.main(["genome","location"])
+    assert directory == os.path.expanduser("~/.genome")
 
 
 def test_set_genome_location():
-    out, err = Popen(["vk","genome","location", "."], stdout = PIPE).communicate()
-    if err:
-        raise Exception(err)
-    directory = out[out.find("Set genome location"):].split(" ")[4].strip()
-    assert directory == os.getcwd() + "/"
+    directory = genome.main(["genome","location", "."])
+    assert directory == os.getcwd()
     # Set genome location back to default
-    out, err = Popen(["vk","genome","location", "-"], stdout = PIPE).communicate()
+    genome.main(["genome","location", "-"])
 
 
 def test_search_genome():
-    out, err = Popen(["vk", "genome", "--search", "coli"], stdout = PIPE).communicate()
-    search_result = [re.split("\W+", x.strip()) for x in out.splitlines() if x.find("GCF_900042795.1") > 0][0][5]
+    results = genome.main(["genome", "--search", "coli"])
+    search_result = [x for x in results if x[0] == "GCF_900042795.1"][0][3]
     assert search_result == "F1L3"
 
 
 def test_download_genome():
-    call(["vk", "genome", "--ref", "F1L3"])
+    genome.main(["genome", "ncbi", "--ref", "F1L3"])
     genome_files = [x for x in listdir(expanduser("~/.genome/F1L3")) if x != ".DS_Store"]
-    print(genome_files)
     assert len(genome_files) == 11
 
 
 def test_samtools_idx():
     out = check_output("samtools faidx ~/.genome/F1L3/F1L3.fa.gz NZ_FCPC01000094.1:1-20", shell=True)
-    print(out)
     seq = out.splitlines()[1]
     assert seq == "CCTCACCGGATAACGCCGGC"
 

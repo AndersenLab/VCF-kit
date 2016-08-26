@@ -23,3 +23,9 @@ def test_phylo_upgma():
         phylo.main(comm)
     h = hashlib.sha224(str(out)).hexdigest()
     assert h == "cd58f6912c40715ef5b2b1d8a381743454eb42cc6d0ba8a6c847ea83"
+
+
+def test_phylo_plot():
+    comm = ["phylo", "tree", "upgma", "--plot", "data/test.vcf.gz"]
+    out = phylo.main(comm)
+    h = hashlib.sha224(str(out)).hexdigest()
