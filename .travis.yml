@@ -13,6 +13,10 @@ addons:
     - curl
     - ncbi-blast+
     - muscle
+    - libblas-dev
+    - liblapack-dev
+    - libatlas-base-dev
+    - gfortran
 
 before_install:
   - git clone https://github.com/Linuxbrew/brew.git ~/.linuxbrew
