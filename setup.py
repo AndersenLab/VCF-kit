@@ -3,7 +3,7 @@ import glob
 
 setup(name='vcfkit',
       version='0.0.1',
-      packages=['vk','vk.utils'],
+      packages=['vcfkit','vcfkit.utils'],
       description='Tools for working with VCF files',
       url='https://github.com/AndersenLab/vcf-toolbox',
       author='Daniel Cook',
@@ -11,7 +11,7 @@ setup(name='vcfkit',
       license='MIT',
       entry_points="""
       [console_scripts]
-      vk = vk.vk:main
+      vk = vcfkit.vk:main
       """,
       install_requires=["cython","docopt", "cyvcf2", "biopython", "clint", "requests"],
       zip_safe=False,

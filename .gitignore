@@ -10,3 +10,4 @@ dist
 *.egg-info
 .python-version
 proj.*
+.coverage

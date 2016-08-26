@@ -1,0 +1,15 @@
+site_name: vcf-kit
+theme: readthedocs
+pages:
+  - 'index.md'
+  - 'about.md'
+  - 'genome.md'
+  - 'phylo.md'
+repo_url: https://github.com/Andersenlab/vcf-kit
+site_favicon: favicon.png
+markdown_extensions:
+    - codehilite
+    - toc:
+        permalink: True
+    - fenced_code
+    - sane_lists

@@ -32,7 +32,7 @@ def test_search_genome():
 
 def test_download_genome():
     call(["vk", "genome", "--ref", "F1L3"])
-    genome_files = listdir(expanduser("~/.genome/F1L3"))
+    genome_files = [x for x in listdir(expanduser("~/.genome/F1L3")) if x != ".DS_Store"]
     print(genome_files)
     assert len(genome_files) == 11
 
