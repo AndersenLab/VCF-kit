@@ -4,11 +4,11 @@ usage:
   vk genome location [<path>]
   vk genome list
   vk genome --search=<term>
-  vk genome [options] ncbi --ref=<asm_name> [--accession-chrom-names]
-  vk genome [options] wormbase --ref=<asm_name>
+  vk genome ncbi [options] --ref=<asm_name> [--accession-chrom-names]
+  vk genome wormbase [options] --ref=<asm_name>
+
 options:
   -h --help                   Show this screen.
-  --version                   Show version.
   --directory=<dir>           Set Genome Directory
 
 """

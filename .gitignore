@@ -6,3 +6,7 @@
 *.pyc
 build
 dist
+.cache
+*.egg-info
+.python-version
+proj.*

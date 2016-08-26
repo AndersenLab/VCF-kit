@@ -59,7 +59,7 @@ if len(sys.argv) == 1:
 
 
 def generate_cigar(arr):
-    grouped = [(k, sum(1 for i in g)) for k,g in groupby(arr)]   
+    grouped = [(k, sum(1 for i in g)) for k,g in groupby(arr)]
     return "".join([{0: "R", 1: "A"}[x] + str(y) for x,y in grouped]), len(grouped) - 1
 
 
@@ -74,15 +74,17 @@ class ranges:
             dp_avg = ""
             last_contig = "null"
             last_pred = -8
-            for chrom in [list(g) for k, g in groupby(results, itemgetter(0))]:
-                chrom = chrom[0][0]
-                for interval in [list(g) for k, g in groupby(results, itemgetter(3))]:
+            for chrom_set in [list(g) for k, g in groupby(results, itemgetter(0))]:
+                chrom = chrom_set[0][0]
+                for interval in [list(g) for k, g in groupby(chrom_set, itemgetter(3))]:
                     orig = [x[2] for x in interval]
                     pred = [x[3] for x in interval]
                     gt = pred[0]
                     orig_cigar, switches = generate_cigar(orig)
                     supporting_sites = len([x for x in interval if x[2] == x[3]])
-                    dp_avg = sum([x[4] for x in interval if x[2] == x[3]])*1.0/supporting_sites
+                    dp_avg = 0
+                    if supporting_sites > 0:
+                        dp_avg = sum([x[4] for x in interval if x[2] == x[3]])*1.0/supporting_sites
                     gt = interval[0][3]
                     start = min([x[1] for x in interval])
                     end = max([x[1] for x in interval])
@@ -92,7 +94,7 @@ class ranges:
                               start,
                               end,
                               sample,
-                              gt,
+                              gt + 1,
                               supporting_sites,
                               sites,
                               dp_avg, 
@@ -166,13 +168,14 @@ if __name__ == '__main__':
             else:
                 result_gt = [from_model[x]
                              for x in np.greater(results[:, 0], results[:, 1])]
-            gtr.result_gt = result_gt
             dp_s = dp_set[0][s]
             dp_s = dp_s[dp_s > 0]
             results = ((a, b, c, d, e)
                        for (a, b, c), d, e in zip(sample_gt, result_gt, dp_s))
-            results = list(results)
             gtr.s = s
+
+            results = list(results)
+
             gtr.process_results(results, args["--vcf-out"])
         s += 1
 
