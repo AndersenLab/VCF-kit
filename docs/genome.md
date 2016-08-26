@@ -38,7 +38,7 @@ vk genome list
 
 ## NCBI
 
-`vcf-kit` makes it easy to obtain and prepare genomes from the [NCBI genome database](http://www.ncbi.nlm.nih.gov/genome/). To do this, it downloads a text file containing a list of all available genomes and uses this for searching purposes. To search for a genome, you can type:
+`vcf-kit` makes it easy to obtain and prepare genomes from the [NCBI genome database](http://www.ncbi.nlm.nih.gov/genome/). To do this, it downloads a [text file](http://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/assembly_summary_refseq.txt) containing a list of all available genomes and uses this for searching purposes. To search for a genome, you can type:
 
 ```
 vk genome --search="Human cyclovirus"
@@ -65,7 +65,9 @@ The results of the search will be output in a table:
 
 As the instructions illustrate, you can download the genome by providing the `asm_name` (assembly name).
 
-### Downloading Genomes from RefSeq
+### Downloading Genomes from NCBI
+
+Set `--ref` to an `asm_name` from the search results table to download a genome.
 
 ```
 vk genome --ref=ViralProj209365
@@ -79,4 +81,12 @@ Reference genomes can also be obtained from wormbase.
 
 ```
 vk genome wormbase --ref=WS245
+```
+
+## Download genome to custom directory
+
+It is possible to set the directory to download a genome using the `--directory` parameter.
+
+```
+vk genome ncbi --directory="." --ref=ViralProj15089
 ```
