@@ -11,3 +11,6 @@ dist
 .python-version
 proj.*
 .coverage
+*__pycache__*
+.genome_directory
+.eggs
