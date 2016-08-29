@@ -1,0 +1,45 @@
+# Overview
+
+The `vk hmm` uses a hidden-markov-model to call near-isogenic lines (NILs) or recombinant-inbred lines (RILs).
+
+```
+usage:
+  vk hmm [options] --alt=<alt_sample> <vcf>
+```
+
+* `--alt=<alt_sample>` - The name of the alternative sample.
+
+To use the `vk hmm` command, you'll need a VCF with these requirements:
+
+1. The 'alternative' (non-reference) parent must be included in the VCF.
+1. One of the parents must be the reference, but it is not necessary that it be included in the VCF.
+
+We have had success using the `vk hmm` command whole genome sequencing strains of _C. elegans_ at very low depth (~1.5x). Genotyping arrays can also be used.
+
+The `vk hmm` command iterates through the VCF, assembles an array of genotypes found to be alternative in the non-reference parent, and uses an hmm to assign parental haplotypes.
+
+# Options
+
+* `--ref=<ref_sample>` - If the reference sample was sequenced, it can be used to filter out sites called alternative in the reference sample. As this is the reference sample, we expect to observe only reference sites. Therefore, these sites are more likely to be erronous due to being located in repetitive regions and the result of low coverage or alignment issues.
+* `--vcf-out` - Outputs a VCF, assigning genotypes based on parental haplotypes called by the hmm.
+* `--endfill` - When outputting genomic regions, if a parental genotype is assigned at the very beginning or end of a chromosome use 1 or the length of the chromosome, respectively.
+* `--infill` - Assume genotypes switch at the end of the previous block + 1 rather than the next observed genotype.
+
+![hmm options](hmm_opts.png)
+<small>__Effect of using `--infill` and `--endfill` options__ - Orange and blue parental haplotypes can extend to the beginning or end of chromosomes using the `--endfill` option whereas regions between adjacent SNVs where haplotypes switch can be filled in with the next haplotype.</small>
+
+# Recommended Filters
+
+`vcf hmm` can take stdout as input. When working with low-coverage whole-genome sequence data, we recommend applying filters to remove problematic sites. Specficially, the DV/DP ratio can be used to remove problematic alt sites using the command below:
+
+```
+bcftools view <vcf> |\
+bcftools filter --set-GTs . --exclude '((FMT/DV)/(FMT/DP) < 0.75 && FMT/GT == "1/1")' |\
+vk hmm --alt=<alt_sample> --ref=<ref_sample> -
+```
+
+# Plotting Results
+
+[This R script](https://gist.github.com/danielecook/c9bf690eddb6ae2b6d4c45f1b93dfd75) can be used to plot. An example is below.
+
+![hmm example](hmm_example.png)
