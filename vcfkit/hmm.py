@@ -204,19 +204,20 @@ if __name__ == '__main__':
 
     if args["--vcf-out"]:
         v = vcf(args["<vcf>"])
+        # Add GT_ORIG and print raw header.
         v.add_format_to_header({"ID":"GT_ORIG", "Description": "Original genotype", "Type": "Character", "Number": "1"})
         print(v.raw_header.strip())
         for n, line in enumerate(v):
             line = variant_line(line, v.samples)
             if line.has_gt and line.chrom in chromosome and line.pos in positions:
-                for sample_col, sample in enumerate(v.samples):
-                    gt_orig = line.gt(sample)
+                for sample_n in xrange(len(v.samples)):
+                    gt_orig = line.get_gt(sample_n)
                     try:
                         new_gt = tree[sample][line.chrom].search(line.pos).pop().data
                     except:
                         new_gt = None
                     if new_gt is not None:
-                        line.modify_gt_format(sample_col, "GT_ORIG", gt_orig)
-                        line.modify_gt_format(sample_col, "GT", to_gt[new_gt])
+                        line.set_gt("GT_ORIG", sample_n, gt_orig)
+                        line.set_gt("GT", sample_n, to_gt[new_gt])
                 print(line)
 

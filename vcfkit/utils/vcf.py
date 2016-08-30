@@ -344,73 +344,26 @@ class variant_set:
                 self.variants =  [variant_line(x) for x in ins.splitlines()]
 
 class variant_line:
+    """
+        Used to modify genotypes by HMM currently...
+    """
     def __init__(self, line, sample_names = None):
-        line = str(line).strip().split("\t")
-        self.line = line
-        self.chrom = line[0]
-        self.pos = int(line[1])
-        self.ref = line[3]
-        self.gt_dict = dict([(n+1,y) for n,y in enumerate(line[4].split(","))] + [(".",".")])
-        self.gt_dict[0] = self.ref
-        self.alt = self.gt_dict[1]
-        self.format_field = line[8].split(":")
-        self.has_gt = False
-        if "GT" in self.format_field:
-            self.gt_loc = self.format_field.index("GT")
-            self.has_gt = True
-        if sample_names:
-            self._sample_to_idx = dict(zip(sample_names, range(9, len(line))))
+        self.line = str(line).strip().split("\t")
+        self.format_keys = self.line[8].split(":")
+        self.values = [x.split(":") for x in self.line[9:]]
 
-    def __getitem__(self, i):
-        return self.line[i]
+    def get_gt(self, format_field, index):
+        f_index = self.format_keys.index(format_field)
+        return self.values[index][f_index]
 
-    def __setitem__(self, i, val):
-        self.line[i] = val
-
-    def append_format_flag(self, flag_name):
-        if flag_name not in self.format_field:
-            self.format_field += [flag_name]
-        return self.format_field.index(flag_name)
-
-    def modify_gt_format(self, i, flag_name, val):
-        i += 9
-        gt_mod = self.line[i].split(":")
-        flag_index = self.append_format_flag(flag_name)
-        if len(gt_mod) == flag_index:
-            gt_mod += [val]
-        else:
-            gt_mod[flag_index] = val
-        self.line[i] = ':'.join(gt_mod)
-
-    def fetch_gt_from_index(self, i):
-        i += 9
-        return self.line[i].split(":")[self.gt_loc]
-
-    def gt(self, sample):
-        if type(sample) == int:
-            return self.fetch_gt_from_index(self._sample_to_idx[sample])
-        else:
-            return self.line[self._sample_to_idx[sample]].split(":")[self.gt_loc]
-
-    def tgt(self, sample, het = True):
-        """
-            Return formatted genotype; Homozygous calls only.
-        """
-        gt = self.line[self._sample_to_idx[sample]].split(":")[self.gt_loc]
-        gt_set = re.split("[/|\|]", gt)
-        genotype = list(set([self.gt_dict[autoconvert(x)] for x in gt_set]))
-        if len(genotype) == 0:
-            return genotype[0]
-        else:
-            return '/'.join(genotype)
-
-    def __getitem__(self, sample):
-        return [self.chrom, self.pos, self.tgt(sample)]
-
-    def __repr__(self):
-        return self.chrom + ":" + str(self.pos)
-
+    def set_gt(self, format_field, index, value):
+        if format_field not in self.format_keys:
+            self.format_keys += [format_field]
+            self.values = [x + ["."] for x in self.values]
+        f_index = self.format_keys.index(format_field)
+        gt = self.values[index][f_index] = value
+        
     def __str__(self):
-        self.line[8] = ':'.join(self.format_field)
+        self.line = self.line[0:8] + [":".join(self.format_keys)] + [":".join(x) for x in self.values]
         return '\t'.join(self.line)
 
