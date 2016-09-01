@@ -209,8 +209,9 @@ if __name__ == '__main__':
         v.add_format_to_header({"ID":"GT_ORIG", "Description": "Original genotype", "Type": "Character", "Number": "1"})
         print(v.raw_header.strip())
         for n, line in enumerate(v):
+            output_line = line.gt_types[v.samples.index(args["--alt"])] == 3
             line = variant_line(line, v.samples)
-            if line.chrom_pos in chrom_pos:
+            if output_line:
                 for sample_n in xrange(len(v.samples)):
                     gt_orig = line.get_gt("GT", sample_n)
                     try:
