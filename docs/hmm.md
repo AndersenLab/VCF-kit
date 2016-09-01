@@ -21,7 +21,8 @@ The `vk hmm` command iterates through the VCF, assembles an array of genotypes f
 # Options
 
 * `--ref=<ref_sample>` - If the reference sample was sequenced, it can be used to filter out sites called alternative in the reference sample. As this is the reference sample, we expect to observe only reference sites. Therefore, these sites are more likely to be erronous due to being located in repetitive regions and the result of low coverage or alignment issues.
-* `--vcf-out` - Outputs a VCF, assigning genotypes based on parental haplotypes called by the hmm.
+* `--vcf-out` - Outputs a VCF, assigning genotypes based on parental haplotypes called by the hmm. A `GT_ORIG` format field is added to retain the original genotype call.
+* `--all-sites` - By default, when using --vcf-out only sites where the `alt_sample` == 1/1 are output. This option can be used to output all sites in a VCF.
 * `--endfill` - When outputting genomic regions, if a parental genotype is assigned at the very beginning or end of a chromosome use 1 or the length of the chromosome, respectively.
 * `--infill` - Assume genotypes switch at the end of the previous block + 1 rather than the next observed genotype.
 

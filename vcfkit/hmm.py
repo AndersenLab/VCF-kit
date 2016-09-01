@@ -10,6 +10,7 @@ options:
   --version                   Show version.
   --ref=<ref_sample>          Provide a reference sample to remove reference errors.
   --vcf-out                   Output VCF instead of intervals.
+  --all-sites                 Output all sites with --vcf-out; Default is sites where alt_sample == 1/1.
   --endfill                   Don't leave gaps at the ends of chromosomes.
   --infill                    Fill in missing portions.
 
@@ -26,7 +27,6 @@ from utils import autoconvert
 from yahmm import *
 import itertools
 import numpy as np
-from pprint import pprint as pp
 from signal import signal, SIGPIPE, SIG_DFL
 from itertools import groupby
 from operator import itemgetter
@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
     if args["--vcf-out"] and args["<vcf>"] == "-":
         with indent(2):
-            exit(puts(colored.blue("Cannot use vcf-out with stdin.")))
+            exit(puts_err(colored.blue("Cannot use vcf-out with stdin.")))
 
     if not args["--vcf-out"]:
         print("chrom\tstart\tend\tsample\tgt\tsupporting_sites\tsites\tDP\tswitches\tCIGAR")
@@ -204,14 +204,15 @@ if __name__ == '__main__':
 
     if args["--vcf-out"]:
         v = vcf(args["<vcf>"])
+        chrom_pos = [x[0:2] for x in sample_gt]
         # Add GT_ORIG and print raw header.
         v.add_format_to_header({"ID":"GT_ORIG", "Description": "Original genotype", "Type": "Character", "Number": "1"})
         print(v.raw_header.strip())
         for n, line in enumerate(v):
             line = variant_line(line, v.samples)
-            if line.has_gt and line.chrom in chromosome and line.pos in positions:
+            if line.chrom_pos in chrom_pos:
                 for sample_n in xrange(len(v.samples)):
-                    gt_orig = line.get_gt(sample_n)
+                    gt_orig = line.get_gt("GT", sample_n)
                     try:
                         new_gt = tree[sample][line.chrom].search(line.pos).pop().data
                     except:
@@ -219,5 +220,8 @@ if __name__ == '__main__':
                     if new_gt is not None:
                         line.set_gt("GT_ORIG", sample_n, gt_orig)
                         line.set_gt("GT", sample_n, to_gt[new_gt])
+                if not args['--all-sites']:
+                    print(line)
+            if args["--all-sites"]:
                 print(line)
 

@@ -349,6 +349,9 @@ class variant_line:
     """
     def __init__(self, line, sample_names = None):
         self.line = str(line).strip().split("\t")
+        self.chrom = self.line[0]
+        self.pos = int(self.line[1])
+        self.chrom_pos = (self.chrom, self.pos)
         self.format_keys = self.line[8].split(":")
         self.values = [x.split(":") for x in self.line[9:]]
 
