@@ -212,10 +212,10 @@ if __name__ == '__main__':
             output_line = line.gt_types[v.samples.index(args["--alt"])] == 3
             line = variant_line(line, v.samples)
             if output_line:
-                for sample_n in xrange(len(v.samples)):
+                for sample_n, sample in enumerate(v.samples):
                     gt_orig = line.get_gt("GT", sample_n)
                     try:
-                        new_gt = tree[sample][line.chrom].search(line.pos).pop().data
+                        new_gt = next(iter(tree[sample][line.chrom].search(line.pos))).data
                     except:
                         new_gt = None
                     if new_gt is not None:
@@ -223,6 +223,6 @@ if __name__ == '__main__':
                         line.set_gt("GT", sample_n, to_gt[new_gt])
                 if not args['--all-sites']:
                     print(line)
-            if args["--all-sites"]:
+            if args['--all-sites']:
                 print(line)
 
