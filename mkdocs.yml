@@ -6,6 +6,7 @@ pages:
   - 'genome.md'
   - 'phylo.md'
   - 'hmm.md'
+  - 'tajima.md'
 repo_url: https://github.com/Andersenlab/vcf-kit
 site_favicon: favicon.png
 markdown_extensions:

@@ -31,6 +31,7 @@ from signal import signal, SIGPIPE, SIG_DFL
 from itertools import groupby
 from operator import itemgetter
 from intervaltree import IntervalTree
+from vk import __version__
 signal(SIGPIPE, SIG_DFL)
 
 # Setup hmm
@@ -72,7 +73,8 @@ def generate_cigar(arr):
 if __name__ == '__main__':
     args = docopt(__doc__,
                   argv=debug,
-                  options_first=False)
+                  options_first=False,
+                  version=__version__)
     v = vcf(args["<vcf>"])
     # Put genotypes into large array
     """

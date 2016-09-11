@@ -67,6 +67,12 @@ vcf-kit
   vcf2sql
 ```
 
+## Installation
+
+```
+pip install <release>
+```
+
 ## Commands
 
 ### call

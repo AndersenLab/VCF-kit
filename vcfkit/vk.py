@@ -30,6 +30,7 @@ import sys
 import vk
 import os
 
+__version__ = "0.0.2"
 
 debug = None
 if len(sys.argv) == 1:
@@ -43,7 +44,8 @@ def getScriptPath():
 def main():
     args = docopt(__doc__,
                   argv=debug,
-                  options_first=True)
+                  options_first=True,
+                  version=__version__)
     argv = [args['<command>']] + args['<args>']
     program_list = {"bwa": "bwa",
                     "samtools": "samtools",
