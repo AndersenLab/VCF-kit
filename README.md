@@ -73,6 +73,20 @@ vcf-kit
 pip install https://github.com/AndersenLab/vcf-kit/archive/0.0.2.tar.gz
 ```
 
+__Installing Dependencies:__
+
+```
+vk setup
+```
+
+Will install:
+
+* bwa
+* samtools
+* bcftools
+* blast
+* muscle
+
 ## Disclaimer
 
 This isn't done yet.
