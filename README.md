@@ -70,8 +70,12 @@ vcf-kit
 ## Installation
 
 ```
-pip install <release>
+pip install https://github.com/AndersenLab/vcf-kit/archive/0.0.2.tar.gz
 ```
+
+## Disclaimer
+
+This isn't done yet.
 
 ## Commands
 
