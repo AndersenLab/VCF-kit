@@ -79,7 +79,7 @@ __Installing Dependencies:__
 vk setup
 ```
 
-Will install:
+`vk setup` uses [homebrew](http://homebrew.sh/) (or if on linux, [linux-brew](http://linuxbrew.sh/)) to install programs used by vcf-kit:
 
 * bwa
 * samtools
