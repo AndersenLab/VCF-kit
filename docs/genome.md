@@ -22,7 +22,17 @@ By default, genomes are stored within your home directory in a `.genome` folder.
 vk genome location
 ```
 
-Similarly, you can change the location by adding a path:
+!!! note
+
+    You can use a bash alias to access the genome currently set with vcf-kit. Add this to your `.bash_profile`:
+
+    ```
+    alias GENOME=`vk genome location`
+    ```
+
+And you can access the currently set genome using `GENOME`.
+
+Additionally, you can change the location by adding a path:
 
 ```
 vk genome /path-to-my-new-genome-directory
