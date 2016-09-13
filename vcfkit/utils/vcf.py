@@ -292,9 +292,6 @@ class variant_interval(deque):
         return self
 
     def filter_within_bounds(self):
-        #remove_list = [x for x in self if x.POS < self.lower_bound]
-        #for i in remove_list:
-        #    self.remove(i)
         cut = [x for x in self if x.POS >= self.lower_bound and x.POS < self.upper_bound]
         return variant_interval(interval = cut, 
                              window_size = self.window_size,
@@ -364,7 +361,7 @@ class variant_line:
             self.format_keys += [format_field]
             self.values = [x + ["."] for x in self.values]
         f_index = self.format_keys.index(format_field)
-        gt = self.values[index][f_index] = value
+        self.values[index][f_index] = value
         
     def __str__(self):
         self.line = self.line[0:8] + [":".join(self.format_keys)] + [":".join(x) for x in self.values]

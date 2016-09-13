@@ -1,12 +1,12 @@
 site_name: vcf-kit
 theme: readthedocs
 pages:
-  - 'index.md'
-  - 'about.md'
-  - 'genome.md'
-  - 'phylo.md'
-  - 'hmm.md'
-  - 'tajima.md'
+  - Home: index.md
+  - about: about.md
+  - genome: 'genome.md'
+  - phylo: 'phylo.md'
+  - hmm: hmm.md
+  - tajima: tajima.md
 repo_url: https://github.com/Andersenlab/vcf-kit
 site_favicon: favicon.png
 markdown_extensions:
@@ -15,3 +15,7 @@ markdown_extensions:
         permalink: True
     - fenced_code
     - sane_lists
+
+
+markdown_extensions:
+    - admonition:

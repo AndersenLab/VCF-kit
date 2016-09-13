@@ -51,14 +51,14 @@ class tajima(vcf):
         # Tajima D Constants
         n = self.n * 2
         a1 = sum([1.0 / i for i in xrange(1, n)])
-        a2 = sum([1.0 / i**2 for i in xrange(1, n)])
-        b1 = (n + 1.0) / (3.0 * (n - 1))
+        a2 = sum([1.0 / i**2.0 for i in xrange(1, n)])
+        b1 = (n + 1.0) / (3.0 * (n - 1.0))
         b2 = (2.0 * (n**2 + n + 3.0)) / \
             (9.0 * n * (n - 1.0))
         c1 = b1 - (1.0 / a1)
         c2 = b2 - ((n + 2.0) / (a1 * n)) + (a2 / (a1**2))
         e1 = c1 / a1
-        e2 = c2 / (a1**2 + a2)
+        e2 = c2 / ((a1*a1) + a2)
 
         if args["--sliding"]:
             shift_method = "POS-Sliding"
@@ -72,28 +72,31 @@ class tajima(vcf):
             n_sites = 0
             for variant in variant_interval:
                 n_sites += 1
-                AN = variant.INFO.get("AN")  # c;AN : total number of alleles in called genotypes
-                # j;AC : allele count in genotypes, for each ALT allele, in the same order as listed
-                AC = variant.INFO.get("AC")
-                try:
-                    # Biallelic sites only!
-                    pi += (2.0 * AC * (AN - AC)) / (AN * (AN - 1.0))
+                if variant.ploidy == 2:
+                    AN = variant.INFO["AN"]  # c;AN : total number of alleles in called genotypes
+                    # 
+                    # j;AC : allele count in genotypes, for each ALT allele, in the same order as listed
+                    AC = variant.INFO["AC"]
+                    if type(AC) is tuple:
+                        AC = AC[0]
+                    pi += variant.nucl_diversity
                     S += 1
-                except:
-                    pass
             try:
                 CHROM = variant_interval[0].CHROM
-                tw = (S / a1)
-                var = (e1 * S) + ((e2 * S) * (S - 1.0))
+                tw = (S*1.0 / a1)
+                var = (e1 * S) + ((e2 * S) * (S - 1))
                 TajimaD = (pi - tw) / \
                           (var)**(0.5)
-                if not isinf(TajimaD) and S > 0:
+                if not isinf(TajimaD) and S > 0 and AC > 0:
                     output = [CHROM,
                               variant_interval.lower_bound,
                               variant_interval.upper_bound,
                               n_sites,
                               S,
-                              TajimaD]
+                              TajimaD,
+                              pi,
+                              tw,
+                              var]
                     if extra:
                         if step_size is None:
                             step_size = "NA"

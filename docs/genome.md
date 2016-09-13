@@ -1,6 +1,6 @@
 # Overview
 
-The `vk genome` command can be used to download and prepare reference genomes for use with other tools within `vcf-kit`. `vcf-kit` will do the following when downloading a reference genome:
+The `genome` command can be used to download and prepare reference genomes for use with other tools within `vcf-kit`. `vcf-kit` will do the following when downloading a reference genome:
 
 
 1. Download the reference genome.
@@ -22,19 +22,17 @@ By default, genomes are stored within your home directory in a `.genome` folder.
 vk genome location
 ```
 
-!!! note
+!!! tip
 
-    You can use a bash alias to access the genome currently set with vcf-kit. Add this to your `.bash_profile`:
-
+    You can use a bash alias to access the genome currently set with vcf-kit. Add this to your __.bash_profile__:
     ```
     alias GENOME=`vk genome location`
     ```
-
-And you can access the currently set genome using `GENOME`.
+    And you can access the currently set genome using `GENOME`.
 
 Additionally, you can change the location by adding a path:
 
-```
+```bash
 vk genome /path-to-my-new-genome-directory
 ```
 
@@ -81,7 +79,7 @@ As the instructions illustrate, you can download the genome by providing the `as
 
 Set `--ref` to an `asm_name` from the search results table to download a genome.
 
-```
+```bash
 vk genome --ref=ViralProj209365
 ```
 
@@ -89,7 +87,7 @@ vk genome --ref=ViralProj209365
 
 Reference genomes can also be obtained from wormbase. 
 
-```
+```bash
 vk genome wormbase --ref=WS245
 ```
 
@@ -97,6 +95,6 @@ vk genome wormbase --ref=WS245
 
 It is possible to set the directory to download a genome using the `--directory` parameter.
 
-```
+```bash
 vk genome ncbi --directory="." --ref=ViralProj15089
 ```

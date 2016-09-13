@@ -56,7 +56,8 @@ def main(debug=None):
         genome_directory = get_genome_directory()
 
     with indent(2):
-        puts(colored.blue("\nGenome Directory: " + genome_directory + "\n"))
+        puts(genome_directory)
+        #puts(colored.blue("\nGenome Directory: " + genome_directory + "\n"))
 
     if args["location"] and not args["<path>"]:
         return genome_directory
