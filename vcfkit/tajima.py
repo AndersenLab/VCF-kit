@@ -94,9 +94,20 @@ class tajima(vcf):
                               n_sites,
                               S,
                               TajimaD,
+                              a1,
+                              a2,
+                              b1,
+                              b2,
+                              c1,
+                              c2,
+                              e1,
+                              e2,
+                              AN,
+                              AC,
                               pi,
                               tw,
-                              var]
+                              S,
+                              var**0.5]
                     if extra:
                         if step_size is None:
                             step_size = "NA"
