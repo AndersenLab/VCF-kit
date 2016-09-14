@@ -72,17 +72,19 @@ class tajima(vcf):
             n_sites = 0
             for variant in variant_interval:
                 n_sites += 1
-                if variant.ploidy == 2:
-                    AN = variant.INFO["AN"]  # c;AN : total number of alleles in called genotypes
+                # Use only diploid, biallelic sites, 0 < AF < 1
+                if variant.ploidy == 2 and len(variant.ALT) == 1 and 0 < variant.aaf < 1:
+                    AN = variant.num_called*2
                     # 
                     # j;AC : allele count in genotypes, for each ALT allele, in the same order as listed
                     AC = variant.INFO["AC"]
-                    if type(AC) is tuple:
-                        AC = AC[0]
-                    pi += variant.nucl_diversity
-                    S += 1
+                    if AC > 0:
+                        p = (AC*1.0/AN)*1.0
+                        pi += p * (1.0-p)
+                        S += 1
             try:
                 CHROM = variant_interval[0].CHROM
+                pi = 2.0*pi*n/(n-1.0);
                 tw = (S*1.0 / a1)
                 var = (e1 * S) + ((e2 * S) * (S - 1))
                 TajimaD = (pi - tw) / \
@@ -93,21 +95,7 @@ class tajima(vcf):
                               variant_interval.upper_bound,
                               n_sites,
                               S,
-                              TajimaD,
-                              a1,
-                              a2,
-                              b1,
-                              b2,
-                              c1,
-                              c2,
-                              e1,
-                              e2,
-                              AN,
-                              AC,
-                              pi,
-                              tw,
-                              S,
-                              var**0.5]
+                              TajimaD]
                     if extra:
                         if step_size is None:
                             step_size = "NA"
@@ -126,6 +114,10 @@ if __name__ == '__main__':
     args = docopt(__doc__,
                   version='VCF-Toolbox v0.1',
                   argv=debug)
+
+    if int(args["<window-size>"]) < int(args["<step-size>"]):
+        exit(puts_err(colored.red("\n\tWindow size must be >= step size.\n")))
+
     if args["<vcf>"] == "":
         print(__doc__)
     wz = int(args["<window-size>"].replace(",", ""))
