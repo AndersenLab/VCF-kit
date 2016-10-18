@@ -2,20 +2,7 @@
 
 ![logo.png](logo.png)
 
-For full documentation visit [mkdocs.org](http://mkdocs.org).
+## About
 
-Great!
+The `Variant Caller Format Kit` is a collection of tools useful for performing a variety of analyses and operations on variant data. VCF-kit is open source and community contributions are encouraged.
 
-## Commands
-
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs help` - Print this help message.
-
-## Project layout
-
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.

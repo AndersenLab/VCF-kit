@@ -1,4 +1,4 @@
-from clint.textui import colored, puts, indent, progress
+from clint.textui import colored, puts, puts_err, indent, progress
 import os
 import re
 
@@ -43,6 +43,10 @@ def which(program):
                 return exe_file
 
     return None
+
+def check_program_exists(program):
+    if which(program) is None:
+        exit(puts_err(colored.red("\n\t" + program + " not installed or on PATH.\n")))
 
 
 # Levenshtein edit distnace

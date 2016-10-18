@@ -63,6 +63,49 @@ The `phylo tree` command sends output to stdout  is newick format. Newick format
 (((N2:0.0250154,PX179:0.02262):0.00270637,(((((EG4946:0.035835,AB1:0.0349638):0.00435886,GXW1:0.0490124):0.00222221,(((WN2001:0.0850733,CB4856:0.130009))...
 ```
 
+### Plot a phylogeny using R
+
+The following script can be used to plot your phylogeny using R. You may need to install the three required packages: `ape`, `ggmap`, and `phyloseq`. You can install them using `install.packages("ape", "ggmap", "phyloseq")`.
+
+```
+library(ape)
+library(ggmap)
+library(phyloseq)
+
+tree <- ape::read.tree(paste0("treefile.newick"))
+
+# Optionally set an outgroup.
+# tree <- root(tree,outgroup = "outgroup", resolve.root = T)
+
+treeSegs <- phyloseq::tree_layout(
+                                phyloseq::phy_tree(tree),
+                                ladderize = T
+                                )
+
+treeSegs$edgeDT <- treeSegs$edgeDT  %>% 
+                   dplyr::mutate(edge.length = 
+                                    ifelse(edge.length < 0, 0, edge.length)
+                                 , xright = xleft + edge.length
+                                 )
+edgeMap = aes(x = xleft, xend = xright, y = y, yend = y)
+vertMap = aes(x = x, xend = x, y = vmin, yend = vmax)
+labelMap <- aes(x = xright+0.0001, y = y, label = OTU)
+
+ggplot(data = treeSegs$edgeDT) + geom_segment(edgeMap) + 
+  geom_segment(vertMap, data = treeSegs$vertDT) +
+  geom_text(labelMap, data = dplyr::filter(treeSegs$edgeDT, !is.na(OTU)), na.rm = TRUE, hjust = -0.05) +
+  ggmap::theme_nothing() + 
+  scale_x_continuous(limits = c(
+    min(treeSegs$edgeDT$xleft)-0.15,
+    max(treeSegs$edgeDT$xright)+0.15
+  ),
+  expand = c(0,0))
+```
+
+The above script will output something that looks like this:
+
+![phylogeny example in R](https://github.com/AndersenLab/vcf-kit/blob/img/phylo_R_example.png?raw=true)
+
 ### Plot a phylogeny from a VCF file
 
 `phylo tree` can be used to generate a plot of a phylogeny by adding the `--plot` flag. 

@@ -93,7 +93,7 @@ vk genome wormbase --ref=WS245
 
 # Custom Directories
 
-It is possible to set the directory to download a genome using the `--directory` parameter.
+It is possible to set the directory to download a genome using the `--directory` parameter. This command will set the directory to the current location.
 
 ```bash
 vk genome ncbi --directory="." --ref=ViralProj15089

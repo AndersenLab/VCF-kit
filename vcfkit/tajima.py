@@ -73,7 +73,7 @@ class tajima(vcf):
             for variant in variant_interval:
                 n_sites += 1
                 # Use only diploid, biallelic sites, 0 < AF < 1
-                if variant.ploidy == 2 and len(variant.ALT) == 1 and 0 < variant.aaf < 1:
+                if variant.ploidy == 2 and len(variant.ALT) == 1 and 0 < variant.aaf < 1 and variant.is_snp:
                     AN = variant.num_called*2
                     # 
                     # j;AC : allele count in genotypes, for each ALT allele, in the same order as listed
@@ -110,20 +110,25 @@ if len(sys.argv) == 1:
     debug = ["tajima", "100000", "10000",
              "~/Dropbox/AndersenLab/wormreagents/Variation/Andersen_VCF/20150731_WI_PASS.vcf.gz"]
 
+def large_int(i):
+  return int(float(i.replace(",","")))
+
 if __name__ == '__main__':
     args = docopt(__doc__,
                   version='VCF-Toolbox v0.1',
                   argv=debug)
 
-    if int(args["<window-size>"]) < int(args["<step-size>"]):
-        exit(puts_err(colored.red("\n\tWindow size must be >= step size.\n")))
-
     if args["<vcf>"] == "":
         print(__doc__)
-    wz = int(args["<window-size>"].replace(",", ""))
+
+    wz = large_int(args["<window-size>"])
     sz = None
     if not args["--sliding"]:
-        sz = int(args["<step-size>"].replace(",", ""))
+        sz = large_int(args["<step-size>"])
+
+    if wz < sz:
+        exit(puts_err(colored.red("\n\tWindow size must be >= step size.\n")))
+    
     if args["--no-header"] is False:
         header_line = ["CHROM",
                        "BIN_START",

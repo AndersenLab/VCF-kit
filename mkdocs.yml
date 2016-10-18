@@ -2,10 +2,11 @@ site_name: vcf-kit
 theme: readthedocs
 pages:
   - Home: index.md
-  - about: about.md
+  - freq: 'freq.md'
   - genome: 'genome.md'
   - phylo: 'phylo.md'
   - hmm: hmm.md
+  - rename: rename.md
   - tajima: tajima.md
 repo_url: https://github.com/Andersenlab/vcf-kit
 site_favicon: favicon.png

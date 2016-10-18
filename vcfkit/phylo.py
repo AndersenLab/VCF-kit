@@ -10,10 +10,11 @@ options:
 
 """
 from docopt import docopt
-import tb
+import vk
 from utils.vcf import *
 from subprocess import Popen
 import sys
+from utils import check_program_exists
 from clint.textui import colored, indent, puts_err
 
 import os
@@ -26,7 +27,7 @@ def main(debug = None):
     module_path = os.path.split(os.path.realpath(__file__))[0]
     v = vcf(args["<vcf>"])
     samples = v.samples
-    _ROOT = os.path.split(os.path.dirname(tb.__file__))[0]
+    _ROOT = os.path.split(os.path.dirname(vk.__file__))[0]
     if args["fasta"] or args["tree"]:
         """
             Generate an aligned fasta from a VCF file.
@@ -48,6 +49,9 @@ def main(debug = None):
             """
             Generate a phylogenetic tree using an aligned fasta with muscle.
             """
+
+            # Check for muscle dependency
+            check_program_exists("muscle")
             fasta = ""
             with indent(4):
                 puts_err(colored.blue("\nGenerating Fasta\n"))

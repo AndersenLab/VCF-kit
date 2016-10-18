@@ -7,19 +7,18 @@ usage:
   vk --version
 
 commands:
-  annotate
-  tajima
-  hmm
-  filter
   call
-  primer
-  genome
-  rename
-  phylo
+  filter
   freq
   geno
-  vcf2tsv
+  genome
+  hmm
+  phylo
+  primer
+  rename
+  tajima
   vcf2sql
+  vcf2tsv
 
 """
 from docopt import docopt

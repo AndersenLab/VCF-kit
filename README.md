@@ -13,10 +13,6 @@
     - [primer](#primer)
     - [genome](#genome)
     - [hmm](#hmm)
-    - [phylo](#phylo)
-          - [Generate a fasta-alignment for variant calls](#generate-a-fasta-alignment-for-variant-calls)
-          - [Generate a phylogenetic tree (newick format)](#generate-a-phylogenetic-tree-newick-format)
-          - [Plot a phylogeny from a VCF file](#plot-a-phylogeny-from-a-vcf-file)
     - [geno](#geno)
           - [transfer-filter](#transfer-filter)
           - [het-polarization](#het-polarization)
@@ -145,29 +141,6 @@ Creates a new FORMAT field (HP) and "polarizes" or switches heterozygous genotyp
 The following header line is added:
 
 `##FORMAT=<ID=HP,Number=1,Type=String,Description="Flag used to mark whether a variant was polarized">`
-
-
-### freq
-
-Calculates the frequency of homozygous genotypes by sample (e.g. number of singletons, doubletons, tripletons, etc. by sample)
-
-```
-vk freq <vcf>
-```
-
-Output from this utility appears as the table below. The first line indicates that the sample __ED3052__ has 2 singletons (private alleles). The second line indicates there are 3 doubltons.
-
-| sample | freq_of_gt | n_gt_at_freq |
-|--------|------------|--------------|
-| ED3052 | 1          | 2            |
-| ED3052 | 2          | 3            |
-| ED3052 | 3          | 2            |
-| ED3052 | 4          | 2            |
-| ED3052 | 5          | 2            |
-| ED3052 | 6          | 1            |
-| ED3052 | 7          | 2            |
-| ED3052 | 8          | 2            |
-| ED3052 | 9          | 1            |
 
 ### vcf2tsv
 
