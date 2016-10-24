@@ -31,13 +31,12 @@ before_install:
   - sudo ln -s /run/shm /dev/shm
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib nose dateutil pandas statsmodels
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION pytest pytest-cov numpy scipy cyvcf2 biopython
   # Coverage packages are on my binstar channel
-  - conda install --yes -c dan_blanchard python-coveralls nose-cov
   - python setup.py install
 
 script: 
-  - coverage run --source=vcf-kit setup.py test
+  - py.test --cov=vcfkit tests/
 
 
 after_success:
