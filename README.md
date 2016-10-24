@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/AndersenLab/vcf-kit.svg?branch=master)](https://travis-ci.org/AndersenLab/vcf-kit)
+[![Build Status](https://travis-ci.org/AndersenLab/VCF-kit.svg?branch=master)](https://travis-ci.org/AndersenLab/VCF-kit)
 
 [![Coverage Status](https://coveralls.io/repos/github/AndersenLab/vcf-kit/badge.svg?branch=master)](https://coveralls.io/github/AndersenLab/vcf-kit?branch=master)
 
@@ -44,13 +44,13 @@ __Installing Dependencies:__
 vk setup
 ```
 
-`vk setup` uses [homebrew](http://brew.sh/) (or if on linux, [linux-brew](http://linuxbrew.sh/)) to install programs used by vcf-kit:
+`vk setup` uses [homebrew](http://brew.sh/) (or if on linux, [linux-brew](http://linuxbrew.sh/)) to install programs used by vcf-kit. Versions listed have been tested:
 
-* bwa
-* samtools
-* bcftools
-* blast
-* muscle
+* bwa (v 0.7.12)
+* samtools (v 1.3)
+* bcftools (v 1.3)
+* blast (v 2.2.31+)
+* muscle (v 3.8.31)
 
 ## To Do (Broad)
 
