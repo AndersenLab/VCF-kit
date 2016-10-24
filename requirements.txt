@@ -12,4 +12,4 @@ clint
 requests
 intervaltree
 tabulate
--e git+git://github.com/hmmlearn/hmmlearn.git@dd67a47e4ddc238457d7e7c935a1d30bdf52a39c#egg=hmmlearn
+hmmlearn
