@@ -12,4 +12,4 @@ clint
 requests
 intervaltree
 tabulate
-hmmlearn
+yahmm
