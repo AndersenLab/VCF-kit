@@ -31,6 +31,7 @@ before_install:
   - sudo ln -s /run/shm /dev/shm
 # Install packages
 install:
+  - conda config --add channels bioconda
   - conda install --yes python=$TRAVIS_PYTHON_VERSION pytest pytest-cov numpy scipy cyvcf2 biopython
   # Coverage packages are on my binstar channel
   - python setup.py install
