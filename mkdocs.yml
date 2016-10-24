@@ -1,4 +1,4 @@
-site_name: vcf-kit
+site_name: VCF-kit
 theme: readthedocs
 pages:
   - Home: index.md
@@ -22,7 +22,6 @@ markdown_extensions:
         permalink: True
     - fenced_code
     - sane_lists
-
 
 markdown_extensions:
     - admonition:

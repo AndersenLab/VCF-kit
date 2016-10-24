@@ -3,6 +3,8 @@
 *.csi
 *.pdf
 
+_build/
+
 *.pyc
 build
 dist

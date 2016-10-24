@@ -1,9 +1,9 @@
-sudo: false
 language: python
 python:
   - "2.7"
 
-cache: pip
+cache: 
+  - pip
  
 
 addons:
@@ -18,23 +18,25 @@ addons:
     - libatlas-base-dev
     - gfortran
 
+# Setup anaconda
 before_install:
-  - git clone https://github.com/Linuxbrew/brew.git ~/.linuxbrew
-  - export PATH="$HOME/.linuxbrew/bin:$PATH"
-  - export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
-  - export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
-  - brew tap homebrew/science
-  - brew install bwa samtools
-
-install: 
-  - pip install Cython
-  - pip install coveralls
-  - pip install -r requirements.txt
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda update --yes conda
+  # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
+  - sudo rm -rf /dev/shm
+  - sudo ln -s /run/shm /dev/shm
+# Install packages
+install:
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION pytest pytest-cov numpy scipy cython biopython tabulate
+  # Coverage packages are on my binstar channel
   - python setup.py install
 
-
 script: 
-  - coverage run --source=vcf-kit setup.py test
+  - py.test --cov=vcfkit tests/
 
 
 after_success:
