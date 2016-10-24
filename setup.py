@@ -1,5 +1,7 @@
 from setuptools import setup
 import glob
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
 
 setup(name='vcfkit',
       version='0.0.1',
@@ -13,7 +15,7 @@ setup(name='vcfkit',
       [console_scripts]
       vk = vcfkit.vk:main
       """,
-      install_requires=["cython","docopt", "cyvcf2", "biopython", "clint", "requests"],
+      install_requires=required,
       zip_safe=False,
       setup_requires=['pytest-runner'],
       tests_require=['pytest'])
