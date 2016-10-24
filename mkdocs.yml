@@ -2,12 +2,18 @@ site_name: vcf-kit
 theme: readthedocs
 pages:
   - Home: index.md
+  - call: 'call.md'
+  - filter: 'filter.md'
   - freq: 'freq.md'
+  - geno: 'geno.md'
   - genome: 'genome.md'
-  - phylo: 'phylo.md'
   - hmm: hmm.md
+  - phylo: 'phylo.md'
+  - primer: 'primer.md'
   - rename: rename.md
   - tajima: tajima.md
+  - vcf2sql: vcf2sql.md
+  - vcf2tsv: vcf2tsv.md
 repo_url: https://github.com/Andersenlab/vcf-kit
 site_favicon: favicon.png
 markdown_extensions:

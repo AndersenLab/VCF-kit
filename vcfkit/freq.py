@@ -2,7 +2,7 @@
 """
 usage:
   vk freq sample_hom_gt <vcf>
-  vk freq spectrum (alleles|genotypes) [--rate] <vcf>
+  vk freq spectrum (alleles|genotypes) [--frequency] <vcf>
 
 Example
 
@@ -57,7 +57,7 @@ class freq_vcf(vcf):
                 alt = line.num_hom_alt
                 het = line.num_het
                 mis = line.num_unknown
-                if args["--rate"]:
+                if args["--frequency"]:
                     ref = float(ref)/vcf.n
                     het = float(het)/vcf.n
                     alt = float(alt)/vcf.n

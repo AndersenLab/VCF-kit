@@ -29,6 +29,7 @@ import sys
 import vk
 import os
 
+
 __version__ = "0.0.2"
 
 debug = None
@@ -56,7 +57,7 @@ def main():
             Use Homebrew to install programs!
         """
         program_installed = program_list.keys()
-        for install_name, program in progtbram_list.items():
+        for install_name, program in program_list.items():
             check_output(["brew", "tap", "homebrew/science"])
             try:
                 with indent(4):
@@ -86,7 +87,7 @@ def main():
             except CalledProcessError:
                 with indent(4):
                     puts(
-                        colored.red(prog + " not installed. Use a package manager to install or try using 'tb.py setup'\n"))
+                        colored.red(prog + " not installed. Use a package manager to install or try using 'vk setup'\n"))
     elif args['<command>'] in ['tajima', 'hmm', 'filter', 'call', 'primer', 'genome', 'rename', 'phylo', 'freq', 'geno', 'vcf2tsv', 'vcf2sql', 'stat', 'annotate']:
         comm = ['python', getScriptPath() + '/' + args["<command>"] + ".py"] + argv
         exit(call(comm))
