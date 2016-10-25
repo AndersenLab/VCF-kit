@@ -17,6 +17,7 @@ addons:
     - liblapack-dev
     - libatlas-base-dev
     - gfortran
+    - tabix
 
 # Setup anaconda
 before_install:
