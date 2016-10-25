@@ -10,7 +10,7 @@ from vcfkit import genome
 
 def test_genome_location():
     directory = genome.main(["genome","location"])
-    assert directory == os.path.expanduser("~/.genome")
+    assert os.path.exists(os.path.expanduser("~/.genome"))
 
 
 def test_set_genome_location():
