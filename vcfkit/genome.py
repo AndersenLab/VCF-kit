@@ -28,6 +28,19 @@ import urllib
 from sys import exit # Used by exit(); don't remove.
 
 
+def download_genomes(genome_db):
+    with indent(2):
+        puts(colored.blue('\nDownloading list of reference genomes\n'))
+    r = requests.get("http://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/assembly_summary_refseq.txt")
+    genome_file = open(genome_db, "w")
+    with genome_file as f:
+        f.write(r.text.encode('utf-8').strip())
+
+
+def is_non_zero_file(fpath):  
+    return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
+
+
 def main(debug=None):
     args = docopt(__doc__,
                   version='VCF-Toolbox v0.1',
@@ -81,13 +94,8 @@ def main(debug=None):
             fileTime = os.path.getctime(genome_db)
         else:
             fileTime = 0
-        if fileTime < (time() - 60 * 60 * 24 * 2):
-            with indent(2):
-                puts(colored.blue('\nDownloading list of reference genomes\n'))
-            r = requests.get("http://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/assembly_summary_refseq.txt")
-            genome_file = open(genome_db, "w")
-            with genome_file as f:
-                f.write(r.text.encode('utf-8').strip())
+        if fileTime < (time() - 60 * 60 * 24 * 2) or is_non_zero_file(genome_db):
+            download_genomes(genome_db)
 
         # Cache result
         header = ["assembly_accession",  # 0
@@ -117,6 +125,10 @@ def main(debug=None):
     elif args["--ref"]:
         # reference name.
         reference_name = args["--ref"]
+
+        # Ensure genome db is available
+        if is_non_zero_file(genome_db) is False:
+            download_genomes(genome_db)
 
         # reference directory
         if not args["--directory"]:
