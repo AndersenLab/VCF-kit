@@ -13,3 +13,4 @@ requests
 intervaltree
 tabulate
 yahmm
+jinja2
