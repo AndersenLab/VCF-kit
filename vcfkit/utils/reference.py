@@ -1,4 +1,4 @@
-from clint.textui import colored, puts, indent
+from clint.textui import colored, puts, puts_err, indent
 import os
 
 
@@ -41,7 +41,10 @@ def resolve_reference_genome(loc):
         return loc
     else:
         if loc in get_genome_list():
-            return "{gd}/{loc}/{loc}.fa.gz".format(gd = get_genome_directory(), loc = loc)
+            reference_location = "{gd}/{loc}/{loc}.fa.gz".format(gd = get_genome_directory(), loc = loc)
+            with indent(4):
+                puts_err(colored.green("\nUsing reference located at %s\n" % reference_location))
+            return reference_location
         else:
             with indent(4):
                 puts_err(colored.red("\nGenome does not exist\n"))

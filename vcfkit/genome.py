@@ -26,15 +26,38 @@ import requests
 import os
 import urllib
 from sys import exit # Used by exit(); don't remove.
+from Bio import Entrez
 
+
+def fetch_chrom_name(id):
+    try:
+        if not id.startswith("NC_"):
+            return id
+        Entrez.email = "vcf-kit@vcf-kit.com"
+        chrom = Entrez.read(Entrez.efetch(db="nuccore", id=id, rettype="gb", retmode = "xml"))
+        gb_feature_quals = chrom[0]["GBSeq_feature-table"][0]["GBFeature_quals"]
+        features = dict([x.values() for x in gb_feature_quals])
+        if "organelle" in features:
+            if features["organelle"] == "mitochondrion":
+                return "MtDNA"
+        else:
+            chrom_name = features["chromosome"]
+            return chrom_name
+    except:
+        return id
 
 def download_genomes(genome_db):
-    with indent(2):
-        puts(colored.blue('\nDownloading list of reference genomes\n'))
-    r = requests.get("http://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/assembly_summary_refseq.txt")
-    genome_file = open(genome_db, "w")
-    with genome_file as f:
-        f.write(r.text.encode('utf-8').strip())
+    if os.path.isfile(genome_db):
+        fileTime = os.path.getmtime(genome_db)
+    else:
+        fileTime = 0
+    if (time() - fileTime) >  (3 * 30 * 24 * 60 * 60) or is_non_zero_file(genome_db) is False:
+        with indent(2):
+            puts(colored.blue('\nDownloading list of reference genomes\n'))
+        r = requests.get("http://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/assembly_summary_refseq.txt")
+        genome_file = open(genome_db, "w")
+        with genome_file as f:
+            f.write(r.text.encode('utf-8').strip())
 
 
 def is_non_zero_file(fpath):  
@@ -70,7 +93,6 @@ def main(debug=None):
 
     with indent(2):
         puts(genome_directory)
-        #puts(colored.blue("\nGenome Directory: " + genome_directory + "\n"))
 
     if args["location"] and not args["<path>"]:
         return genome_directory
@@ -90,12 +112,7 @@ def main(debug=None):
     ##################
     elif args["--search"]:
         # Download and cache a list of genomes from NCBI for searching
-        if os.path.isfile(genome_db):
-            fileTime = os.path.getctime(genome_db)
-        else:
-            fileTime = 0
-        if fileTime < (time() - 60 * 60 * 24 * 2) or is_non_zero_file(genome_db):
-            download_genomes(genome_db)
+        download_genomes(genome_db)
 
         # Cache result
         header = ["assembly_accession",  # 0
@@ -120,15 +137,14 @@ def main(debug=None):
         with indent(2):
             puts(colored.blue('\nTo download a genome and setup for use:'))
         with indent(4):
-            puts(colored.green("\nvk genome --ref=<asm_name>\n"))
+            puts(colored.green("\nvk genome ncbi --ref=<asm_name>\n"))
         return results
     elif args["--ref"]:
         # reference name.
         reference_name = args["--ref"]
 
         # Ensure genome db is available
-        if is_non_zero_file(genome_db) is False:
-            download_genomes(genome_db)
+        download_genomes(genome_db)
 
         # reference directory
         if not args["--directory"]:
@@ -184,9 +200,10 @@ def main(debug=None):
                     for line in f:
                         outline = line
                         if line.startswith(">"):
-                            chrom_name = re.match(".*[c|C]hromosome ([A-Za-z0-9]+)[W]*", line)
+                            acc = line.split(" ")[0].strip(">")
+                            chrom_name = fetch_chrom_name(acc)
                             if chrom_name is not None:
-                                outline = ">" + chrom_name.group(1) + "\n"
+                                outline = ">" + chrom_name + "\n"
                             elif line.lower().find("mitochon") > 0:
                                 outline = ">MtDNA\n"
                             puts(colored.blue(line.strip("\n>")) + " --> " + colored.blue(outline.strip("\n>")))

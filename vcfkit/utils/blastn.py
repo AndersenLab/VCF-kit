@@ -42,9 +42,12 @@ class blast_variant:
     output_order = ["CHROM",
                     "POS",
                     "REF",
-                    "gt",
+                    "ALT",
+                    "seq_gt",
                     "vcf_gt",
+                    "sample",
                     "variant_type",
+                    "classification",
                     "index",
                     "alignment_start",
                     "alignment_end",
@@ -55,7 +58,8 @@ class blast_variant:
                     "evalue",
                     "bitscore",
                     "phred_quality",
-                    "phred_quality_window"]
+                    "phred_quality_window",
+                    "description"]
 
     def __init__(self,
                  blast_result,
@@ -71,9 +75,13 @@ class blast_variant:
 
         self.CHROM = blast_result["sacc"]
         self.POS = POS
+        posp1 = self.POS + 1
+        self.CHROM_POS = "{self.CHROM}:{self.POS}-{posp1}".format(**locals())
+        self.classification = None
         self.REF = ref_out.strip("-")
-        self.gt = alt_out.strip("-")
-        self.is_variant = (self.REF != self.gt)
+        self.ALT = None
+        self.seq_gt = alt_out.strip("-")
+        self.is_variant = (self.REF != self.seq_gt)
         self.vcf_gt = ""
         self.alignment_start = blast_result["sstart"]
         self.alignment_end = blast_result["send"]
@@ -84,23 +92,27 @@ class blast_variant:
         self.index = index
         self.evalue = blast_result["evalue"]
         self.bitscore = blast_result["bitscore"]
-        if self.REF != self.gt:
-            if len(self.REF) == len(self.gt):
+        if self.REF != self.seq_gt:
+            if len(self.REF) == len(self.seq_gt):
                 self.variant_type = "snp"
-            elif len(self.REF) > len(self.gt):
+            elif len(self.REF) > len(self.seq_gt):
                 self.variant_type = "deletion"
-            elif len(self.REF) < len(self.gt):
+            elif len(self.REF) < len(self.seq_gt):
                 self.variant_type = "insertion"
         else:
             self.variant_type = ""
         self.phred_quality = phred_quality
         self.phred_quality_window = phred_quality_window
 
+    def classify_variant(self):
+        # Determines whether variant is TP, TN, FP, FN
+        pass
+
     def chrom_pos_allele(self):
         """
             Simplified representation of variant
         """
-        return [self.CHROM, self.POS, self.gt]
+        return [self.CHROM, self.POS, self.seq_gt]
 
     def region(self):
         return "{self.CHROM}:{self.alignment_start}-{self.alignment_end}".format(**locals())

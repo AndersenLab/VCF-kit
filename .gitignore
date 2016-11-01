@@ -16,3 +16,5 @@ proj.*
 *__pycache__*
 .genome_directory
 .eggs
+
+site
