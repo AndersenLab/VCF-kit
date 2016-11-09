@@ -86,13 +86,6 @@ class vcf(cyvcf2):
         self.header = copy(self.raw_header)
 
 
-    def insert_header_line(self, header_line):
-        header = self.header.splitlines()
-        header.insert(len(header)-1, header_line)
-        self.header = '\n'.join(header)
-        return self.header
-
-
     def fetch_variants(self, chrom, start, end):
         """
             Fetch variants by specifying chrom, start, and end.
