@@ -2,9 +2,12 @@ from clint.textui import colored, puts, puts_err, indent, progress
 import os
 import re
 
-def message(message, n_indent = 2):
+def message(message, n_indent = 4, color = "blue"):
     with indent(n_indent):
-        puts(colored.blue('\nSearching...\n'))
+        if color == "blue":
+            puts_err(colored.blue('\n' + message + '\n'))
+        elif color == "red":
+            puts_err(colored.blue('\n' + message + '\n'))
 
 
 def boolify(s):

@@ -71,7 +71,7 @@ def main(debug = None):
                 import tempfile
                 # R code for plotting here!
                 prefix = _ROOT + "/static"
-                tree_template = Template(open(_ROOT + "/templates/tree.html", 'r').read())
+                tree_template = Template(open(_ROOT + "/static/tree.html", 'r').read())
                 html_out = tempfile.NamedTemporaryFile(suffix=".html", delete=False)
                 with html_out as f:
                     tree = tree.replace("\n", "")

@@ -1,5 +1,6 @@
 from clint.textui import colored, puts, puts_err, indent
 import os
+from . import message
 
 
 def get_genome_directory_file():
@@ -33,10 +34,24 @@ def get_genome_list():
     return [os.path.split(x[0])[1] for x in os.walk(get_genome_directory())][1:]
 
 
+
+def output_genome_list():
+    """
+        Outputs list of available genomes
+    """
+    message('\n'.join(get_genome_list()))
+
+
 def resolve_reference_genome(loc):
     """
         Resolve location of reference genome file.
     """
+
+    if loc is None:
+        message("You must specify a genome:")
+        output_genome_list()
+        exit()
+
     if os.path.exists(loc):
         return loc
     else:

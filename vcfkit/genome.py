@@ -103,9 +103,7 @@ def main(debug=None):
     # List Genomes #
     ################
     if args["list"]:
-        genome_list = get_genome_list()
-        with indent(2):
-            exit(puts(colored.blue("\n".join(genome_list) + "\n")))
+        output_genome_list()
 
     ##################
     # Search Genomes #
