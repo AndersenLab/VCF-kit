@@ -1,1 +1,4 @@
-include static/*
+static/*
+requirements.txt
+mkdocs.yml
+README.md
