@@ -5,7 +5,6 @@ python:
 cache: 
   - pip
  
-
 addons:
   apt:
     packages:
@@ -34,13 +33,12 @@ before_install:
 # Install packages
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION pytest pytest-cov numpy scipy cython biopython bwa samtools bcftools
-  # Coverage packages are on my binstar channel
-  - python setup.py install
   - pip install coveralls
   - pip install pytest-cov
+  - python setup.py develop
 
 script: 
-  - py.test --cov-report=term --cov=vcfkit tests/
+  - py.test --cov-report=term --cov=vcfkit tests
 
 
 after_success:
