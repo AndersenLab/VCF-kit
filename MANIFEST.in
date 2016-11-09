@@ -1,2 +1,2 @@
 include requirements.txt
-recursive-include data static
+recursive include static *

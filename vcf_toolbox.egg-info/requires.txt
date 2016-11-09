@@ -1,6 +1,0 @@
-cython
-docopt
-cyvcf2
-biopython
-clint
-requests
