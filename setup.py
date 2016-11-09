@@ -31,4 +31,4 @@ setup(name='vcfkit',
       include_package_data=True,
       data_files=gen_data_files("static"),
       setup_requires=['pytest-runner'],
-      tests_require=['pytest'])
+      tests_require=['pytest', 'coveralls'])
