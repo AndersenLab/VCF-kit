@@ -36,7 +36,8 @@ install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION pytest pytest-cov numpy scipy cython biopython bwa samtools bcftools
   # Coverage packages are on my binstar channel
   - python setup.py install
-  - pip install -r .travis-requirements.txt
+  - pip install coveralls
+  - pip install pytest-cov
 
 script: 
   - py.test --cov-report=term --cov=vcfkit tests/
