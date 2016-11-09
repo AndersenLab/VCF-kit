@@ -1,7 +1,18 @@
 from setuptools import setup
 import glob
+import os
 with open('requirements.txt') as f:
     required = f.read().splitlines()
+
+
+def gen_data_files(*dirs):
+    results = []
+
+    for src_dir in dirs:
+        for root,dirs,files in os.walk(src_dir):
+            results.append((root, map(lambda f:root + "/" + f, files)))
+    return results
+
 
 setup(name='vcfkit',
       version='0.0.1',
@@ -18,5 +29,6 @@ setup(name='vcfkit',
       install_requires=required,
       zip_safe=False,
       include_package_data=True,
+      data_files=gen_data_files("static"),
       setup_requires=['pytest-runner'],
       tests_require=['pytest'])
