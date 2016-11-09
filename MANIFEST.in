@@ -1,4 +1,2 @@
-static/*
-requirements.txt
-mkdocs.yml
-README.md
+include requirements.txt
+recursive-include data static
