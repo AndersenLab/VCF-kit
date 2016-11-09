@@ -44,14 +44,15 @@ def test_amb_file():
     """
     amb_file = expanduser("~/.genome/F1L3/") + "F1L3.fa.gz.amb"
     with open(amb_file, "r") as f:
-        assert '5252759 94 1 575 10 N' == ' '.join(f.splitlines())
+        assert '5252759 94 1 575 10 N' == ' '.join(f.read().splitlines())
 
 
 def test_ann_file():
     ann = expanduser("~/.genome/F1L3/") + "F1L3.fa.gz.ann"
-    hash = hashlib.sha256(open(ann, 'r').read()).hexdigest()
-    assert ann.startswith("5252759 94 11")
-    assert len(ann.splitlines()) is 189
+    with open(ann, "r") as f:
+        f = f.read()
+        assert f.startswith("5252759 94 11")
+        assert len(f.splitlines()) == 189
 
 
 def test_fai_file():
@@ -60,5 +61,5 @@ def test_fai_file():
     """
     fai = expanduser("~/.genome/F1L3/") + "F1L3.fa.gz.fai"
     fai = open(fai, 'r').read().splitlines()
-    assert len(fai) is 94
-    assert fai[0] is "NZ_FCPC01000001.1\t436251\t19\t80\t81"
+    assert len(fai) == 94
+    assert fai[0] == "NZ_FCPC01000001.1\t436251\t19\t80\t81"
