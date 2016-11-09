@@ -38,7 +38,7 @@ install:
   - python setup.py install
 
 script: 
-  - py.test --cov=vcfkit tests/
+  - py.test --cov-report=term --cov=vcfkit tests/
 
 
 after_success:
