@@ -3,11 +3,6 @@ from subprocess import Popen, PIPE
 import hashlib
 from test import Capturing, terminal
 
-def test_open_phylo():
-    out, err = terminal(["vk", "phylo"])
-    print(out)
-    print(err)
-    assert err == 'usage:\n  vk phylo fasta <vcf>\n  vk phylo tree (nj|upgma) [--plot] <vcf>\n'
 
 def test_phylo_fasta():
     with Capturing() as out:
