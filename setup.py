@@ -29,6 +29,11 @@ setup(name='vcfkit',
       install_requires=required,
       zip_safe=False,
       include_package_data=True,
+      keywords=["VCF", "variant", "caller", "format", "snps", "genetic", "variation", "genetics"]
       data_files=gen_data_files("static"),
       setup_requires=['pytest-runner'],
-      tests_require=['pytest', 'coveralls'])
+      tests_require=['pytest', 'coveralls'],
+      classifiers=["Development Status :: 4 - Beta","Operating System :: MacOS",
+                   "Operating System :: Unix",
+                   "Operating System :: POSIX :: Linux",
+                   "License :: OSI Approved :: MIT License"])

@@ -6,6 +6,7 @@ from os.path import expanduser
 from os import listdir
 import re
 from vcfkit import genome
+from test import Capturing, terminal
 
 
 def test_genome_location():
@@ -65,4 +66,5 @@ def test_fai_file():
     assert fai[0] == "NZ_FCPC01000001.1\t436251\t19\t80\t81"
 
 def test_list_genomes():
-    assert "F1L3" in genome.main(["genome", "list"])
+    out, err = terminal(["vk", "genome", "list"])
+    assert "F1L3" in err

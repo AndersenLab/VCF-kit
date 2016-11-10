@@ -26,6 +26,9 @@ class Capturing_err(list):
         self.extend(self._stringio.getvalue().splitlines())
         sys.stderr = self._stderr
 
+def terminal(command):
+    return Popen(command, stdout=PIPE, stderr=PIPE ).communicate()
+
 def test_tajima():
     out, err = Popen(["tb","tajima","--no-header","--print-header","100000", "1000", "test.vcf.gz"], stdout = PIPE).communicate()
     if err:
