@@ -63,3 +63,6 @@ def test_fai_file():
     fai = open(fai, 'r').read().splitlines()
     assert len(fai) == 94
     assert fai[0] == "NZ_FCPC01000001.1\t436251\t19\t80\t81"
+
+def test_list_genomes():
+    assert "F1L3" in genome.main(["genome", "list"])
