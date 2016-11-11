@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 """
 usage:
-  vk freq sample_hom_gt <vcf>
-  vk freq genotypes [--frequency] <vcf>
-  vk freq spectrum <vcf>
+  vk calc sample_hom_gt <vcf>
+  vk calc genotypes [--frequency] <vcf>
+  vk calc spectrum <vcf>
 
 Example
 
