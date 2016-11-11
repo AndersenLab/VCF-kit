@@ -2,9 +2,9 @@ site_name: VCF-kit
 theme: readthedocs
 pages:
   - Home: index.md
+  - calc: 'calc.md'
   - call: 'call.md'
   - filter: 'filter.md'
-  - freq: 'freq.md'
   - geno: 'geno.md'
   - genome: 'genome.md'
   - hmm: hmm.md
