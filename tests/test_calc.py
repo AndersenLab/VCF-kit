@@ -10,7 +10,6 @@ def test_sample_hom_gt():
     assert out[10] == 'QG536\t10\t11'
 
 
-
 def test_spectrum_genotypes_count():
     with Capturing() as out:
         calc.main(["calc", "genotypes", "data/test.vcf.gz"])
