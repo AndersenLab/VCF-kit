@@ -14,9 +14,9 @@ usage:
   vk --version
 
 commands:
+  calc
   call
   filter
-  freq
   geno
   genome
   hmm
