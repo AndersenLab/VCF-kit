@@ -21,7 +21,6 @@ import os
 
 def main(debug = None):
     args = docopt(__doc__,
-                  version='VCF-Toolbox v0.1',
                   argv=debug,
                   options_first=False)
     module_path = os.path.split(os.path.realpath(__file__))[0]
