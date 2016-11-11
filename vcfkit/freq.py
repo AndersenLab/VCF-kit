@@ -87,8 +87,7 @@ debug = None
 if len(sys.argv) == 1:
     debug = ["freq", "spectrum", "alleles", "../test.vcf.gz"]
 
-
-if __name__ == '__main__':
+def main(debug = None):
     args = docopt(__doc__,
                   argv=debug,
                   options_first=False)
@@ -98,5 +97,8 @@ if __name__ == '__main__':
         vcf.calc_af()
     elif args["spectrum"]:
         vcf.calc_frequency()
+
+if __name__ == '__main__':
+    main()
 
     

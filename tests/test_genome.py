@@ -68,3 +68,4 @@ def test_fai_file():
 def test_list_genomes():
     out, err = terminal(["vk", "genome", "list"])
     assert "F1L3" in err
+
