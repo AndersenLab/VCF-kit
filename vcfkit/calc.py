@@ -14,6 +14,7 @@ options:
 
 
 """
+from vcfkit import __version__
 from docopt import docopt
 from utils.vcf import *
 from utils.fasta import *
@@ -90,7 +91,8 @@ def main(debug = None):
     # Define args globally
     args = docopt(__doc__,
               argv=debug,
-              options_first=False)
+              options_first=False,
+              version=__version__)
     vcf = freq_vcf(args["<vcf>"])
     if args["sample_hom_gt"]:
         vcf.calc_af(args)
