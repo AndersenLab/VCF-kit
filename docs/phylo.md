@@ -106,7 +106,7 @@ The above script will output something that looks like this:
 
 ![phylogeny example in R](https://github.com/AndersenLab/vcf-kit/blob/img/phylo_R_example.png?raw=true)
 
-### Plot a phylogeny from a VCF file
+### Plot a phylogeny in your web browser
 
 `phylo tree` can be used to generate a plot of a phylogeny by adding the `--plot` flag. 
 

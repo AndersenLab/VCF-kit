@@ -22,7 +22,7 @@ def test_compare_vcftools():
     """
     comm = ["vcftools", "--TajimaD", "100000", "--gzvcf", "data/test.vcf.gz"]
     out, err = Popen(comm, stdout=PIPE, stderr=PIPE).communicate()
-    vcftools_tajima = open("data/out.Tajima.D", 'r').read()
+    vcftools_tajima = open("out.Tajima.D", 'r').read()
     vcftools_tajima = [x.split("\t")[0:4] for x in open("data/out.Tajima.D", 'r').read().splitlines()]
     with Capturing() as out:
         tajima.main(["tajima","--no-header","100000", "100000", "data/test.vcf.gz"])
