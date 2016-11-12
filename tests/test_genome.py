@@ -6,7 +6,7 @@ from os.path import expanduser
 from os import listdir
 import re
 from vcfkit import genome
-from test import Capturing, terminal
+from test import terminal
 
 
 def test_genome_location():

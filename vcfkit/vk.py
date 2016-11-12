@@ -21,6 +21,7 @@ commands:
   vcf2tsv
 
 """
+from vcfkit import __version__
 from docopt import docopt
 from subprocess import call, check_output, CalledProcessError
 from utils.vcf import *
@@ -28,9 +29,6 @@ from clint.textui import colored, puts, indent
 import sys
 import vk
 import os
-
-
-__version__ = "0.0.2"
 
 debug = None
 if len(sys.argv) == 1:

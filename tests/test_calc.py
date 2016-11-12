@@ -1,7 +1,7 @@
 from vcfkit import calc
 from subprocess import Popen, PIPE
 import hashlib
-from test import Capturing, terminal
+from tests.test_utilities import Capturing
 
 def test_sample_hom_gt():
     with Capturing() as out:
