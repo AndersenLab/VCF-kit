@@ -116,7 +116,7 @@ if __name__ == '__main__':
     args = docopt(__doc__,
                   argv=debug,
                   options_first=False)
-
+    
     v = vcf(args["<vcf>"], reference=args["--ref"])
 
     # Region

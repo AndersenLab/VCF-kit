@@ -4,6 +4,7 @@ from collections import OrderedDict, deque
 from itertools import islice
 from clint.textui import colored, puts, puts_err, indent
 import re
+from vcfkit.utils import message
 from copy import copy
 import os
 from . import autoconvert, lev
@@ -93,16 +94,17 @@ class vcf(cyvcf2):
         self.header = copy(self.raw_header)
 
 
-    def fetch_variants(self, chrom, start, end):
+    def fetch_variants(self, region=None):
         """
-            Fetch variants by specifying chrom, start, and end.
+            Fetch variants using the specified region
         """
-        region = "{chrom}:{start}-{end}".format(**locals())
+        if region is None:
+            region = self.region
         for i in self(region):
             yield i
 
 
-    def variant_region(self, variant, size, template = None):
+    def variant_region(self, variant, size):
         """
             Use samtools to fetch the variant region
             with optional consensus of variants.
@@ -116,6 +118,7 @@ class vcf(cyvcf2):
         start = variant.POS - size
         end = variant.POS + size
         sample_flag = ""
+        template = self.template
 
         # Retreive the reference sequence
         ref_seq_command = "samtools faidx {self.reference_file} {chrom}:{start}-{end}"
@@ -152,35 +155,33 @@ class vcf(cyvcf2):
         if self.mode == "template":
             print('\t'.join(header))
 
-    def fetch_variants_w_consensus(self, chrom, start, end, size = 100, template = None, sample_output = "ALL"):
+    def fetch_variants_w_consensus(self):
         """
             Return a variant with the sequence surrounding it; Both reference
             and alternate or for a set of specified samples.
 
             sample_output: List of samples to output w/ their genotypes.
         """
-        if chrom:
-            variant_iterator = self.fetch_variants(chrom, start, end)
+        if self.region:
+            variant_iterator = self.fetch_variants(self.region)
         else:
             variant_iterator = self
 
         for variant in variant_iterator:
+            size = self.size
             start = variant.POS - size
             end = variant.POS + size
 
-            if template not in self.samples + ["REF", "ALT"]:
-                exit(message(template + " template not found."))
+            if self.template not in self.samples + ["REF", "ALT"]:
+                exit(message(self.template + " template not found."))
             gt_collection = defaultdict(list)
 
-            if sample_output == "ALL":
-                sample_output = v.samples
-
             for vcf_sample, gt in zip(self.samples, variant.gt_types):
-                if vcf_sample in sample_output:
+                if vcf_sample in self.output_samples:
                     gt_collection[gt].append(vcf_sample)
 
             # Retrieve ref and alt sequences; Define box_seq as none.
-            ref_seq, alt_seq = self.variant_region(variant, size, template)
+            ref_seq, alt_seq = self.variant_region(variant, size)
             box_seq = None
 
             if self.box_variants:
@@ -192,7 +193,7 @@ class vcf(cyvcf2):
                            ref_seq,
                            alt_seq,
                            box_seq,
-                           template=template,
+                           template=self.template,
                            gt_collection=gt_collection)
 
 
