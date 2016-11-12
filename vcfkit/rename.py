@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 """
 usage:
-  vk rename [--prefix=<prefix> --suffix=<suffix> --subst=<subst>...] <vcf> 
+  vk rename [--prefix=<prefix> --suffix=<suffix> --subst=<subst>...] <vcf>
 
 options:
   -h --help                   Show this screen.
-  --version                   Show version.  
+  --version                   Show version.
 
 """
 from vcfkit import __version__
@@ -13,10 +13,10 @@ from docopt import docopt
 from utils.vcf import *
 import re
 from signal import signal, SIGPIPE, SIG_DFL
-signal(SIGPIPE,SIG_DFL) 
+signal(SIGPIPE, SIG_DFL)
 
 
-def main(debug = None):
+def main(debug=None):
     args = docopt(__doc__,
                   argv=debug,
                   version=__version__)
@@ -42,4 +42,3 @@ def main(debug = None):
 
 if __name__ == '__main__':
     main()
-    

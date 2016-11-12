@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  vk stat <vcf> 
+  vk stat <vcf>
 
 """
 from docopt import docopt

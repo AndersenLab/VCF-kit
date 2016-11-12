@@ -29,7 +29,6 @@ from vcfkit import __version__
 from docopt import docopt
 from utils.vcf import *
 from math import isinf
-import sys
 import os
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
@@ -76,7 +75,6 @@ class tajima(vcf):
                 # Use only diploid, biallelic sites, 0 < AF < 1
                 if variant.ploidy == 2 and len(variant.ALT) == 1 and 0 < variant.aaf < 1 and variant.is_snp:
                     AN = variant.num_called*2
-                    # 
                     # j;AC : allele count in genotypes, for each ALT allele, in the same order as listed
                     AC = variant.INFO["AC"]
                     if AC > 0:
@@ -85,7 +83,7 @@ class tajima(vcf):
                         S += 1
             try:
                 CHROM = variant_interval[0].CHROM
-                pi = 2.0*pi*n/(n-1.0);
+                pi = 2.0*pi*n/(n-1.0)
                 tw = (S*1.0 / a1)
                 var = (e1 * S) + ((e2 * S) * (S - 1))
                 TajimaD = (pi - tw) / \
@@ -107,10 +105,12 @@ class tajima(vcf):
             except:
                 pass
 
-def large_int(i):
-  return int(float(i.replace(",","")))
 
-def main(debug = None):
+def large_int(i):
+    return int(float(i.replace(",", "")))
+
+
+def main(debug=None):
     args = docopt(__doc__,
                   version=__version__,
                   argv=debug)
@@ -125,7 +125,7 @@ def main(debug = None):
 
     if wz < sz:
         exit(puts_err(colored.red("\n\tWindow size must be >= step size.\n")))
-    
+
     if args["--no-header"] is False:
         header_line = ["CHROM",
                        "BIN_START",
