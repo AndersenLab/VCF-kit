@@ -65,9 +65,8 @@ if len(sys.argv) == 1:
 
 
 def generate_cigar(arr):
-    grouped = [(k, sum(1 for i in g)) for k,g in groupby(arr)]
-    return "".join([{0: "R", 1: "A"}[x] + str(y) for x,y in grouped]), len(grouped) - 1
-
+    grouped = [(k, sum(1 for i in g)) for k, g in groupby(arr)]
+    return "".join([{0: "R", 1: "A"}[x] + str(y) for x, y in grouped]), len(grouped) - 1
 
 
 if __name__ == '__main__':
@@ -87,7 +86,7 @@ if __name__ == '__main__':
     # Get contig lengths
     contigs = [x for x in v.raw_header.splitlines() if x.startswith("##contig")]
     contigs = [re.findall("ID=([^,]+),length=([0-9]+)", x)[0] for x in contigs]
-    contigs = {x:int(v) for x,v in contigs}
+    contigs = {x: int(v) for x, v in contigs}
 
     gt_list, dp_list, dv_list = [], [], []
     chromosome = []
@@ -186,7 +185,6 @@ if __name__ == '__main__':
                             start = 1
                         if args["--endfill"] and interval_n == interval_set_len - 1:
                             end = contigs[chrom]
-                        
                         output = [chrom,
                                   start,
                                   end,
@@ -194,11 +192,11 @@ if __name__ == '__main__':
                                   gt + 1,
                                   supporting_sites,
                                   sites,
-                                  dp_avg, 
+                                  dp_avg,
                                   switches,
                                   orig_cigar]
                         if not args["--vcf-out"]:
-                            out_line = "\t".join(map(str,output))
+                            out_line = "\t".join(map(str, output))
                             print(out_line)
                         else:
                             tree[sample][chrom][start:end+1] = gt
@@ -208,7 +206,10 @@ if __name__ == '__main__':
         v = vcf(args["<vcf>"])
         chrom_pos = [x[0:2] for x in sample_gt]
         # Add GT_ORIG and print raw header.
-        v.add_format_to_header({"ID":"GT_ORIG", "Description": "Original genotype", "Type": "Character", "Number": "1"})
+        v.add_format_to_header({"ID": "GT_ORIG",
+                                "Description": "Original genotype",
+                                "Type": "Character",
+                                "Number": "1"})
         print(v.raw_header.strip())
         for n, line in enumerate(v):
             output_line = line.gt_types[v.samples.index(args["--alt"])] == 3
@@ -227,4 +228,3 @@ if __name__ == '__main__':
                     print(line)
             if args['--all-sites']:
                 print(line)
-
