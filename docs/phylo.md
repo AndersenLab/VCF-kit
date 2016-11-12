@@ -1,5 +1,10 @@
 # Overview
 
+```
+vk phylo fasta <vcf>
+vk phylo tree (nj|upgma) [--plot] <vcf>
+```
+
 The `phylo` command can be used to generate dendrograms, tree files, or a fasta file of variants concatenated together (equivelent to a multiple sequence alignment) from a VCF. Tree files are generated in [Newick format](http://evolution.genetics.washington.edu/phylip/newicktree.html)) with [MUSCLE](http://drive5.com/muscle/) using [UPGMA](https://en.wikipedia.org/wiki/UPGMA) or [neighbor-joining](https://en.wikipedia.org/wiki/Neighbor_joining). VCF-kit can use the output tree file to  generate a plot of the tree/phylogeny.
 
 `phylo` can read a VCF directly or from stdin by using `-`.
