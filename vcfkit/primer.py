@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  vk primer template [options] <vcf> 
+  vk primer template [options] <vcf>
   vk primer sanger   [options] <vcf>
   vk primer snipsnp  [options] <vcf>
   vk primer indel    [options] <vcf>
@@ -21,15 +21,11 @@ options:
 
 """
 from docopt import docopt
-from clint.textui import colored, puts, indent
-from utils import parse_region, message
+from utils import message
 from utils.primer_vcf import *
 from utils.reference import *
 from utils.fasta import *
 import sys
-from utils.primer3 import primer3
-import os
-from glob import glob
 from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
 from Bio.Restriction import AllEnzymes
@@ -116,7 +112,11 @@ if __name__ == '__main__':
     args = docopt(__doc__,
                   argv=debug,
                   options_first=False)
-    
+
+    # Ensure user has specified a reference.
+    if args["--ref"] is None:
+        exit(message("Must specify a reference with --ref", color="red"))
+
     v = primer_vcf(args["<vcf>"], reference=args["--ref"])
 
     # Region
@@ -143,13 +143,14 @@ if __name__ == '__main__':
     if args["template"]:
         v.mode = "template"
         v.print_primer_header()
-        for cvariant in v.fetch_variants_w_consensus():
+        for cvariant in v.fetch_template():
             print(cvariant)
 
     elif args["indel"]:
         v.mode = "indel"
-        for cvariant in v.fetch_variants_w_consensus():
-            print(cvariant)
+        for cvariant in v.fetch_indel_primers():
+            print(list(cvariant))
+
 
     elif args["snpsnp"]:
         for primer, restriction_sites, start, end in v.extract_restriction():

@@ -19,11 +19,11 @@ class primer3:
             self.PRIMER_TASK = "pick_pcr_primers"
             self.generate_pcr_template = True
         # Global default
-        thermo_path = "/usr/local/share/primer3_config/"
+        thermo_path = "/usr/local/Cellar/primer3/2.3.7/share/primer3/primer3_config/"
         self.PRIMER_THERMODYNAMIC_PARAMETERS_PATH = thermo_path
 
         # Set primer returns:
-        if self.PRIMER_TASK == "pick_left_only": 
+        if self.PRIMER_TASK == "pick_left_only":
             self.left_or_right = ["PRIMER_LEFT"]
         else:
             self.left_or_right = ["PRIMER_LEFT", "PRIMER_RIGHT"]
@@ -31,8 +31,7 @@ class primer3:
     def generate_record(self):
         # Generates text record ready for input
         # into primer3
-        attributes = [x for x in dir(self) if x.upper() == x
-                      and not x.startswith("_")]
+        attributes = [x for x in dir(self) if x.upper() == x and not x.startswith("_")]
         values = [str(getattr(self, x)) for x in attributes]
         att_val = zip(attributes, values)
         return '\n'.join(["=".join(x) for x in att_val]) + "\n=\n"
@@ -57,8 +56,7 @@ class primer3:
         # Iterates through primers
         if "PRIMER_LEFT_NUM_RETURNED" in self.results:
             n_primers = self.results["PRIMER_LEFT_NUM_RETURNED"]
-            #print pp(self.results)
-            for primer_num in xrange(0,n_primers):
+            for primer_num in xrange(0, n_primers):
                 primer_return = {}
                 for side in self.left_or_right:
                     primer_prefix = side + "_" + str(primer_num)
@@ -68,17 +66,17 @@ class primer3:
                     primer_return[side] = {}
                     for key, val in [(k.replace(primer_prefix + "_",""), v) 
                         for k, v in self.results.items() 
-                        if k.startswith(primer_prefix)]:
-                            if key == primer_prefix:
-                                start, length = val.split(",")
-                                primer_return[side]["PRIMER_START"] = int(start)
-                                primer_return[side]["PRIMER_LENGTH"] = int(length)
-                            else:
-                                primer_return[side][key] = autoconvert(val)
-                
+                            if k.startswith(primer_prefix)]:
+                                if key == primer_prefix:
+                                    start, length = val.split(",")
+                                    primer_return[side]["PRIMER_START"] = int(start)
+                                    primer_return[side]["PRIMER_LENGTH"] = int(length)
+                                else:
+                                    primer_return[side][key] = autoconvert(val)
+
                 # Add PCR Template
                 if self.generate_pcr_template:
-                    primer_left_pos = self.results["PRIMER_LEFT_"  + primer_num]
+                    primer_left_pos = self.results["PRIMER_LEFT_" + primer_num]
                     primer_right_pos = self.results["PRIMER_RIGHT_" + primer_num]
                     left_start, left_length = map(int, primer_left_pos.split(","))
                     right_start, right_length = map(int, primer_right_pos.split(","))
