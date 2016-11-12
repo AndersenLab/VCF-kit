@@ -1,20 +1,20 @@
 # Overview
 
-The `calc` command can be used to calculate or count genotypes/alleles from a VCF.
-
-Calculates the frequency of homozygous genotypes (e.g. number of singletons, doubletons, tripletons, etc.) by sample.
-
 ```
   vk calc sample_hom_gt <vcf>
   vk calc genotypes [--frequency] <vcf>
   vk calc spectrum <vcf>
 ```
 
+The `calc` command can be used examine the frequency or count of genotypes/alleles from a VCF in different ways.
+
 ## Calculate shared homozygous genotypes
 
 ```
     vk calc sample_hom_gt <vcf>
 ```
+
+The above command calculates the frequency of homozygous genotypes (e.g. number of singletons, doubletons, tripletons, etc.) by sample.
 
 An example of the output from this utility appears as the table below. The first column indicates the name of the sample. The second column indicates how often the genotype occurs in the population (within the VCF). Finally, the third column indicates the number of cases that exist for that sample. Therefore, the first row indicates that __ED3052__ has two singletons. The second row indicates that __ED3052__ shares a single genotype with another sample for three variants.
 
