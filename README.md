@@ -6,8 +6,8 @@ VCF-kit
 
 VCF-kit is a collection of utilities for performing analysis on variant caller format (VCF) files. A summary of the commands is provided below.
 
-| Command Description                                                                                 |
-|:----------------------------------------------------------------------------------------------------|
+| Command |Description                                                                                 |
+|:----------|------------------------------------------------------------------------------------------|
 | calc | Obtain  frequency/count of  genotypes and alleles.                                               |
 | call | Compare variants  identified  from  sequences obtained  through alternative methods against a VCF. |
 | filter | Filter  variants  with  a minimum or  maximum number  of  REF,  HET,  ALT,  or  missing calls.         |
