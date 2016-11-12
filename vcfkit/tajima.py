@@ -107,10 +107,6 @@ class tajima(vcf):
             except:
                 pass
 
-if len(sys.argv) == 1:
-    debug = ["tajima", "100000", "10000",
-             "~/Dropbox/AndersenLab/wormreagents/Variation/Andersen_VCF/20150731_WI_PASS.vcf.gz"]
-
 def large_int(i):
   return int(float(i.replace(",","")))
 
