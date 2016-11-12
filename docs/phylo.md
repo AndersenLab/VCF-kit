@@ -1,8 +1,8 @@
 # Overview
 
-The `phylo fasta` command can be used to generate a fasta file of variants and enables users to generate a tree file (in [Newick format](http://evolution.genetics.washington.edu/phylip/newicktree.html)) using [UPGMA](https://en.wikipedia.org/wiki/UPGMA) or [neighbor-joining](https://en.wikipedia.org/wiki/Neighbor_joining). It can also generate a plot of the tree/phylogeny.
+The `phylo` command can be used to generate dendrograms, tree files, or a fasta file of variants concatenated together (equivelent to a multiple sequence alignment) from a VCF. Tree files are generated in [Newick format](http://evolution.genetics.washington.edu/phylip/newicktree.html)) with [MUSCLE](http://drive5.com/muscle/) using [UPGMA](https://en.wikipedia.org/wiki/UPGMA) or [neighbor-joining](https://en.wikipedia.org/wiki/Neighbor_joining). VCF-kit can use the output tree file to  generate a plot of the tree/phylogeny.
 
-`phylo fasta` can read from stdin by using `-`.
+`phylo` can read a VCF directly or from stdin by using `-`.
 
 ## Generate fasta-alignment from variant calls
 
@@ -35,7 +35,7 @@ bcftools filter --set-GTs . --exclude 'FMT/DP < 20'  data/test.vcf.gz | vk phylo
 
 `vk phylo tree` can be used to generate a tree/phylogeny from a vcf file. This command uses a fasta file (identical to what is produced using `vk phylo fasta`), and uses [MUSCLE](https://en.wikipedia.org/wiki/MUSCLE_(alignment_software) to produce a tree file. 
 
-### Generate a upgma tree
+### Generate a UPGMA tree
 
 An unweighted pair group method with arithmetic-mean (UPGMA) tree can be constructed using the following command. Output is in newick format.
 
