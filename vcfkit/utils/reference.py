@@ -5,7 +5,7 @@ from . import message
 
 def get_genome_directory_file():
     """
-        
+        Return genome directory.
     """
     module_path = os.path.split(os.path.realpath(__file__))[0]
     return module_path + "/.genome_directory"

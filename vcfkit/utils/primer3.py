@@ -1,23 +1,12 @@
 from subprocess import Popen, PIPE
-from utils import *
-# Wrapper for primer3
+from vcfkit.utils import *
 
-def boolify(s):
-    if s == 'True':
-        return True
-    if s == 'False':
-        return False
-    raise ValueError("huh?")
 
-def autoconvert(s):
-    for fn in (boolify, int, float):
-        try:
-            return fn(s)
-        except ValueError:
-            pass
-    return s
 
 class primer3:
+    """
+        A wrapper for primer3
+    """
     def __init__(self, method="pcr"):
         if method == "pcr":
             self.PRIMER_PRODUCT_SIZE_RANGE = "600-800"  # Must be set

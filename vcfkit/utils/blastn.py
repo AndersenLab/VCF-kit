@@ -8,22 +8,7 @@ from Bio.Blast import NCBIXML
 from Bio.SeqRecord import SeqRecord
 from copy import copy
 from cStringIO import StringIO
-
-
-def boolify(s):
-    if s == 'True':
-        return True
-    if s == 'False':
-        return False
-    raise ValueError("huh?")
-
-def autoconvert(s):
-    for fn in (boolify, int, float):
-        try:
-            return fn(s)
-        except ValueError:
-            pass
-    return s
+from vcfkit.utils import *
 
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)

@@ -23,7 +23,7 @@ options:
 from docopt import docopt
 from clint.textui import colored, puts, indent
 from utils import parse_region, message
-from utils.vcf import *
+from utils.primer_vcf import *
 from utils.reference import *
 from utils.fasta import *
 import sys
@@ -117,38 +117,39 @@ if __name__ == '__main__':
                   argv=debug,
                   options_first=False)
     
-    v = vcf(args["<vcf>"], reference=args["--ref"])
+    v = primer_vcf(args["<vcf>"], reference=args["--ref"])
 
     # Region
     if args["--region"]:
-        chrom, start, end = parse_region(args["--region"])
+        v.region = args["--region"]
     else:
-        chrom, start, end = [None] * 3
+        v.region = None
 
     # Samples
     if args["--samples"]:
         if args["--samples"] == "ALL":
-            samples = v.samples
+            v.output_samples = v.samples
         else:
-            samples = args["--samples"].split(",")
-            for sample in samples:
+            v.output_samples = args["--samples"].split(",")
+            for sample in v.output_samples:
                 if sample not in v.samples + ["REF", "ALT", ]:
                     exit(message(sample + " not found in VCF", "red"))
 
-    # Box variant line
     v.box_variants = args["--box-variants"]
+    v.size = int(args["--size"])
+    v.template = args["--template"]
 
     # Check for std. input
     if args["template"]:
         v.mode = "template"
         v.print_primer_header()
-        for cvariant in v.fetch_variants_w_consensus(chrom, start, end, int(args["--size"]), args["--template"], samples):
+        for cvariant in v.fetch_variants_w_consensus():
             print(cvariant)
 
     elif args["indel"]:
-        seq = v.fetch_variants_w_consensus(chrom, start, end)
-        print(list(seq))
-        exit()
+        v.mode = "indel"
+        for cvariant in v.fetch_variants_w_consensus():
+            print(cvariant)
 
     elif args["snpsnp"]:
         for primer, restriction_sites, start, end in v.extract_restriction():
