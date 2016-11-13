@@ -1,5 +1,4 @@
 from cyvcf2 import VCF as cyvcf2
-from cyvcf2 import Variant
 from clint.textui import colored, puts, indent
 import re
 from collections import OrderedDict, defaultdict
@@ -11,6 +10,9 @@ from utils.primer3 import primer3
 from subprocess import Popen, PIPE, check_output
 from reference import resolve_reference_genome
 np.set_printoptions(threshold=np.nan)
+import signal
+signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
+
 
 debug = None
 
@@ -22,41 +24,26 @@ class cvariant:
     alt_seq = Alternative Sequence of variant (as determined by template)
     box_seq = reference sequence with alternative variant boxed.
     """
-    def __init__(self, variant, ref_seq, alt_seq, box_seq, template, indel_size = None, gt_collection=None):
-        self.variant = variant
-        self.CHROM = variant.CHROM
-        self.POS = variant.POS
-        self.REF = variant.REF
-        self.ALT = variant.ALT
-        self.is_indel = variant.is_indel
-        if indel_size:
-            self.indel_size = indel_size
-        self.ref_seq = ref_seq
-        self.alt_seq = alt_seq
-        self.box_seq = box_seq
-        self.edit_distance = lev(self.ref_seq.lower(), self.alt_seq.lower())
-        if template in [None, "ALT"]:
+    def __init__(self, variant):
+        for i in filter(lambda x: x.startswith("_") is False, dir(variant)):
+            setattr(self, i, getattr(variant, i))
+      
+    def __repr__(self):
+        CHROM_POS = "{self.CHROM}:{self.POS}".format(**locals())
+
+        if self.template in [None, "ALT"]:
             self.output = self.alt_seq
             self.sample = "ALT"
-        elif template in ["REF"]:
+        elif self.template in ["REF"]:
             self.output = self.ref_seq
             self.sample = "REF"
         else:
             self.output = self.alt_seq
-            self.sample = template
-        self.sample_gt = False  # Show sample genotypes.
-        if gt_collection:
-            self.gt_collection = gt_collection
-            self.homozygous_ref = ','.join(self.gt_collection[0])
-            self.heterozygous = ','.join(self.gt_collection[1])
-            self.homozygous_alt = ','.join(self.gt_collection[3])
-            self.missing = ','.join(self.gt_collection[2])
+            self.sample = self.template
 
-    def __repr__(self):
-        CHROM_POS = "{self.variant.CHROM}:{self.variant.POS}".format(**locals())
         output = [CHROM_POS,
-                  self.variant.REF,
-                  ','.join(self.variant.ALT),
+                  self.REF,
+                  ','.join(self.ALT),
                   self.sample,
                   str(self.edit_distance),
                   self.output,
@@ -70,21 +57,38 @@ class cvariant:
 
 
 class primer_vcf(cyvcf2):
-    def __init__(self, filename, reference=None):
+    def __init__(self, filename, reference=None, template="ALT"):
         if not os.path.isfile(filename) and filename != "-":
             exit(message("Error: " + filename + " does not exist"))
         self.filename = filename
+        self.template = template
         if reference:
             self.reference = reference
             self.reference_file = resolve_reference_genome(reference)
 
         cyvcf2.__init__(self, self.filename)
+        # Check if file exists
+        self.n = len(self.samples)  # Number of Samples
+
+        # Meta Data
+        comp = re.compile(r'''^##(?P<key>[^<#]+?)=(?P<val>[^<#]+$)''', re.M)
+        self.metadata = OrderedDict(comp.findall(self.raw_header))
 
         # Contigs
         self.contigs = OrderedDict(zip(
             re.compile("##contig=<ID=(.*?),").findall(self.raw_header),
             map(int, re.compile("##contig.*length=(.*?)>").findall(self.raw_header))
         ))
+
+        self.info_set = [x for x in self.header_iter() if x.type == "INFO"]
+        self.filter_set = [x for x in self.header_iter() if x.type == "FILTER"]
+        self.format_set = [x for x in self.header_iter() if x.type == "FORMAT"]
+        self.header = copy(self.raw_header)
+
+        # Setup template
+        if self.template not in self.samples + ["REF", "ALT"]:
+            exit(message(self.template + " template not found."))
+
 
     def variant_iterator(self):
         """
@@ -97,38 +101,43 @@ class primer_vcf(cyvcf2):
             var_region = self
 
         for variant in var_region:
-            if variant.is_indel:
-                indel_size =  abs(len(variant.REF) - len(variant.ALT[0]))
-                self.size = indel_size*2 + 150
-            size = self.size
-            start = variant.POS - size
-            end = variant.POS + size
+            nz = cvariant(variant)
+            nz.template = self.template
+            nz.mode = self.mode
 
-            if self.template not in self.samples + ["REF", "ALT"]:
-                exit(message(self.template + " template not found."))
             gt_collection = defaultdict(list)
 
             for vcf_sample, gt in zip(self.samples, variant.gt_types):
                 if vcf_sample in self.output_samples:
                     gt_collection[gt].append(vcf_sample)
 
+            # Determine region size
+            nz.indel_size = 0
+            if nz.is_indel:
+                nz.indel_size =  abs(len(nz.REF) - len(nz.ALT[0]))
+                nz.region_size = nz.indel_size*2 + 150
+
+
             # Retrieve ref and alt sequences; Define box_seq as none.
-            ref_seq, alt_seq = self.variant_region(variant, size)
-            box_seq = None
+            ref_seq, alt_seq = self.variant_region(nz)
+            nz.ref_seq = ref_seq
+            nz.alt_seq = alt_seq
+            nz.edit_distance = lev(ref_seq.lower(), alt_seq.lower())
 
+            if gt_collection:
+                nz.gt_collection = gt_collection
+                nz.homozygous_ref = ','.join(nz.gt_collection[0])
+                nz.heterozygous = ','.join(nz.gt_collection[1])
+                nz.homozygous_alt = ','.join(nz.gt_collection[3])
+                nz.missing = ','.join(nz.gt_collection[2])
+
+            nz.box_seq = None
             if self.box_variants:
-                a, b = alt_seq[:size], alt_seq[size+len(variant.REF):]
+                a, b = alt_seq[:nz.region_size], alt_seq[nz.region_size+len(variant.REF):]
                 alt_variants = '/'.join(variant.ALT)
-                box_seq = "{a}[{variant.REF}/{alt_variants}]{b}".format(**locals())
+                nz.box_seq = "{a}[{variant.REF}/{alt_variants}]{b}".format(**locals())
 
-            # Attach attributes to variant
-            yield cvariant(variant,
-                           ref_seq,
-                           alt_seq,
-                           box_seq,
-                           indel_size=indel_size,
-                           template=self.template,
-                           gt_collection=gt_collection)
+            yield nz
 
     def fetch_variants(self, region=None):
         """
@@ -139,9 +148,10 @@ class primer_vcf(cyvcf2):
         for i in self(region):
             yield i
 
-    def variant_region(self, variant, size):
+    def variant_region(self, variant):
         """
-            Use samtools to fetch the region with variants added.
+            Use samtools to fetch the variant region
+            with optional consensus of variants.
 
             Use template = "ref" to return the reference
             Omit template, or set sample = "alt" to return alternative genotypes.
@@ -149,8 +159,9 @@ class primer_vcf(cyvcf2):
             for a specific sample.
         """
         chrom = variant.CHROM
-        start = variant.POS - size
-        end = variant.POS + size
+        start = variant.POS - variant.region_size
+        end = variant.POS + variant.region_size
+        print chrom, start, end, variant.region_size
         sample_flag = ""
         template = self.template
 
@@ -175,10 +186,11 @@ class primer_vcf(cyvcf2):
             sample_flag = "--sample=" + template  # Get template for sample.
             command = "samtools faidx {self.reference_file} {chrom}:{start}-{end} | bcftools consensus {sample_flag} {self.filename}"
         command = command.format(**locals())
-        alt_seq, err = Popen(command, shell=True, stdout=PIPE, stderr=PIPE).communicate()
-        if (err):
-            message(err)
-        alt_seq = ''.join(alt_seq.splitlines()[1:])
+        try:
+            alt_seq = check_output(command, shell=True)
+            alt_seq = ''.join(alt_seq.splitlines()[1:])
+        except:
+            alt_seq = ''
         return ref_seq, alt_seq
 
     def print_primer_header(self):
@@ -187,7 +199,7 @@ class primer_vcf(cyvcf2):
                   "ALT",
                   "SAMPLE",
                   "EDIT_DISTANCE",
-                  "SEQUENCE",
+                  "TEMPLATE",
                   "0/0",
                   "0/1",
                   "1/1",
@@ -196,6 +208,7 @@ class primer_vcf(cyvcf2):
             header.insert(6, "SEQUENCE_BOX")
         if self.mode == "template":
             print('\t'.join(header))
+
 
     def fetch_template(self):
         """
@@ -207,22 +220,16 @@ class primer_vcf(cyvcf2):
         for variant in self.variant_iterator():
             yield variant
 
-    def fetch_indel_primers(self):
-        for cvariant in self.variant_iterator():
-            p3 = primer3()
-            if cvariant.is_indel and cvariant.indel_size >= 30 and cvariant.indel_size <= 500:
-                template = max([cvariant.ref_seq, cvariant.alt_seq], key = lambda x: len(x))[0]
-                if len(cvariant.ref_seq) > len(cvariant.alt_seq):
-                    template = cvariant.ref_seq
-                    temp = "ref"
-                else:
-                    template = cvariant.alt_seq
-                    temp = "alt"
-                min_size = len(template) - cvariant.indel_size*2
-                max_size = len(template)
-                p3.PRIMER_PRODUCT_SIZE_RANGE = "{min_size}-{max_size}".format(**locals())
-                for primer_set in p3.fetch_primers(template):
-                    print(primer_set)
 
-                #yield cvariant
+    def fetch_indel_primers(self):
+        p3 = primer3()
+        for variant in self.variant_iterator():
+            if 30 <= variant.indel_size <= 500:
+                low = variant.region_size/2
+                high = variant.region_size
+                p3.PRIMER_PRODUCT_SIZE_RANGE = "{low}-{high}".format(**locals())
+                print list(p3.fetch_primers(variant.ref_seq))
+                yield p3.fetch_primers(variant.ref_seq)
+                print(variant)
+                # Take processed variant and feed to indel processor.
 

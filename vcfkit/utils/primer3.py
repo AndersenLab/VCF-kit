@@ -1,5 +1,7 @@
 from subprocess import Popen, PIPE
 from vcfkit.utils import *
+import signal
+signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
 
 
 
@@ -21,7 +23,7 @@ class primer3:
             self.generate_pcr_template = True
 
         # Global default
-        thermo_path = "/usr/local/Cellar/primer3/2.3.7/share/primer3/primer3_config/"
+        thermo_path = "/usr/local/share/primer3/primer3_config/"
         self.PRIMER_THERMODYNAMIC_PARAMETERS_PATH = thermo_path
 
         # Set primer returns:
@@ -30,7 +32,7 @@ class primer3:
         else:
             self.left_or_right = ["PRIMER_LEFT", "PRIMER_RIGHT"]
 
-    def generate_record(self):
+    def _generate_record(self):
         # Generates text record ready for input
         # into primer3
         attributes = [x for x in dir(self) if x.upper() == x and not x.startswith("_")]
@@ -42,7 +44,7 @@ class primer3:
         # Runs primer3 with the generated record.
         self.SEQUENCE_TEMPLATE = sequence_template
         primer3_run = Popen(["primer3_core"], stdin=PIPE, stdout=PIPE)
-        record = self.generate_record()
+        record = self._generate_record()
         print(record)
         resp, err = primer3_run.communicate(record)
         resp = resp.strip().split("\n")

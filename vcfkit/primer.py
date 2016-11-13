@@ -151,8 +151,8 @@ if __name__ == '__main__':
         if args["--size"]:
             message("Warning: --size ignored; size is set dynamically when genotyping indels.")
         v.mode = "indel"
-        for cvariant in v.fetch_indel_primers():
-            print(cvariant)
+        for variant in v.fetch_indel_primers():
+            print(variant)
 
 
     elif args["snpsnp"]:
