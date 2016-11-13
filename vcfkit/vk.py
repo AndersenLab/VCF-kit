@@ -30,6 +30,8 @@ from clint.textui import colored, puts, indent
 import sys
 import vk
 import os
+import signal
+signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
 
 
 command_list = [x.strip() for x in filter(len, __doc__.splitlines()[8:])]

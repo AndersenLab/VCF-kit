@@ -29,14 +29,14 @@ import sys
 from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
 from Bio.Restriction import AllEnzymes
-from signal import signal, SIGPIPE, SIG_DFL
-signal(SIGPIPE, SIG_DFL)
+from utils import check_program_exists
 
+import signal
+signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
 
 debug = None
 if len(sys.argv) == 1:
     debug = ['primer', "--ref=WBcel235", "test.vcf.gz"]
-
 
 class restriction_sites:
 
@@ -113,11 +113,13 @@ if __name__ == '__main__':
                   argv=debug,
                   options_first=False)
 
+    check_program_exists("primer3_core")
+
     # Ensure user has specified a reference.
     if args["--ref"] is None:
         exit(message("Must specify a reference with --ref", color="red"))
 
-    v = primer_vcf(args["<vcf>"], reference=args["--ref"])
+    v = primer_vcf(args["<vcf>"], reference=args["--ref"], template=args["--template"])
 
     # Region
     if args["--region"]:
@@ -136,15 +138,14 @@ if __name__ == '__main__':
                     exit(message(sample + " not found in VCF", "red"))
 
     v.box_variants = args["--box-variants"]
-    v.size = int(args["--size"])
-    v.template = args["--template"]
+    v.region_size = int(args["--size"])
 
     # Check for std. input
     if args["template"]:
         v.mode = "template"
         v.print_primer_header()
-        for cvariant in v.fetch_template():
-            print(cvariant)
+        for variant in v.fetch_template():
+            print(variant)
 
     elif args["indel"]:
         if args["--size"]:
