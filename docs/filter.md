@@ -1,10 +1,10 @@
 # Overview
 
-The filter command can be used to hard or soft-filter variants based on the count or frequency of homozygous reference, heterozygous, homozygous alternative, or missing variants from a  VCF.
+```
+vk filter (REF|HET|ALT|MISSING) [--min=<min> --max=<max> --soft-filter=<soft> --mode=<mode>] <vcf>
+```
 
-```
-    vk filter (REF|HET|ALT|MISSING) [--min=<min> --max=<max> --soft-filter=<soft> --mode=<mode>] <vcf>
-```
+The filter command can be used to hard or soft-filter variants based on the count or frequency of homozygous reference, heterozygous, homozygous alternative, or missing variants from a  VCF.
 
 ### Options
 

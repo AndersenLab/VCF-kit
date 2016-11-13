@@ -22,7 +22,7 @@ options:
 """
 from docopt import docopt
 from utils import message
-from utils.primer_vcf import *
+from utils.primer_vcf import primer_vcf
 from utils.reference import *
 from utils.fasta import *
 import sys
@@ -147,9 +147,11 @@ if __name__ == '__main__':
             print(cvariant)
 
     elif args["indel"]:
+        if args["--size"]:
+            message("Warning: --size ignored; size is set dynamically when genotyping indels.")
         v.mode = "indel"
         for cvariant in v.fetch_indel_primers():
-            print(list(cvariant))
+            print(cvariant)
 
 
     elif args["snpsnp"]:

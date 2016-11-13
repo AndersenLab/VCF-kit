@@ -8,16 +8,18 @@ class primer3:
         A wrapper for primer3
     """
     def __init__(self, method="pcr"):
+        self.PRIMER_OPT_SIZE = 20
+        self.PRIMER_MIN_SIZE = 18  # Must be set
+        self.PRIMER_MAX_SIZE = 20  # Must be set
+        self.PRIMER_NUM_RETURN = 5
+        self.PRIMER_PRODUCT_SIZE_RANGE = "600-800"
+        
         if method == "pcr":
-            self.PRIMER_PRODUCT_SIZE_RANGE = "600-800"  # Must be set
-            self.PRIMER_OPT_SIZE = 20
-            self.PRIMER_MIN_SIZE = 18  # Must be set
-            self.PRIMER_MAX_SIZE = 20  # Must be set
-            self.PRIMER_NUM_RETURN = 5
             seq_template_length = self.PRIMER_PRODUCT_SIZE_RANGE.split("-")[1]
             self.seq_template_length = int(seq_template_length)
             self.PRIMER_TASK = "pick_pcr_primers"
             self.generate_pcr_template = True
+
         # Global default
         thermo_path = "/usr/local/Cellar/primer3/2.3.7/share/primer3/primer3_config/"
         self.PRIMER_THERMODYNAMIC_PARAMETERS_PATH = thermo_path
@@ -41,10 +43,11 @@ class primer3:
         self.SEQUENCE_TEMPLATE = sequence_template
         primer3_run = Popen(["primer3_core"], stdin=PIPE, stdout=PIPE)
         record = self.generate_record()
+        print(record)
         resp, err = primer3_run.communicate(record)
         resp = resp.strip().split("\n")
         if err:
-            raise Exception(err)
+            exit(message(err))
         primer3_results = dict([x.split("=") for x in resp
                                if x.split("=")[0] != ""])
         self.results = {}
