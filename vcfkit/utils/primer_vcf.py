@@ -104,8 +104,6 @@ class restriction_sites:
     """
 
     def __init__(self, ref_seq, alt_seq):
-        self.ref_seq = Seq(ref_seq, DNA_SET)
-        self.alt_seq = Seq(alt_seq, DNA_SET)
         self.ref_sites = dict(AllEnzymes.search(self.ref_seq).items())
         self.alt_sites = dict(AllEnzymes.search(self.alt_seq).items())
         self.ref_sites_diff = {k: v for k, v in self.ref_sites.items() if len(v) > 0 and len(v) <= 3 and
