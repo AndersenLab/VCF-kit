@@ -48,6 +48,7 @@ class primer3:
         print(record)
         resp, err = primer3_run.communicate(record)
         resp = resp.strip().split("\n")
+        print(resp)
         if err:
             exit(message(err))
         primer3_results = dict([x.split("=") for x in resp

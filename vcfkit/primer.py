@@ -47,7 +47,7 @@ if __name__ == '__main__':
     if args["--ref"] is None:
         exit(message("Must specify a reference with --ref", color="red"))
 
-    v = primer_vcf(args["<vcf>"], reference=args["--ref"], template=args["--template"])
+    v = primer_vcf(args["<vcf>"], reference=args["--ref"], use_template=args["--template"])
 
     # Region
     if args["--region"]:
@@ -84,7 +84,10 @@ if __name__ == '__main__':
 
 
     elif args["snip"]:
+        if args["--size"]:
+            message("Warning: --size ignored; size is set to ~1000 bp templates.")
         v.mode = "snip"
+        v.region_size = 500
         for variant in v.fetch_snpsnp_primers():
             print(variant)
 
