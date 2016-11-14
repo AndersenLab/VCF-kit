@@ -13,8 +13,12 @@ np.set_printoptions(threshold=np.nan)
 import signal
 signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
 
+from Bio.Seq import Seq
+from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
+from Bio.Restriction import AllEnzymes, CommOnly, RestrictionBatch
 
-high_fidelity = ["AgeI",
+
+high_fidelity = RestrictionBatch(["AgeI",
                  "ApoI",
                  "BamHI",
                  "BbsI",
@@ -47,7 +51,7 @@ high_fidelity = ["AgeI",
                  "SpeI",
                  "SphI",
                  "SspI",
-                 "StyI"]
+                 "StyI"])
 
 debug = None
 
@@ -56,7 +60,7 @@ class cvariant:
     """
     Variant with surrounding region.
     ref_seq = Reference Sequence of variant
-    alt_seq = Alternative Sequence of variant (as determined by template)
+    alt_seq = Alternative Sequence of variant (as determined by use_template)
     box_seq = reference sequence with alternative variant boxed.
     """
     def __init__(self, variant):
@@ -66,15 +70,15 @@ class cvariant:
     def __repr__(self):
         CHROM_POS = "{self.CHROM}:{self.POS}".format(**locals())
 
-        if self.template in [None, "ALT"]:
+        if self.use_template in [None, "ALT"]:
             self.output = self.alt_seq
             self.sample = "ALT"
-        elif self.template in ["REF"]:
+        elif self.use_template in ["REF"]:
             self.output = self.ref_seq
             self.sample = "REF"
         else:
             self.output = self.alt_seq
-            self.sample = self.template
+            self.sample = self.use_template
 
         output = [CHROM_POS,
                   self.REF,
@@ -91,10 +95,102 @@ class cvariant:
         return "\t".join(output)
 
 
+class template:
 
-from Bio.Seq import Seq
-from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
-from Bio.Restriction import AllEnzymes
+    def __init__(self, variant, reference_file, use_template):
+        # Copy variant attributes over
+        for i in filter(lambda x: x.startswith("_") is False, dir(variant)):
+            setattr(self, i, getattr(variant, i))
+        self.reference_file = reference_file
+        self.use_template = use_template
+        self.region_start = variant.POS - variant.region_size
+        self.region_end = variant.POS + variant.region_size - 1
+        self.region = "{self.CHROM}:{self.region_start}-{self.region_end}".format(**locals())
+        
+        # Retrieve sequences
+        self.ref_seq = self.fetch_sequence("REF")
+        if use_template == 'REF':
+            self.alt_seq = self.ref_seq
+        else:
+            self.alt_seq = self.fetch_sequence(use_template)
+        self.edit_distance = lev(self.ref_seq.tostring().lower(), self.alt_seq.tostring().lower())
+
+        if self.mode == 'snip':
+            ref_seq = self.ref_seq.tostring()
+            # Generate a primary variant only seq to identify restriction
+            # sites that target ALT sites.
+            self.primary_variant_seq = Seq(ref_seq[0:500] + self.ALT[0] + ref_seq[501:])
+            self.fetch_restriction_sites()
+
+    def fetch_sequence(self, use_template):
+        sample_flag = ""
+        if use_template == "REF":
+            command = "samtools faidx {self.reference_file} {self.region}"
+        elif use_template == "ALT" or use_template is None:
+            command = "samtools faidx {self.reference_file} {self.region} | bcftools consensus {self.filename}"
+        else:
+            sample_flag = "--sample=" + use_template  # Get use_template for sample.
+            command = "samtools faidx {self.reference_file} {self.region} | bcftools consensus {sample_flag} {self.filename}"
+        command = command.format(**locals())
+        try:
+            seq = check_output(command, shell=True)
+            seq = Seq(''.join(seq.splitlines()[1:]), DNA_SET)
+        except:
+            seq = Seq('')
+        return seq
+
+    def fetch_restriction_sites(self, enzymes = "ALL"):
+        """ 
+            Spike in target variant first, generate list restriction enzymes that will work.
+        """
+        # Filters:
+        # 1. Between 1-3 cuts.
+
+        if enzymes == "ALL":
+            enzyme_group = AllEnzymes
+        elif enzymes == "Common":
+            enzyme_group = CommOnly
+        elif enzymes == "high_fidelity":
+            enzyme_group = high_fidelity
+        else:
+            enzyme_group = RestrictionBatch(','.split(enzymes))
+
+        # Calculate rflps for ALT sites only
+        self.ref_sites = dict(enzyme_group.search(self.ref_seq).items())
+        self.primary_variant_sites = dict(enzyme_group.search(self.primary_variant_seq).items())
+        self.rflps = {k: (self.ref_sites[k], self.primary_variant_sites[k]) for k, v in self.ref_sites.items() 
+                        if len(v) > 0 and len(v) <= 3
+                        and self.ref_sites[k] != self.primary_variant_sites[k]}
+        
+        # Filter cut sites that are too similar
+        #for k,v in self.rflps.items():
+        #    ref_cuts = self.calculate_cuts(1000, v[0])
+        #    alt_cuts = self.calculate_cuts(1000, v[1])
+        #    ref_cuts = [x for x in ref_cuts if x not in alt_cuts]
+        #    alt_cuts = [x for x in alt_cuts if x not in ref_cuts]
+        #    print ref_cuts, "ref", alt_cuts, "alt"
+
+
+    def calculate_cuts(self, length, positions):
+        """
+            Given a template and cut sites,
+            returns resulting fragments and their size.
+        """
+        if positions:
+            init, cuts = 0, []
+            for cut in positions:
+                cut_len = cut - init
+                cuts.append(cut_len)
+                init = init + cut_len
+            # Add last piece in
+            cuts.append(length - positions[-1])
+            return cuts
+        else:
+            return [length]
+
+    def __repr__(self):
+        return "<Template> -- {self.region} -- {self.edit_distance}".format(**locals())
+
 
 class restriction_sites:
 
@@ -141,11 +237,11 @@ class restriction_sites:
 
 
 class primer_vcf(cyvcf2):
-    def __init__(self, filename, reference=None, template="ALT"):
+    def __init__(self, filename, reference=None, use_template="ALT"):
         if not os.path.isfile(filename) and filename != "-":
             exit(message("Error: " + filename + " does not exist"))
         self.filename = filename
-        self.template = template
+        self.use_template = use_template
         if reference:
             self.reference = reference
             self.reference_file = resolve_reference_genome(reference)
@@ -169,9 +265,16 @@ class primer_vcf(cyvcf2):
         self.format_set = [x for x in self.header_iter() if x.type == "FORMAT"]
         self.header = copy(self.raw_header)
 
-        # Setup template
-        if self.template not in self.samples + ["REF", "ALT"]:
-            exit(message(self.template + " template not found."))
+        # Make sure index exists for this VCF.
+        if not os.path.isfile(self.filename + ".csi"):
+            message("VCF is not indexed; Indexing.")
+            comm = "bcftools index {f}".format(f=self.filename)
+            out = check_output(comm, shell=True)
+            message(out)
+
+        # Setup use_template
+        if self.use_template not in self.samples + ["REF", "ALT"]:
+            exit(message(self.use_template + " use_template not found."))
 
 
     def variant_iterator(self):
@@ -186,8 +289,9 @@ class primer_vcf(cyvcf2):
 
         for variant in var_region:
             nz = cvariant(variant)
-            nz.template = self.template
+            nz.use_template = self.use_template
             nz.mode = self.mode
+            nz.filename = self.filename
 
             gt_collection = defaultdict(list)
 
@@ -201,6 +305,8 @@ class primer_vcf(cyvcf2):
             if nz.is_indel:
                 nz.indel_size =  abs(len(nz.REF) - len(nz.ALT[0]))
                 nz.region_size = nz.indel_size*2 + 150
+            if self.mode == 'snip':
+                nz.region_size == 500
 
 
             # Retrieve ref and alt sequences; Define box_seq as none.
@@ -208,6 +314,9 @@ class primer_vcf(cyvcf2):
             nz.ref_seq = ref_seq
             nz.alt_seq = alt_seq
             nz.edit_distance = lev(ref_seq.tostring().lower(), alt_seq.tostring().lower())
+
+            t = template(nz, self.reference_file, self.use_template)
+            print(t)
 
             if gt_collection:
                 nz.gt_collection = gt_collection
@@ -238,16 +347,16 @@ class primer_vcf(cyvcf2):
             Use samtools to fetch the variant region
             with optional consensus of variants.
 
-            Use template = "ref" to return the reference
-            Omit template, or set sample = "alt" to return alternative genotypes.
-            Or set template = <sample name> to return a consensus sequence
+            Use use_template = "ref" to return the reference
+            Omit use_template, or set sample = "alt" to return alternative genotypes.
+            Or set use_template = <sample name> to return a consensus sequence
             for a specific sample.
         """
         chrom = variant.CHROM
         start = variant.POS - variant.region_size
         end = variant.POS + variant.region_size
         sample_flag = ""
-        template = self.template
+        use_template = self.use_template
 
         # Make sure index exists
         if not os.path.isfile(self.filename + ".csi"):
@@ -262,12 +371,12 @@ class primer_vcf(cyvcf2):
         ref_seq = check_output(ref_seq_command, shell=True)
         ref_seq = Seq(''.join(ref_seq.splitlines()[1:]), DNA_SET)
 
-        if template == "REF":
+        if use_template == "REF":
             command = "samtools faidx {self.reference_file} {chrom}:{start}-{end}"
-        elif template == "ALT" or template is None:
+        elif use_template == "ALT" or use_template is None:
             command = "samtools faidx {self.reference_file} {chrom}:{start}-{end} | bcftools consensus {self.filename}"
         else:
-            sample_flag = "--sample=" + template  # Get template for sample.
+            sample_flag = "--sample=" + use_template  # Get use_template for sample.
             command = "samtools faidx {self.reference_file} {chrom}:{start}-{end} | bcftools consensus {sample_flag} {self.filename}"
         command = command.format(**locals())
         try:
@@ -283,18 +392,18 @@ class primer_vcf(cyvcf2):
                   "ALT",
                   "SAMPLE",
                   "EDIT_DISTANCE",
-                  "TEMPLATE",
+                  "use_template",
                   "0/0",
                   "0/1",
                   "1/1",
                   "./."]
         if self.box_variants:
             header.insert(6, "SEQUENCE_BOX")
-        if self.mode == "template":
+        if self.mode == "use_template":
             print('\t'.join(header))
 
 
-    def fetch_template(self):
+    def fetch_use_template(self):
         """
             Return a variant with the sequence surrounding it; Both reference
             and alternate or for a set of specified samples.
