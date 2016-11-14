@@ -4,7 +4,7 @@
 VCF-kit - [Documentation](http://vcf-kit.readthedocs.io/en/latest/?badge=latest)
 ===========
 
-VCF-kit is a command-line based collection of utilities for performing analysis on variant caller format (VCF) files. A summary of the commands is provided below.
+VCF-kit is a command-line based collection of utilities for performing analysis on Variant Call Format (VCF) files. A summary of the commands is provided below.
 
 | Command |Description                                                                                 |
 |:----------|------------------------------------------------------------------------------------------|

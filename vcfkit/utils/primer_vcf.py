@@ -14,6 +14,41 @@ import signal
 signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
 
 
+high_fidelity = ["AgeI",
+                 "ApoI",
+                 "BamHI",
+                 "BbsI",
+                 "BmtI",
+                 "BsaI",
+                 "BsiWI",
+                 "BsrGI",
+                 "BstEII",
+                 "BstZ17I",
+                 "DraIII",
+                 "EagI",
+                 "EcoRI",
+                 "EcoRV",
+                 "HindIII",
+                 "KpnI",
+                 "MfeI",
+                 "MluI",
+                 "NcoI",
+                 "NheI",
+                 "NotI",
+                 "NruI",
+                 "NsiI",
+                 "PstI",
+                 "PvuI",
+                 "PvuII",
+                 "SacI",
+                 "SalI",
+                 "SbfI",
+                 "ScaI",
+                 "SpeI",
+                 "SphI",
+                 "SspI",
+                 "StyI"]
+
 debug = None
 
 
@@ -46,7 +81,7 @@ class cvariant:
                   ','.join(self.ALT),
                   self.sample,
                   str(self.edit_distance),
-                  self.output,
+                  self.output.tostring(),
                   self.homozygous_ref,
                   self.heterozygous,
                   self.homozygous_alt,
@@ -54,6 +89,57 @@ class cvariant:
         if self.box_seq:
             output.insert(6, self.box_seq)
         return "\t".join(output)
+
+
+
+from Bio.Seq import Seq
+from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
+from Bio.Restriction import AllEnzymes
+
+class restriction_sites:
+
+    """
+        Container for determining restriction sites
+        and modifying their coordinates
+    """
+
+    def __init__(self, ref_seq, alt_seq):
+        self.ref_seq = Seq(ref_seq, DNA_SET)
+        self.alt_seq = Seq(alt_seq, DNA_SET)
+        self.ref_sites = dict(AllEnzymes.search(self.ref_seq).items())
+        self.alt_sites = dict(AllEnzymes.search(self.alt_seq).items())
+        self.ref_sites_diff = {k: v for k, v in self.ref_sites.items() if len(v) > 0 and len(v) <= 3 and
+                               abs(len(self.ref_sites[k]) - len(self.alt_sites[k])) == 1}
+        self.alt_sites_diff = {k: self.alt_sites[k] for k, v in self.ref_sites_diff.items()}
+
+    def shift_positions(self, shift):
+        for k in self.ref_sites_diff.keys():
+            for n, s1 in enumerate(self.ref_sites_diff[k]):
+                self.ref_sites_diff[k][n] = s1 + shift
+            for n, s2 in enumerate(self.alt_sites_diff[k]):
+                self.alt_sites_diff[k][n] = s2 + shift
+
+    def __len__(self):
+        return len(self.ref_sites_diff.keys())
+
+
+    def extract_restriction(self, window=2000):
+        for varset in self.window(window_size=window, step_size=1, shift_method="POS-Sliding"):
+            start = varset.lower_bound
+            end = varset.upper_bound
+            CHROM = varset[0].CHROM
+            ref_seq = self.reference[CHROM][start:end].seq
+            alt_seq = ref_seq
+            for var in varset:
+                # Spike all alt variants within sequence.
+                alt_seq = alt_seq[:var.POS - start] + var.ALT[0] + alt_seq[var.POS - start + 1:]
+            rsites = restriction_sites(ref_seq, alt_seq)
+            if len(rsites) > 0:
+                primer_set = primer3()
+                for primer in primer_set.fetch_primers(ref_seq):
+                    yield primer, restriction_sites, start, end
+
+
 
 
 class primer_vcf(cyvcf2):
@@ -113,6 +199,7 @@ class primer_vcf(cyvcf2):
 
             # Determine region size
             nz.indel_size = 0
+            nz.region_size = self.region_size
             if nz.is_indel:
                 nz.indel_size =  abs(len(nz.REF) - len(nz.ALT[0]))
                 nz.region_size = nz.indel_size*2 + 150
@@ -122,7 +209,7 @@ class primer_vcf(cyvcf2):
             ref_seq, alt_seq = self.variant_region(nz)
             nz.ref_seq = ref_seq
             nz.alt_seq = alt_seq
-            nz.edit_distance = lev(ref_seq.lower(), alt_seq.lower())
+            nz.edit_distance = lev(ref_seq.tostring().lower(), alt_seq.tostring().lower())
 
             if gt_collection:
                 nz.gt_collection = gt_collection
@@ -161,7 +248,6 @@ class primer_vcf(cyvcf2):
         chrom = variant.CHROM
         start = variant.POS - variant.region_size
         end = variant.POS + variant.region_size
-        print chrom, start, end, variant.region_size
         sample_flag = ""
         template = self.template
 
@@ -176,7 +262,7 @@ class primer_vcf(cyvcf2):
         ref_seq_command = "samtools faidx {self.reference_file} {chrom}:{start}-{end}"
         ref_seq_command = ref_seq_command.format(**locals())
         ref_seq = check_output(ref_seq_command, shell=True)
-        ref_seq = ''.join(ref_seq.splitlines()[1:])
+        ref_seq = Seq(''.join(ref_seq.splitlines()[1:]), DNA_SET)
 
         if template == "REF":
             command = "samtools faidx {self.reference_file} {chrom}:{start}-{end}"
@@ -188,7 +274,7 @@ class primer_vcf(cyvcf2):
         command = command.format(**locals())
         try:
             alt_seq = check_output(command, shell=True)
-            alt_seq = ''.join(alt_seq.splitlines()[1:])
+            alt_seq = Seq(''.join(alt_seq.splitlines()[1:]), DNA_SET)
         except:
             alt_seq = ''
         return ref_seq, alt_seq
@@ -233,3 +319,10 @@ class primer_vcf(cyvcf2):
                 print(variant)
                 # Take processed variant and feed to indel processor.
 
+    def fetch_snpsnp_primers(self):
+        for variant in self.variant_iterator():
+            yield variant
+
+    def fetch_sanger_primers(self):
+        for variant in self.variant_iterator():
+            yield variant

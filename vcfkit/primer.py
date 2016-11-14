@@ -3,7 +3,7 @@
 usage:
   vk primer template [options] <vcf>
   vk primer sanger   [options] <vcf>
-  vk primer snipsnp  [options] <vcf>
+  vk primer snip     [options] <vcf>
   vk primer indel    [options] <vcf>
 
 Example
@@ -155,8 +155,8 @@ if __name__ == '__main__':
             print(variant)
 
 
-    elif args["snpsnp"]:
-        for primer, restriction_sites, start, end in v.extract_restriction():
-            # print primer
-            print restriction_sites
-            print start, end
+    elif args["snip"]:
+        for variant in v.fetch_snpsnp_primers():
+            print(variant)
+
+

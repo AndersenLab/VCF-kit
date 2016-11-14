@@ -4,7 +4,7 @@
 
 ## About
 
-The `Variant Caller Format Kit` is a collection of tools useful for performing a variety of analyses and operations on variant data stored using the [Variant Caller Format](https://en.wikipedia.org/wiki/Variant_Call_Format). VCF-kit is open source and community contributions are encouraged.
+The `Variant Call Format Kit` is a collection of tools useful for performing a variety of analyses and operations on variant data stored using the [Variant Call Format](https://en.wikipedia.org/wiki/Variant_Call_Format). VCF-kit is open source and community contributions are encouraged.
 
 VCF-kit is open source and is licensed under [the MIT License](https://raw.githubusercontent.com/AndersenLab/VCF-kit/master/LICENSE). We welcome community contributions.
 
