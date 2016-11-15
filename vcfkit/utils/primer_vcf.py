@@ -122,6 +122,10 @@ class template:
             self.primary_variant_seq = Seq(ref_seq[0:500] + self.ALT[0] + ref_seq[501:])
             self.fetch_restriction_sites()
 
+        # Retrieve primers
+        p3 = primer3(reference_file)
+        self.primers = [x for x in p3.fetch_primers(self.ref_seq) if x.unique_primer_group()]
+
     def fetch_sequence(self, use_template):
         sample_flag = ""
         if use_template == "REF":
@@ -170,7 +174,6 @@ class template:
         #    alt_cuts = [x for x in alt_cuts if x not in ref_cuts]
         #    print ref_cuts, "ref", alt_cuts, "alt"
 
-
     def calculate_cuts(self, length, positions):
         """
             Given a template and cut sites,
@@ -187,6 +190,7 @@ class template:
             return cuts
         else:
             return [length]
+
 
     def __repr__(self):
         return "<Template> -- {self.region} -- {self.edit_distance}".format(**locals())
