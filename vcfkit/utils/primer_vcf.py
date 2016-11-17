@@ -17,6 +17,8 @@ from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
 from Bio.Restriction import AllEnzymes, CommOnly, RestrictionBatch
 
+# Global flag for header output
+header_printed = False
 
 high_fidelity = RestrictionBatch(["AgeI",
                  "ApoI",
@@ -72,8 +74,6 @@ class template:
         for i in filter(lambda x: x.startswith("_") is False, dir(variant)):
             setattr(self, i, getattr(variant, i))
         self.reference_file = reference_file
-        self.header_printed = False
-        self.use_template = use_template
         self.region_start = variant.POS - variant.region_size
         if self.region_start <= 0:
             self.region_start = 1
@@ -104,6 +104,9 @@ class template:
             self.primers = [x for x in p3.fetch_primers(self.ref_seq) if x.unique_primer_group()]
 
     def fetch_sequence(self, use_template):
+        """
+            Fetches sequence surrounding variant for REF, ALT, or given sample.
+        """
         sample_flag = ""
         if use_template == "REF":
             command = "samtools faidx {self.reference_file} {self.region}"
@@ -182,6 +185,13 @@ class template:
         self.variants = variants
         self.variant_positions = [x[1] for x in variants]
 
+    def box_variants(self, sequence, start):
+        """
+            Add boxed variants from the VCF to the sequence.
+            Start is used to indicate the start position.
+        """
+
+
     def __repr__(self):
 
         hout = ["CHROM",
@@ -203,8 +213,11 @@ class template:
         if self.mode == 'snip':
             pass
 
-        if self.header_printed == False:
-            self.header_printed = True
+        # Print header
+        global header_printed
+        if header_printed is False:
+            print('\t'.join(map(str, hout)))
+            header_printed = True
 
         return '\t'.join(map(str, out))
 
@@ -326,12 +339,6 @@ class primer_vcf(cyvcf2):
             if self.mode == 'snip':
                 nz.region_size == 500
 
-            # Retrieve ref and alt sequences; Define box_seq as none.
-            ref_seq, alt_seq = self.variant_region(nz)
-            nz.ref_seq = ref_seq
-            nz.alt_seq = alt_seq
-            nz.edit_distance = lev(ref_seq.tostring().lower(), alt_seq.tostring().lower())
-
             t = template(nz, self.reference_file, self, self.use_template)
 
             if gt_collection:
@@ -340,12 +347,6 @@ class primer_vcf(cyvcf2):
                 nz.heterozygous = ','.join(nz.gt_collection[1])
                 nz.homozygous_alt = ','.join(nz.gt_collection[3])
                 nz.missing = ','.join(nz.gt_collection[2])
-
-            nz.box_seq = None
-            if self.box_variants:
-                a, b = alt_seq[:nz.region_size], alt_seq[nz.region_size+len(variant.REF):]
-                alt_variants = '/'.join(variant.ALT)
-                nz.box_seq = "{a}[{variant.REF}/{alt_variants}]{b}".format(**locals())
 
             yield t
 
@@ -357,64 +358,4 @@ class primer_vcf(cyvcf2):
             region = self.region
         for i in self(region):
             yield i
-
-    def variant_region(self, variant):
-        """
-            Use samtools to fetch the variant region
-            with optional consensus of variants.
-
-            Use use_template = "ref" to return the reference
-            Omit use_template, or set sample = "alt" to return alternative genotypes.
-            Or set use_template = <sample name> to return a consensus sequence
-            for a specific sample.
-        """
-        chrom = variant.CHROM
-        start = variant.POS - variant.region_size
-        end = variant.POS + variant.region_size
-        sample_flag = ""
-        use_template = self.use_template
-
-        # Make sure index exists
-        if not os.path.isfile(self.filename + ".csi"):
-            message("VCF is not indexed; Indexing.")
-            comm = "bcftools index {f}".format(f=self.filename)
-            out = check_output(comm, shell=True)
-            message(out)
-
-        # Retreive the reference sequence
-        ref_seq_command = "samtools faidx {self.reference_file} {chrom}:{start}-{end}"
-        ref_seq_command = ref_seq_command.format(**locals())
-        ref_seq = check_output(ref_seq_command, shell=True)
-        ref_seq = Seq(''.join(ref_seq.splitlines()[1:]), DNA_SET)
-
-        if use_template == "REF":
-            command = "samtools faidx {self.reference_file} {chrom}:{start}-{end}"
-        elif use_template == "ALT" or use_template is None:
-            command = "samtools faidx {self.reference_file} {chrom}:{start}-{end} | bcftools consensus {self.filename}"
-        else:
-            sample_flag = "--sample=" + use_template  # Get use_template for sample.
-            command = "samtools faidx {self.reference_file} {chrom}:{start}-{end} | bcftools consensus {sample_flag} {self.filename}"
-        command = command.format(**locals())
-        try:
-            alt_seq = check_output(command, shell=True)
-            alt_seq = Seq(''.join(alt_seq.splitlines()[1:]), DNA_SET)
-        except:
-            alt_seq = ''
-        return ref_seq, alt_seq
-
-    def print_primer_header(self):
-        header = ["CHROM_POS",
-                  "REF",
-                  "ALT",
-                  "SAMPLE",
-                  "EDIT_DISTANCE",
-                  "use_template",
-                  "0/0",
-                  "0/1",
-                  "1/1",
-                  "./."]
-        if self.box_variants:
-            header.insert(6, "SEQUENCE_BOX")
-        if self.mode == "use_template":
-            print('\t'.join(header))
 
