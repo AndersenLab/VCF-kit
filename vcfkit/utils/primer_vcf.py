@@ -58,52 +58,25 @@ debug = None
 
 class cvariant:
     """
-    Variant with surrounding region.
-    ref_seq = Reference Sequence of variant
-    alt_seq = Alternative Sequence of variant (as determined by use_template)
-    box_seq = reference sequence with alternative variant boxed.
+        Mutable variant object
     """
     def __init__(self, variant):
         for i in filter(lambda x: x.startswith("_") is False, dir(variant)):
             setattr(self, i, getattr(variant, i))
-      
-    def __repr__(self):
-        CHROM_POS = "{self.CHROM}:{self.POS}".format(**locals())
-
-        if self.use_template in [None, "ALT"]:
-            self.output = self.alt_seq
-            self.sample = "ALT"
-        elif self.use_template in ["REF"]:
-            self.output = self.ref_seq
-            self.sample = "REF"
-        else:
-            self.output = self.alt_seq
-            self.sample = self.use_template
-
-        output = [CHROM_POS,
-                  self.REF,
-                  ','.join(self.ALT),
-                  self.sample,
-                  str(self.edit_distance),
-                  self.output.tostring(),
-                  self.homozygous_ref,
-                  self.heterozygous,
-                  self.homozygous_alt,
-                  self.missing]
-        if self.box_seq:
-            output.insert(6, self.box_seq)
-        return "\t".join(output)
 
 
 class template:
 
-    def __init__(self, variant, reference_file, use_template):
+    def __init__(self, variant, reference_file, vcf, use_template):
         # Copy variant attributes over
         for i in filter(lambda x: x.startswith("_") is False, dir(variant)):
             setattr(self, i, getattr(variant, i))
         self.reference_file = reference_file
+        self.header_printed = False
         self.use_template = use_template
         self.region_start = variant.POS - variant.region_size
+        if self.region_start <= 0:
+            self.region_start = 1
         self.region_end = variant.POS + variant.region_size - 1
         self.region = "{self.CHROM}:{self.region_start}-{self.region_end}".format(**locals())
         
@@ -115,6 +88,9 @@ class template:
             self.alt_seq = self.fetch_sequence(use_template)
         self.edit_distance = lev(self.ref_seq.tostring().lower(), self.alt_seq.tostring().lower())
 
+        # Return array of variants within region.
+        self.fetch_variants(vcf)
+
         if self.mode == 'snip':
             ref_seq = self.ref_seq.tostring()
             # Generate a primary variant only seq to identify restriction
@@ -123,8 +99,9 @@ class template:
             self.fetch_restriction_sites()
 
         # Retrieve primers
-        p3 = primer3(reference_file)
-        self.primers = [x for x in p3.fetch_primers(self.ref_seq) if x.unique_primer_group()]
+        if self.mode != 'template':
+            p3 = primer3(reference_file)
+            self.primers = [x for x in p3.fetch_primers(self.ref_seq) if x.unique_primer_group()]
 
     def fetch_sequence(self, use_template):
         sample_flag = ""
@@ -147,6 +124,7 @@ class template:
         """ 
             Spike in target variant first, generate list restriction enzymes that will work.
         """
+
         # Filters:
         # 1. Between 1-3 cuts.
 
@@ -191,9 +169,45 @@ class template:
         else:
             return [length]
 
+    def fetch_variants(self, vcf):
+        """
+            Fetches the variants in the region and 
+            generates a box variant string from primary
+            variant and identified variants.
+        """
+        variants = []
+        for i in vcf(self.region):
+            var = (i.CHROM, i.POS, i.REF, i.ALT)
+            variants.append(var)
+        self.variants = variants
+        self.variant_positions = [x[1] for x in variants]
 
     def __repr__(self):
-        return "<Template> -- {self.region} -- {self.edit_distance}".format(**locals())
+
+        hout = ["CHROM",
+                "POS",
+                "region",
+                "REF",
+                "ALT"]
+
+        out = [self.CHROM,
+               self.POS,
+               self.region,
+               self.REF,
+               ','.join(self.ALT)]
+
+        if self.mode == 'template':
+            hout += ["Template_Sample", "Template"]
+            out += [self.use_template, self.alt_seq]
+
+        if self.mode == 'snip':
+            pass
+
+        if self.header_printed == False:
+            self.header_printed = True
+
+        return '\t'.join(map(str, out))
+
 
 
 class restriction_sites:
@@ -312,15 +326,13 @@ class primer_vcf(cyvcf2):
             if self.mode == 'snip':
                 nz.region_size == 500
 
-
             # Retrieve ref and alt sequences; Define box_seq as none.
             ref_seq, alt_seq = self.variant_region(nz)
             nz.ref_seq = ref_seq
             nz.alt_seq = alt_seq
             nz.edit_distance = lev(ref_seq.tostring().lower(), alt_seq.tostring().lower())
 
-            t = template(nz, self.reference_file, self.use_template)
-            print(t)
+            t = template(nz, self.reference_file, self, self.use_template)
 
             if gt_collection:
                 nz.gt_collection = gt_collection
@@ -335,7 +347,7 @@ class primer_vcf(cyvcf2):
                 alt_variants = '/'.join(variant.ALT)
                 nz.box_seq = "{a}[{variant.REF}/{alt_variants}]{b}".format(**locals())
 
-            yield nz
+            yield t
 
     def fetch_variants(self, region=None):
         """
@@ -406,34 +418,3 @@ class primer_vcf(cyvcf2):
         if self.mode == "use_template":
             print('\t'.join(header))
 
-
-    def fetch_use_template(self):
-        """
-            Return a variant with the sequence surrounding it; Both reference
-            and alternate or for a set of specified samples.
-
-            sample_output: List of samples to output w/ their genotypes.
-        """
-        for variant in self.variant_iterator():
-            yield variant
-
-
-    def fetch_indel_primers(self):
-        p3 = primer3()
-        for variant in self.variant_iterator():
-            if 30 <= variant.indel_size <= 500:
-                low = variant.region_size/2
-                high = variant.region_size
-                p3.PRIMER_PRODUCT_SIZE_RANGE = "{low}-{high}".format(**locals())
-                print list(p3.fetch_primers(variant.ref_seq))
-                yield p3.fetch_primers(variant.ref_seq)
-                print(variant)
-                # Take processed variant and feed to indel processor.
-
-    def fetch_snpsnp_primers(self):
-        for variant in self.variant_iterator():
-            yield variant
-
-    def fetch_sanger_primers(self):
-        for variant in self.variant_iterator():
-            yield variant

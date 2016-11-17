@@ -103,17 +103,12 @@ class primer3:
         resp = resp.strip().split("\n")
         if err:
             exit(message(err))
-        primer3_results = dict([x.split("=") for x in resp
+        p3_results = dict([x.split("=") for x in resp
                                if x.split("=")[0] != ""])
-        self.results = {}
-        for k, v in primer3_results.items():
-            self.results[k] = autoconvert(v)
-        return self.return_primers()
-
-    def return_primers(self):
-        # Iterates through primers
-        if "PRIMER_LEFT_NUM_RETURNED" in self.results:
-            n_primers = self.results["PRIMER_LEFT_NUM_RETURNED"]
+        p3_results = {k: autoconvert(v) for k,v in p3_results.items()}
+        
+        if "PRIMER_LEFT_NUM_RETURNED" in p3_results:
+            n_primers = p3_results["PRIMER_LEFT_NUM_RETURNED"]
             primer_return = []
             for primer_num in xrange(0, n_primers):
                 pn = "_{n}_".format(n=primer_num)
