@@ -29,7 +29,7 @@ import sys
 from utils import check_program_exists
 
 import signal
-signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
+signal.signal(signal.SIGINT, lambda x, y: sys.exit(0))
 
 debug = None
 if len(sys.argv) == 1:

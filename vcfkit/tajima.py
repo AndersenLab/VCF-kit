@@ -1,14 +1,14 @@
 #! /usr/bin/env python
 """
 usage:
-  vk tajima [--no-header --extra] <window-size> <step-size> <vcf> 
-  vk tajima [--no-header --extra] <window-size> --sliding <vcf> 
+  vk tajima [--no-header --extra] <window-size> <step-size> <vcf>
+  vk tajima [--no-header --extra] <window-size> --sliding <vcf>
 
 options:
   -h --help                   Show this screen.
-  --version                   Show version.  
-  --window-size               blah
-  --step-size                 blash 
+  --version                   Show version.
+  --window-size               Size of window
+  --step-size                 Distance to move window.
   --extra                     display extra
 
 command:

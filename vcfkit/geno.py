@@ -54,7 +54,7 @@ if __name__ == '__main__':
                 samples = line.strip().split("\t")[9:]
             elif line.startswith("#"):
                 # Add Info line for het polarization flag
-                if line.startswith("##FORMAT") and format_added == False:
+                if line.startswith("##FORMAT") and format_added is False:
                     format_added = True
                     line = line + "\n##FORMAT=<ID=FT,Number=1,Type=String,Description=\"Genotype-level filter\">"
             else:
@@ -74,7 +74,7 @@ if __name__ == '__main__':
                 line = """##FORMAT=<ID=PL,Number=G,Type=Integer,Description="List of Phred-scaled genotype likelihoods">"""
             elif line.startswith("#"):
                 # Add Info line for het polarization flag
-                if line.startswith("##FORMAT") and format_added == False:
+                if line.startswith("##FORMAT") and format_added is False:
                     format_added = True
                     line += "\n##FORMAT=<ID=HP,Number=1,Type=String,Description=\"Flag used to mark whether a variant was polarized\">"
                 # Pass comment lines.
