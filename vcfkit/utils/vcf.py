@@ -6,7 +6,7 @@ from clint.textui import colored, puts, puts_err, indent
 import re
 from copy import copy
 import os
-from . import autoconvert, lev
+from . import autoconvert, lev, message
 import numpy as np
 import sys
 import fileinput
@@ -18,7 +18,7 @@ from Bio import pairwise2
 
 class cvariant:
     """
-    Variant with surrounding region.
+        Object for representing variants and their surrounding reference sequence.
     """
     def __init__(self, variant, reference_seq, consensus_seq, template, gt_collection = None):
         self.variant = variant
@@ -57,14 +57,11 @@ class cvariant:
 
 
 class vcf(cyvcf2):
-    def __init__(self, filename, reference=None):
+    def __init__(self, filename):
         if not os.path.isfile(filename) and filename != "-":
             with indent(4):
                 exit(puts(colored.red("\nError: " + filename + " does not exist\n")))
         self.filename = filename
-        if reference:
-            self.reference = reference
-            self.reference_file = resolve_reference_genome(reference)
 
         cyvcf2.__init__(self, self.filename)
         # Check if file exists
@@ -85,6 +82,19 @@ class vcf(cyvcf2):
         self.format_set = [x for x in self.header_iter() if x.type == "FORMAT"]
         self.header = copy(self.raw_header)
 
+    # When setting certain attributes, check.
+    def __setattr__(self, k, v):
+        if k in ["reference", "size"]:
+            if k == "reference":
+                self.__dict__["reference"] = k
+                self.reference_file = resolve_reference_genome(v)
+            elif k == "size":
+                if not v.isdigit():
+                    exit(message("Size must be an integer"))
+                if v < 5:
+                    exit(message("Must specify size >= 5"))
+        else:
+            self.__dict__[k] = v
 
     def fetch_variants(self, chrom, start, end):
         """
@@ -254,6 +264,9 @@ class vcf(cyvcf2):
 
 
 class variant_interval(deque):
+    """
+        Return variants within a given interval
+    """
     def __init__(self, interval = [], window_size = None, step_size = None, shift_method = None, varlist=None, lower_bound = 0):
         self.shift_method = shift_method
         self.window_size = window_size
