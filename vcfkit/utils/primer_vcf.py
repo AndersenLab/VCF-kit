@@ -98,16 +98,11 @@ class template:
 
         # Identify restriction site locations
         if self.mode == 'snip':
-            ref_seq = self.ref_seq.tostring()
+            ref_seq = str(self.ref_seq)
             # Generate a primary variant only seq to identify restriction
             # sites that target ALT sites.
             self.primary_variant_seq = Seq(ref_seq[0:500] + self.ALT[0] + ref_seq[501:])
             self.fetch_restriction_sites()
-
-            # Apply SnipSNP filters:
-            # 1 - Only one variant must be present in the interval
-            #print(self.primers)
-
 
 
     def fetch_sequence(self, use_template):
@@ -229,10 +224,8 @@ class template:
         homozygous_alt = ','.join(map(str,self.gt_collection[3]))
 
         if self.mode == 'snip':
-            hout += ["ref_cut_sites",
-                     "ref_sizes",
-                     "alt_cut_sites",
-                     "alt_sizes",
+            hout += ["ref_sites",
+                     "alt_sites",
                      "restriction_enzyme",
                      "restriction_site",
                      "amplicon_length",
@@ -242,6 +235,7 @@ class template:
                      "amplicon_sequence",
                      "0/0",
                      "1/1"]
+
             self.print_header(hout)
             for primer_group in self.primers:
                 amp_start = self.region_start + primer_group.primer_left.START
@@ -262,10 +256,14 @@ class template:
                         if any([x < 150 for x in product_sizes]):
                             break
 
-                        out_primers = out + [ref_cut_sites,
-                                             ref_product_sizes,
-                                             alt_cut_sites,
-                                             alt_product_sizes,
+                        # Cleanup cut sites / product sites
+                        ref_cut_sites = ','.join(map(str, ref_cut_sites))
+                        ref_product_sizes = ','.join(map(str, ref_product_sizes))
+                        alt_cut_sites = ','.join(map(str, alt_cut_sites))
+                        alt_product_sizes = ','.join(map(str, alt_product_sizes))
+
+                        out_primers = out + [ref_cut_sites + ":" + ref_product_sizes,
+                                             alt_cut_sites + ":" + alt_product_sizes,
                                              rflp,
                                              rflp.site,
                                              amplicon_length,
@@ -276,6 +274,9 @@ class template:
                                              homozygous_ref,
                                              homozygous_alt]
                         print('\t'.join(map(str, out_primers)))
+        elif self.mode == 'indel':
+            self.print_header(hout)
+            print('\t'.join(map(str, out)))
         else:
             self.print_header(hout)
             print('\t'.join(map(str, out)))

@@ -185,7 +185,10 @@ class blast:
 
     def check_primer(self, q):
         blast_results = self.blast_search(q)
-        return len([i for i in blast_results if i['length'] > 14])
+        if blast_results:
+            return len([i for i in blast_results if i['length'] > 14])
+        else:
+            return 0
 
 
     def blast_call(self, q):
