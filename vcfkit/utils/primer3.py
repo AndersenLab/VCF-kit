@@ -52,6 +52,9 @@ class primer_group:
                 setattr(self, k, v)
 
     def unique_primer_group(self):
+        """
+            Return a set of filtered primers that are usable.
+        """
         return all([self.primer_left.unique(), self.primer_right.unique()])
 
     def __repr__(self):
@@ -112,6 +115,6 @@ class primer3:
             primer_return = []
             for primer_num in xrange(0, n_primers):
                 pn = "_{n}_".format(n=primer_num)
-                primer_dataset = {k.replace(pn,"_"):v for k,v in self.results.items() if pn in k}
+                primer_dataset = {k.replace(pn,"_"):v for k,v in p3_results.items() if pn in k}
                 primer_return.append(primer_group(primer_dataset, self.SEQUENCE_TEMPLATE, self.reference))
             return primer_return

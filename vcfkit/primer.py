@@ -71,24 +71,19 @@ if __name__ == '__main__':
     # Check for std. input
     if args["template"]:
         v.mode = "template"
-        v.print_primer_header()
-        for variant in v.fetch_template():
-            print(variant)
 
     elif args["indel"]:
         if args["--size"]:
             message("Warning: --size ignored; size is set dynamically when genotyping indels.")
         v.mode = "indel"
-        for variant in v.fetch_indel_primers():
-            print(variant)
-
 
     elif args["snip"]:
         if args["--size"]:
             message("Warning: --size ignored; size is set to ~1000 bp templates.")
         v.mode = "snip"
         v.region_size = 500
-        for variant in v.fetch_snpsnp_primers():
-            print(variant)
+
+    for variant in v.variant_iterator():
+        print(variant)
 
 
