@@ -26,7 +26,6 @@ def get_genome_directory():
     return genome_directory
 
 
-
 def get_genome_list():
     """
         Return list of downloaded genomes.

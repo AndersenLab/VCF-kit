@@ -28,6 +28,9 @@ from clint.textui import colored, puts, indent
 import sys
 import vk
 import os
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE, SIG_DFL)
+
 
 
 __version__ = "0.0.2"

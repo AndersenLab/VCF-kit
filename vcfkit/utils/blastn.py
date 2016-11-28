@@ -1,5 +1,5 @@
 from subprocess import Popen, PIPE
-from utils import *
+from vcfkit.utils import *
 from collections import defaultdict, OrderedDict
 from pprint import pprint as pp
 import csv

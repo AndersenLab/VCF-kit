@@ -15,6 +15,10 @@ from reference import resolve_reference_genome
 np.set_printoptions(threshold=np.nan)
 from collections import defaultdict
 from Bio import pairwise2
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE, SIG_DFL)
+
+
 
 class cvariant:
     """

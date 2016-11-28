@@ -15,13 +15,14 @@ options:
   --region=<region>           Restrict to region.
   --samples=<samples>         Output genotypes for a sample or set of samples. [default: ALL]
   --template=<sample>         Sequence to use for template. Use REF, ALT, or sample name. [default: ALT]
+  --mark-variant              Use brackets to indicate the location of the variant in output.
   --size=<int>                Amplicon size/2 (Upstream and downstream length) [default: 50]
 
 
 """
 from docopt import docopt
 from clint.textui import colored, puts, indent
-from utils import parse_region
+from utils import parse_region, message
 from utils.vcf import *
 from utils.reference import *
 from utils.fasta import *
@@ -114,9 +115,13 @@ if __name__ == '__main__':
     args = docopt(__doc__, 
                   argv = debug,
                   options_first=False)
-    print(args)
-    reference = resolve_reference_genome(args["--ref"])
-    v = vcf(args["<vcf>"], reference = args["--ref"])
+
+    v = vcf(args["<vcf>"])
+
+    # Set VCF Options
+    v.size = args["--size"]
+    v.reference = args["--ref"]
+
     
     if args["--region"]:
         chrom, start, end = parse_region(args["--region"])
@@ -157,7 +162,7 @@ if __name__ == '__main__':
         print(list(seq))
         exit()
 
-    elif args["snpsnp"]:
+    elif args["snipsnp"]:
         for primer, restriction_sites, start, end in v.extract_restriction():
             #print primer
             print restriction_sites

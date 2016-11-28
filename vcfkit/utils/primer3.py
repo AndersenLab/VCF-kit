@@ -1,5 +1,9 @@
 from subprocess import Popen, PIPE
 from utils import *
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE, SIG_DFL)
+
+
 # Wrapper for primer3
 
 def boolify(s):
