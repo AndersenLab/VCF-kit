@@ -16,8 +16,13 @@ class seqprimer:
         for k,v in primer_values.items():
             setattr(self, k, v)
         self.left = left_primer
-        template = template.tostring()
-        self.START = template.find(self.SEQUENCE)
+        template = str(template)
+        if left_primer:
+            self.START = template.find(self.SEQUENCE)
+        else:
+            # Reverse - complement right primer to find its location
+            pright_rc = str(Seq(self.SEQUENCE).reverse_complement())
+            self.START = template.find(pright_rc)
         self.END = self.START + len(self.SEQUENCE)
 
         # Blast primer sequence
@@ -29,6 +34,9 @@ class seqprimer:
 
     def calc_position(template_start):
         pass
+
+    def __str__(self):
+        return self.SEQUENCE
 
     def __repr__(self):
         return "<primer:{self.SEQUENCE} - {self.START}-{self.END} ({self.unique_copies})>".format(**locals())
@@ -47,6 +55,7 @@ class primer_group:
         pright = {k.replace("PRIMER_RIGHT_", ""):v for k,v in primer_values.items() if k.startswith("PRIMER_RIGHT")}
         self.primer_left = seqprimer(pleft, template, reference)
         self.primer_right = seqprimer(pright, template, reference, False)
+        self.amplicon = template[self.primer_left.START:self.primer_right.END]
         for k,v in primer_values.items():
             if not k.startswith("PRIMER_LEFT") and not k.startswith("PRIMER_RIGHT"):
                 setattr(self, k, v)
@@ -80,7 +89,7 @@ class primer3:
             self.generate_pcr_template = True
 
         # Global default
-        thermo_path = "/usr/local/share/primer3/primer3_config/"
+        thermo_path = "/usr/local/share/primer3_config/"
         self.PRIMER_THERMODYNAMIC_PARAMETERS_PATH = thermo_path
 
         # Set primer returns:
@@ -109,12 +118,14 @@ class primer3:
         p3_results = dict([x.split("=") for x in resp
                                if x.split("=")[0] != ""])
         p3_results = {k: autoconvert(v) for k,v in p3_results.items()}
-        
+
         if "PRIMER_LEFT_NUM_RETURNED" in p3_results:
             n_primers = p3_results["PRIMER_LEFT_NUM_RETURNED"]
             primer_return = []
             for primer_num in xrange(0, n_primers):
                 pn = "_{n}_".format(n=primer_num)
                 primer_dataset = {k.replace(pn,"_"):v for k,v in p3_results.items() if pn in k}
-                primer_return.append(primer_group(primer_dataset, self.SEQUENCE_TEMPLATE, self.reference))
+                primer_return.append(primer_group(primer_dataset,
+                                                  self.SEQUENCE_TEMPLATE,
+                                                  self.reference))
             return primer_return

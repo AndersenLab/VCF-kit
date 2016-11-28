@@ -10,8 +10,8 @@ from utils.primer3 import primer3
 from subprocess import Popen, PIPE, check_output
 from reference import resolve_reference_genome
 np.set_printoptions(threshold=np.nan)
-import signal
-signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
+#import signal
+#signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
 
 from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
@@ -91,6 +91,12 @@ class template:
         # Return array of variants within region.
         self.fetch_variants(vcf)
 
+        # Retrieve primers
+        if self.mode != 'template':
+            p3 = primer3(reference_file)
+            self.primers = [x for x in p3.fetch_primers(self.ref_seq) if x.unique_primer_group()]
+
+        # Identify restriction site locations
         if self.mode == 'snip':
             ref_seq = self.ref_seq.tostring()
             # Generate a primary variant only seq to identify restriction
@@ -98,10 +104,11 @@ class template:
             self.primary_variant_seq = Seq(ref_seq[0:500] + self.ALT[0] + ref_seq[501:])
             self.fetch_restriction_sites()
 
-        # Retrieve primers
-        if self.mode != 'template':
-            p3 = primer3(reference_file)
-            self.primers = [x for x in p3.fetch_primers(self.ref_seq) if x.unique_primer_group()]
+            # Apply SnipSNP filters:
+            # 1 - Only one variant must be present in the interval
+            #print(self.primers)
+
+
 
     def fetch_sequence(self, use_template):
         """
@@ -123,13 +130,14 @@ class template:
             seq = Seq('')
         return seq
 
-    def fetch_restriction_sites(self, enzymes = "ALL"):
+
+    def fetch_restriction_sites(self, enzymes = "Common"):
         """ 
             Spike in target variant first, generate list restriction enzymes that will work.
         """
 
         # Filters:
-        # 1. Between 1-3 cuts.
+        # 1. Between 1-2 cuts.
 
         if enzymes == "ALL":
             enzyme_group = AllEnzymes
@@ -144,9 +152,10 @@ class template:
         self.ref_sites = dict(enzyme_group.search(self.ref_seq).items())
         self.primary_variant_sites = dict(enzyme_group.search(self.primary_variant_seq).items())
         self.rflps = {k: (self.ref_sites[k], self.primary_variant_sites[k]) for k, v in self.ref_sites.items() 
-                        if len(v) > 0 and len(v) <= 3
+                        if len(v) > 0 and len(v) <= 2
                         and self.ref_sites[k] != self.primary_variant_sites[k]}
         
+        #print(self.rflps)
         # Filter cut sites that are too similar
         #for k,v in self.rflps.items():
         #    ref_cuts = self.calculate_cuts(1000, v[0])
@@ -174,7 +183,7 @@ class template:
 
     def fetch_variants(self, vcf):
         """
-            Fetches the variants in the region and 
+            Fetches all haplotypes in the region and 
             generates a box variant string from primary
             variant and identified variants.
         """
@@ -191,8 +200,13 @@ class template:
             Start is used to indicate the start position.
         """
 
+    def print_header(self, hout):
+        global header_printed
+        if header_printed is False:
+            print('\t'.join(map(str, hout)))
+            header_printed = True
 
-    def __repr__(self):
+    def out(self):
 
         hout = ["CHROM",
                 "POS",
@@ -206,20 +220,59 @@ class template:
                self.REF,
                ','.join(self.ALT)]
 
+
         if self.mode == 'template':
             hout += ["Template_Sample", "Template"]
             out += [self.use_template, self.alt_seq]
 
         if self.mode == 'snip':
-            pass
+            hout += ["ref_cut_sites",
+                     "ref_sizes",
+                     "alt_cut_sites",
+                     "alt_sizes",
+                     "restriction_enzyme",
+                     "restriction_site",
+                     "amplicon_length",
+                     "amplicon_region",
+                     "primer_left",
+                     "primer_right",
+                     "amplicon_sequence"]
+            self.print_header(hout)
+            for primer_group in self.primers:
+                amp_start = self.region_start + primer_group.primer_left.START
+                amp_end = self.region_start + primer_group.primer_right.END
+                amplicon_length = len(primer_group.amplicon)
+                primer_group.amplicon_region = "{self.CHROM}:{amp_start}-{amp_end}".format(**locals())
+                if primer_group is not None:
+                    for rflp, cut_sites in self.rflps.items():
+                        # Shift cut sites
+                        ref_cut_sites = [x - primer_group.primer_left.START for x in cut_sites[0]]
+                        alt_cut_sites = [x - primer_group.primer_left.START for x in cut_sites[1]]
+                        # Calculate Cuts and shift positions
+                        ref_product_sizes = self.calculate_cuts(amplicon_length, ref_cut_sites)
+                        alt_product_sizes = self.calculate_cuts(amplicon_length, alt_cut_sites)
 
-        # Print header
-        global header_printed
-        if header_printed is False:
-            print('\t'.join(map(str, hout)))
-            header_printed = True
+                        # FILTER: If product sizes are less than 150, ignore.
+                        product_sizes = ref_product_sizes + alt_product_sizes
+                        if any([x < 150 for x in product_sizes]):
+                            break
 
-        return '\t'.join(map(str, out))
+                        out_primers = out + [ref_cut_sites,
+                                             ref_product_sizes,
+                                             alt_cut_sites,
+                                             alt_product_sizes,
+                                             rflp,
+                                             rflp.site,
+                                             amplicon_length,
+                                             primer_group.amplicon_region,
+                                             primer_group.primer_left,
+                                             primer_group.primer_right,
+                                             primer_group.amplicon]
+                        print('\t'.join(map(str, out_primers)))
+        else:
+            self.print_header(hout)
+            print('\t'.join(map(str, out)))
+
 
 
 
@@ -339,14 +392,14 @@ class primer_vcf(cyvcf2):
             if self.mode == 'snip':
                 nz.region_size == 500
 
-            t = template(nz, self.reference_file, self, self.use_template)
-
             if gt_collection:
                 nz.gt_collection = gt_collection
-                nz.homozygous_ref = ','.join(nz.gt_collection[0])
-                nz.heterozygous = ','.join(nz.gt_collection[1])
-                nz.homozygous_alt = ','.join(nz.gt_collection[3])
-                nz.missing = ','.join(nz.gt_collection[2])
+                nz.homozygous_ref = nz.gt_collection[0]
+                nz.heterozygous = nz.gt_collection[1]
+                nz.homozygous_alt = nz.gt_collection[3]
+                nz.missing = nz.gt_collection[2]
+
+            t = template(nz, self.reference_file, self, self.use_template)
 
             yield t
 

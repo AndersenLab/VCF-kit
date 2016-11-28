@@ -29,8 +29,8 @@ from utils.fasta import *
 import sys
 from utils import check_program_exists
 
-import signal
-signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
+#import signal
+#signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
 
 debug = None
 if len(sys.argv) == 1:
@@ -85,6 +85,6 @@ if __name__ == '__main__':
         v.region_size = 500
 
     for variant in v.variant_iterator():
-        print(variant)
+        variant.out()
 
 
