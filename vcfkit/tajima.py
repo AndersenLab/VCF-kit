@@ -25,10 +25,10 @@ output:
 
 
 """
+from vcfkit import __version__
 from docopt import docopt
 from utils.vcf import *
 from math import isinf
-import sys
 import os
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
@@ -47,7 +47,7 @@ class tajima(vcf):
     def __init__(self, filename):
         vcf.__init__(self, filename)
 
-    def calc_tajima(self, window_size, step_size, extra=False):
+    def calc_tajima(self, window_size, step_size, sliding, extra=False):
         # Tajima D Constants
         n = self.n * 2
         a1 = sum([1.0 / i for i in xrange(1, n)])
@@ -60,7 +60,7 @@ class tajima(vcf):
         e1 = c1 / a1
         e2 = c2 / ((a1*a1) + a2)
 
-        if args["--sliding"]:
+        if sliding:
             shift_method = "POS-Sliding"
             step_size = None
         else:
@@ -75,7 +75,6 @@ class tajima(vcf):
                 # Use only diploid, biallelic sites, 0 < AF < 1
                 if variant.ploidy == 2 and len(variant.ALT) == 1 and 0 < variant.aaf < 1 and variant.is_snp:
                     AN = variant.num_called*2
-                    # 
                     # j;AC : allele count in genotypes, for each ALT allele, in the same order as listed
                     AC = variant.INFO["AC"]
                     if AC > 0:
@@ -84,7 +83,7 @@ class tajima(vcf):
                         S += 1
             try:
                 CHROM = variant_interval[0].CHROM
-                pi = 2.0*pi*n/(n-1.0);
+                pi = 2.0*pi*n/(n-1.0)
                 tw = (S*1.0 / a1)
                 var = (e1 * S) + ((e2 * S) * (S - 1))
                 TajimaD = (pi - tw) / \
@@ -106,16 +105,14 @@ class tajima(vcf):
             except:
                 pass
 
-if len(sys.argv) == 1:
-    debug = ["tajima", "100000", "10000",
-             "~/Dropbox/AndersenLab/wormreagents/Variation/Andersen_VCF/20150731_WI_PASS.vcf.gz"]
 
 def large_int(i):
-  return int(float(i.replace(",","")))
+    return int(float(i.replace(",", "")))
 
-if __name__ == '__main__':
+
+def main(debug=None):
     args = docopt(__doc__,
-                  version='VCF-Toolbox v0.1',
+                  version=__version__,
                   argv=debug)
 
     if args["<vcf>"] == "":
@@ -128,7 +125,7 @@ if __name__ == '__main__':
 
     if wz < sz:
         exit(puts_err(colored.red("\n\tWindow size must be >= step size.\n")))
-    
+
     if args["--no-header"] is False:
         header_line = ["CHROM",
                        "BIN_START",
@@ -141,5 +138,8 @@ if __name__ == '__main__':
                             "window_size",
                             "step_size"]
         print "\t".join(header_line)
-    for i in tajima(args["<vcf>"]).calc_tajima(wz, sz, extra=args["--extra"]):
+    for i in tajima(args["<vcf>"]).calc_tajima(wz, sz, args["--sliding"], extra=args["--extra"]):
         print(i)
+
+if __name__ == '__main__':
+    main()

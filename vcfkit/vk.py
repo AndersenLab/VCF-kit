@@ -21,6 +21,8 @@ commands:
   vcf2tsv
 
 """
+from vcfkit import __version__
+from utils import lev, message
 from docopt import docopt
 from subprocess import call, check_output, CalledProcessError
 from utils.vcf import *
@@ -28,12 +30,11 @@ from clint.textui import colored, puts, indent
 import sys
 import vk
 import os
-from signal import signal, SIGPIPE, SIG_DFL
-signal(SIGPIPE, SIG_DFL)
+import signal
+signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
+command_list = [x.strip() for x in filter(len, __doc__.splitlines()[8:])]
 
 
-
-__version__ = "0.0.2"
 
 debug = None
 if len(sys.argv) == 1:
@@ -91,9 +92,14 @@ def main():
                 with indent(4):
                     puts(
                         colored.red(prog + " not installed. Use a package manager to install or try using 'vk setup'\n"))
-    elif args['<command>'] in ['tajima', 'hmm', 'filter', 'call', 'primer', 'genome', 'rename', 'phylo', 'calc', 'geno', 'vcf2tsv', 'vcf2sql', 'stat', 'annotate']:
+    elif args['<command>'] in command_list:
         comm = ['python', getScriptPath() + '/' + args["<command>"] + ".py"] + argv
         exit(call(comm))
+    else:
+        levs = [(x, lev(args['<command>'], x)) for x in command_list]
+        closest =  min(levs, key = lambda x: x[1])[0]
+        command = args['<command>']
+        message("There is no command '{command}'. Did you mean 'vk {closest}'?".format(**locals()))
 
 if __name__ == '__main__':
     main()

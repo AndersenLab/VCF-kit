@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-  vk filter (REF|HET|ALT|MISSING) [--min=<min> --max=<max> --soft-filter=<soft> --mode=<mode>] <vcf>
+  vk filter (REF|HET|ALT|MISSING) [--min=<min> --max=<max> --soft-filter=<soft> --mode=(+|x)] <vcf>
 
 Example
 
@@ -16,6 +16,7 @@ from docopt import docopt
 from clint.textui import colored, puts, indent
 from utils.vcf import *
 from utils.fasta import *
+from utils import message
 from collections import defaultdict
 import sys
 import os
@@ -25,18 +26,13 @@ from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE,SIG_DFL) 
 
 
-debug = None
-if len(sys.argv) == 1:
-    debug = ['primer', "--ref=WBcel235", "test.vcf.gz"]
-
-
-if __name__ == '__main__':
-    #print debug
+def main(debug = None):
     args = docopt(__doc__, 
                   version='VCF-Toolbox v0.1',
                   argv = debug,
                   options_first=False)
-    
+    if args["--soft-filter"] and not args["--mode"]:
+        exit(message("Must Specify --mode with soft-filter"))
     v = vcf(args["<vcf>"])
     n_samples = len(v.samples) * 1.0
     f = {}
@@ -107,3 +103,6 @@ if __name__ == '__main__':
                 sys.stdout.write('\t'.join(line))
         elif filtered is False:
             sys.stdout.write(str(line))
+
+if __name__ == '__main__':
+    main()

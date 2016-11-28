@@ -1,11 +1,10 @@
 # Overview
 
-The `vk hmm` uses a hidden-markov-model to call near-isogenic lines (NILs) or recombinant-inbred lines (RILs).
+```
+vk hmm [options] --alt=<alt_sample> <vcf>
+```
 
-```
-usage:
-  vk hmm [options] --alt=<alt_sample> <vcf>
-```
+The `vk hmm` uses a hidden-markov-model to call near-isogenic lines (NILs) or recombinant-inbred lines (RILs).
 
 * `--alt=<alt_sample>` - The name of the alternative sample.
 

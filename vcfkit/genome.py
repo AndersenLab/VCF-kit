@@ -21,11 +21,10 @@ import gzip
 from subprocess import call
 from time import time
 from tabulate import tabulate as tab
-import re
 import requests
 import os
 import urllib
-from sys import exit # Used by exit(); don't remove.
+from sys import exit  # Used by exit(); don't remove.
 from Bio import Entrez
 
 
@@ -34,7 +33,7 @@ def fetch_chrom_name(id):
         if not id.startswith("NC_"):
             return id
         Entrez.email = "vcf-kit@vcf-kit.com"
-        chrom = Entrez.read(Entrez.efetch(db="nuccore", id=id, rettype="gb", retmode = "xml"))
+        chrom = Entrez.read(Entrez.efetch(db="nuccore", id=id, rettype="gb", retmode="xml"))
         gb_feature_quals = chrom[0]["GBSeq_feature-table"][0]["GBFeature_quals"]
         features = dict([x.values() for x in gb_feature_quals])
         if "organelle" in features:
@@ -46,12 +45,13 @@ def fetch_chrom_name(id):
     except:
         return id
 
+
 def download_genomes(genome_db):
     if os.path.isfile(genome_db):
         fileTime = os.path.getmtime(genome_db)
     else:
         fileTime = 0
-    if (time() - fileTime) >  (3 * 30 * 24 * 60 * 60) or is_non_zero_file(genome_db) is False:
+    if (time() - fileTime) > (3 * 30 * 24 * 60 * 60) or is_non_zero_file(genome_db) is False:
         with indent(2):
             puts(colored.blue('\nDownloading list of reference genomes\n'))
         r = requests.get("http://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/assembly_summary_refseq.txt")
@@ -60,7 +60,7 @@ def download_genomes(genome_db):
             f.write(r.text.encode('utf-8').strip())
 
 
-def is_non_zero_file(fpath):  
+def is_non_zero_file(fpath):
     return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
 
 
@@ -178,12 +178,12 @@ def main(debug=None):
             with indent(2):
                 puts(colored.green('\nDownloading: ' + reference_name + "; " + url + '\n'))
 
-            # stack overflow: 15644964; 
+            # stack overflow: 15644964;
             r = requests.get(url, stream=True)
 
             with open(ref_filename, 'wb') as f:
                 total_length = int(r.headers.get('content-length'))
-                for chunk in progress.bar(r.iter_content(chunk_size=1024), expected_size=(total_length/1024) + 1): 
+                for chunk in progress.bar(r.iter_content(chunk_size=1024), expected_size=(total_length / 1024) + 1):
                     if chunk:
                         f.write(chunk)
                         f.flush()
@@ -193,7 +193,7 @@ def main(debug=None):
             with indent(2):
                 puts(colored.green('\nFixing chromosome names\n'))
 
-            with open(ref_filename.replace(".fa.gz",".fa"), 'w') as outfa:
+            with open(ref_filename.replace(".fa.gz", ".fa"), 'w') as outfa:
                 with gzip.open(ref_filename, 'rb') as f:
                     for line in f:
                         outline = line
@@ -214,8 +214,8 @@ def main(debug=None):
             if args["--accession-chrom-names"]:
                 call(["gunzip", "-f", ref_filename])
             comm_bgzip = "bgzip -fc {ref_filename} > {ref_out}"
-            comm_bgzip = comm_bgzip.format(ref_filename=ref_filename.replace(".fa.gz",".fa"),
-                              ref_out = ref_filename.replace(".tmp",""))
+            comm_bgzip = comm_bgzip.format(ref_filename=ref_filename.replace(".fa.gz", ".fa"),
+                                           ref_out=ref_filename.replace(".tmp", ""))
             call(comm_bgzip, shell=True)
             ref_filename = ref_filename.replace(".tmp", "")
         else:
@@ -243,7 +243,7 @@ def main(debug=None):
             with indent(2):
                 puts(colored.green("\nCreating blast database\n"))
             comm = "gunzip -c {ref} | makeblastdb -in - -dbtype=nucl -title={ref} -out={ref}".format(ref=ref_filename)
-            call(comm, shell = True)
+            call(comm, shell=True)
         else:
             with indent(2):
                 puts(colored.blue("\nSkipping creation of blast database; blast is not installed\n"))

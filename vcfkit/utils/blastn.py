@@ -8,22 +8,7 @@ from Bio.Blast import NCBIXML
 from Bio.SeqRecord import SeqRecord
 from copy import copy
 from cStringIO import StringIO
-
-
-def boolify(s):
-    if s == 'True':
-        return True
-    if s == 'False':
-        return False
-    raise ValueError("huh?")
-
-def autoconvert(s):
-    for fn in (boolify, int, float):
-        try:
-            return fn(s)
-        except ValueError:
-            pass
-    return s
+from vcfkit.utils import *
 
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
@@ -122,9 +107,10 @@ class blast_variant:
 
 
 class blast:
-    def __init__(self, db, num_alignments=1):
+    def __init__(self, db, num_alignments=1, word_size = 28):
         self.db = db
         self.num_alignments = num_alignments
+        self.word_size = word_size
         self.output_format = ["sacc",
                               "pident",
                               "gaps",
@@ -141,7 +127,8 @@ class blast:
         self.output_string = ' '.join(self.output_format)
         self.blastn_query_str = ' '.join(["echo {self.query} | blastn -query - -db={self.db} ",
                              "-outfmt '6 {self.output_string}'",
-                             "-num_alignments {self.num_alignments}"])
+                             "-num_alignments {self.num_alignments}",
+                             "-word_size {self.word_size}"])
 
     def print_alignment(self, q, start=0, end=None):
         """ 
@@ -180,39 +167,26 @@ class blast:
             self.query = q
 
         self.query_length = len(q)
-        self.blastn_query = self.blastn_query_str.format(**locals())
-        resp, err = Popen(self.blastn_query,
+        blastn_query = self.blastn_query_str.format(**locals())
+        resp, err = Popen(blastn_query,
                           stdout=PIPE,
                           stderr=PIPE,
                           shell=True).communicate()
-
         if not resp:
            return None
         if err:
            raise Exception(err)
 
         # Format variables
-        resp = map(autoconvert, [x.strip() for x in resp.split("\n")[0].split("\t")])
-        # Convert to dictionary
-        resp = OrderedDict(zip(self.output_format, resp))
-        # Append quality values if available, and insert gaps
-        if self.query_qual:
-            qseq = resp["qseq"]
-            query_qualities = self.query_qual[resp["qstart"] - 1:resp["qend"]]
-            # Add gaps
-            inserted_gaps = 0
-            for i in xrange(len(qseq)):
-                if qseq[i] == "-":
-                    query_qualities.insert(i - inserted_gaps , "NA")
-                    inserted_gaps += 1
-            resp["qqual"] = query_qualities
-        # Add strand information
-        if resp["sstart"] > resp["send"]:
-            resp["strand"] = "-"
-            resp["sstart"], resp["send"] = resp["send"], resp["sstart"]
-        else:
-            resp["strand"] = "+"
+        resp = [OrderedDict(zip(self.output_format,
+                                map(autoconvert, x.split("\t")))) 
+                for x in resp.splitlines()]
         return resp
+
+    def check_primer(self, q):
+        blast_results = self.blast_search(q)
+        return len([i for i in blast_results if i['length'] > 14])
+
 
     def blast_call(self, q):
         """
@@ -285,44 +259,3 @@ class blast:
                 yield variant_out
                 i += 1
 
-
-"""
-OLD - remove/rewrite for snip-snp
-
-        resp = [dict(zip(field,map(autoconvert,x.split("\t")))) for x in resp.strip().split("\n")]
-        exact_matches = 0
-        for i in resp:
-            i["query_length"] = abs(i["q_end"] - i["q_start"]) + 1
-            i["subject_length"] = abs(i["s_end"] - i["s_start"]) + 1
-            i["query_string"] = q[i["q_start"]-1:i["q_end"]]
-
-            # Determine if its a
-            i["perfect_match"] = (i["query_string"] == self.query)
-            i["bp_mismatch"] = (i["subject_length"] == self.query_length
-                                and i["mismatches"] == 1)
-            i["end_mismatch"] = (self.query.find(i["query_string"]) >= 0
-                                 and i["perfect_match"] == False)
-            if chrom is not None:
-                i["perfect_match_same_chrom"] = (i["perfect_match"] is True
-                                                 and i["CHROM"] == self.chrom)
-            else:
-                i["perfect_match_same_chrom"] = False
-            if chrom is not None and pos is not None:
-                i["nearby_matches"] = ((i["perfect_match"] is True or
-                                        i["bp_mismatch"] is True or
-                                        i["end_mismatch"] is True) and
-                                       i["CHROM"] == self.chrom and
-                                       abs(i["s_start"] - pos) < 10000)
-            else:
-                i["nearby_matches"] = False
-
-        self.resp = resp
-
-        return self
-
-    def query_stat(self):
-        self.stats = {}
-        for i in ["perfect_match", "bp_mismatch", "end_mismatch", "perfect_match_same_chrom", "nearby_matches"]:
-            self.stats[i] = len([x for x in self.resp if x[i] is True])
-        return self.stats
-"""

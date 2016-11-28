@@ -1,8 +1,4 @@
-# Overview
-
-
-
-###### transfer-filter
+## transfer-filter
 
 ```
 vk geno transfer-filter <vcf>
@@ -13,7 +9,7 @@ Generate a FORMAT field filter column (FT) and transfer filters applied within t
 `##FORMAT=<ID=GF,Number=1,Type=String,Description="Genotype Filter">`
 
 
-###### het-polarization
+## het-polarization
 
 ```
 vk geno het-polarization <vcf>

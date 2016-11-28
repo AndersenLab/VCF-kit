@@ -56,7 +56,7 @@ def check_program_exists(program):
 # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
 def lev(s1, s2):
     if len(s1) < len(s2):
-        return levenshtein(s2, s1)
+        return lev(s2, s1)
 
     # len(s1) >= len(s2)
     if len(s2) == 0:
@@ -73,3 +73,4 @@ def lev(s1, s2):
         previous_row = current_row
     
     return previous_row[-1]
+

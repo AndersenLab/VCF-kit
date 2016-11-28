@@ -1,5 +1,13 @@
 # Overview
 
+```
+vk genome location [<path>]
+vk genome list
+vk genome --search=<term>
+vk genome ncbi [options] --ref=<asm_name> [--accession-chrom-names]
+vk genome wormbase [options] --ref=<asm_name>
+```
+
 The `genome` command can be used to download and prepare reference genomes for use with other tools within `vcf-kit`. `vcf-kit` will do the following when downloading a reference genome:
 
 
