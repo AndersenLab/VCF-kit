@@ -225,6 +225,9 @@ class template:
             hout += ["Template_Sample", "Template"]
             out += [self.use_template, self.alt_seq]
 
+        homozygous_ref = ','.join(map(str,self.gt_collection[0]))
+        homozygous_alt = ','.join(map(str,self.gt_collection[3]))
+
         if self.mode == 'snip':
             hout += ["ref_cut_sites",
                      "ref_sizes",
@@ -236,7 +239,9 @@ class template:
                      "amplicon_region",
                      "primer_left",
                      "primer_right",
-                     "amplicon_sequence"]
+                     "amplicon_sequence",
+                     "0/0",
+                     "1/1"]
             self.print_header(hout)
             for primer_group in self.primers:
                 amp_start = self.region_start + primer_group.primer_left.START
@@ -267,7 +272,9 @@ class template:
                                              primer_group.amplicon_region,
                                              primer_group.primer_left,
                                              primer_group.primer_right,
-                                             primer_group.amplicon]
+                                             primer_group.amplicon,
+                                             homozygous_ref,
+                                             homozygous_alt]
                         print('\t'.join(map(str, out_primers)))
         else:
             self.print_header(hout)
