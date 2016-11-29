@@ -94,7 +94,16 @@ class template:
         # Retrieve primers
         if self.mode != 'template':
             p3 = primer3(reference_file)
-            self.primers = [x for x in p3.fetch_primers(self.ref_seq) if x.unique_primer_group()]
+            # Modify amplicon size if indel.
+            if self.mode == 'indel':
+                max_amplicon_length = max([len(self.ref_seq), len(self.alt_seq)])
+                min_amplicon_length = max_amplicon_length - 200
+                p3.PRIMER_PRODUCT_SIZE_RANGE = "{min_amplicon_length}-{max_amplicon_length}".format(**locals())
+            primers = p3.fetch_primers(self.ref_seq, self.CHROM, self.region_start)
+            if primers:
+                self.primers = [x for x in primers if x.filter_primer_group()]
+            else:
+                self.primers = []
 
         # Identify restriction site locations
         if self.mode == 'snip':
@@ -143,11 +152,14 @@ class template:
         else:
             enzyme_group = RestrictionBatch(','.split(enzymes))
 
+        # Filter ambiguous cutters
+        enzyme_group = RestrictionBatch([x for x in enzyme_group if x.is_ambiguous() is False])
+
         # Calculate rflps for ALT sites only
         self.ref_sites = dict(enzyme_group.search(self.ref_seq).items())
         self.primary_variant_sites = dict(enzyme_group.search(self.primary_variant_seq).items())
         self.rflps = {k: (self.ref_sites[k], self.primary_variant_sites[k]) for k, v in self.ref_sites.items() 
-                        if len(v) > 0 and len(v) <= 2
+                        if len(v) > 0 and len(v) <= 3
                         and self.ref_sites[k] != self.primary_variant_sites[k]}
         
         #print(self.rflps)
@@ -215,28 +227,30 @@ class template:
                self.REF,
                ','.join(self.ALT)]
 
-
         if self.mode == 'template':
             hout += ["Template_Sample", "Template"]
             out += [self.use_template, self.alt_seq]
 
         homozygous_ref = ','.join(map(str,self.gt_collection[0]))
         homozygous_alt = ','.join(map(str,self.gt_collection[3]))
-
+        
         if self.mode == 'snip':
             hout += ["ref_sites",
                      "alt_sites",
                      "restriction_enzyme",
                      "restriction_site",
+                     "restriction_site_length",
                      "amplicon_length",
                      "amplicon_region",
                      "primer_left",
                      "primer_right",
                      "amplicon_sequence",
                      "0/0",
-                     "1/1"]
+                     "1/1",
+                     "polymorphic"]
 
             self.print_header(hout)
+
             for primer_group in self.primers:
                 amp_start = self.region_start + primer_group.primer_left.START
                 amp_end = self.region_start + primer_group.primer_right.END
@@ -251,9 +265,9 @@ class template:
                         ref_product_sizes = self.calculate_cuts(amplicon_length, ref_cut_sites)
                         alt_product_sizes = self.calculate_cuts(amplicon_length, alt_cut_sites)
 
-                        # FILTER: If product sizes are less than 150, ignore.
+                        # FILTER: If product sizes are less than 75, ignore.
                         product_sizes = ref_product_sizes + alt_product_sizes
-                        if any([x < 150 for x in product_sizes]):
+                        if any([x < 25 for x in product_sizes]):
                             break
 
                         # Cleanup cut sites / product sites
@@ -262,78 +276,50 @@ class template:
                         alt_cut_sites = ','.join(map(str, alt_cut_sites))
                         alt_product_sizes = ','.join(map(str, alt_product_sizes))
 
+
+                        # out_primers represents variables that are specific to the primer/rflp
                         out_primers = out + [ref_cut_sites + ":" + ref_product_sizes,
                                              alt_cut_sites + ":" + alt_product_sizes,
                                              rflp,
                                              rflp.site,
-                                             amplicon_length,
+                                             rflp.size,
+                                             primer_group.amplicon_length,
                                              primer_group.amplicon_region,
                                              primer_group.primer_left,
                                              primer_group.primer_right,
                                              primer_group.amplicon,
                                              homozygous_ref,
-                                             homozygous_alt]
+                                             homozygous_alt,
+                                             self.is_polymorphic]
                         print('\t'.join(map(str, out_primers)))
         elif self.mode == 'indel':
+            hout += ["indel_size",
+                     "amplicon_length",
+                     "amplicon_region",
+                     "primer_left",
+                     "primer_right",
+                     "amplicon_region",
+                     "amplicon_sequence",
+                     "0/0",
+                     "1/1"]
+
             self.print_header(hout)
-            print('\t'.join(map(str, out)))
+            for primer_group in self.primers:
+                out_primers = out + [primer_group.amplicon_length,
+                                     primer_group.amplicon_region]
+                print('\t'.join(map(str, out_primers)))
         else:
             self.print_header(hout)
             print('\t'.join(map(str, out)))
 
 
-
-
-class restriction_sites:
-
-    """
-        Container for determining restriction sites
-        and modifying their coordinates
-    """
-
-    def __init__(self, ref_seq, alt_seq):
-        self.ref_sites = dict(AllEnzymes.search(self.ref_seq).items())
-        self.alt_sites = dict(AllEnzymes.search(self.alt_seq).items())
-        self.ref_sites_diff = {k: v for k, v in self.ref_sites.items() if len(v) > 0 and len(v) <= 3 and
-                               abs(len(self.ref_sites[k]) - len(self.alt_sites[k])) == 1}
-        self.alt_sites_diff = {k: self.alt_sites[k] for k, v in self.ref_sites_diff.items()}
-
-    def shift_positions(self, shift):
-        for k in self.ref_sites_diff.keys():
-            for n, s1 in enumerate(self.ref_sites_diff[k]):
-                self.ref_sites_diff[k][n] = s1 + shift
-            for n, s2 in enumerate(self.alt_sites_diff[k]):
-                self.alt_sites_diff[k][n] = s2 + shift
-
-    def __len__(self):
-        return len(self.ref_sites_diff.keys())
-
-
-    def extract_restriction(self, window=2000):
-        for varset in self.window(window_size=window, step_size=1, shift_method="POS-Sliding"):
-            start = varset.lower_bound
-            end = varset.upper_bound
-            CHROM = varset[0].CHROM
-            ref_seq = self.reference[CHROM][start:end].seq
-            alt_seq = ref_seq
-            for var in varset:
-                # Spike all alt variants within sequence.
-                alt_seq = alt_seq[:var.POS - start] + var.ALT[0] + alt_seq[var.POS - start + 1:]
-            rsites = restriction_sites(ref_seq, alt_seq)
-            if len(rsites) > 0:
-                primer_set = primer3()
-                for primer in primer_set.fetch_primers(ref_seq):
-                    yield primer, restriction_sites, start, end
-
-
-
-
 class primer_vcf(cyvcf2):
-    def __init__(self, filename, reference=None, use_template="ALT"):
+    def __init__(self, filename, reference=None, use_template="ALT", polymorphic=True):
         if not os.path.isfile(filename) and filename != "-":
             exit(message("Error: " + filename + " does not exist"))
         self.filename = filename
         self.use_template = use_template
+        self.use_polymorphic = polymorphic
         if reference:
             self.reference = reference
             self.reference_file = resolve_reference_genome(reference)
@@ -384,6 +370,7 @@ class primer_vcf(cyvcf2):
             nz.use_template = self.use_template
             nz.mode = self.mode
             nz.filename = self.filename
+            nz.use_polymorphic = self.use_polymorphic
 
             gt_collection = defaultdict(list)
 
@@ -391,24 +378,33 @@ class primer_vcf(cyvcf2):
                 if vcf_sample in self.output_samples:
                     gt_collection[gt].append(vcf_sample)
 
-            # Determine region size
-            nz.indel_size = 0
-            nz.region_size = self.region_size
-            if nz.is_indel:
-                nz.indel_size =  abs(len(nz.REF) - len(nz.ALT[0]))
-                nz.region_size = nz.indel_size*2 + 150
-            if self.mode == 'snip':
-                nz.region_size == 500
-
             if gt_collection:
                 nz.gt_collection = gt_collection
                 nz.homozygous_ref = nz.gt_collection[0]
                 nz.heterozygous = nz.gt_collection[1]
                 nz.homozygous_alt = nz.gt_collection[3]
                 nz.missing = nz.gt_collection[2]
+            is_polymorphic = all(map(lambda x: len(x) > 0,[gt_collection[0], gt_collection[3]]))
+
+            nz.is_polymorphic = is_polymorphic
+            if self.use_polymorphic and not is_polymorphic:
+                continue
+
+            # Determine region size
+            nz.indel_size = 0
+            nz.region_size = self.region_size
+            if nz.is_indel:
+                # Size is dynamically set for indels
+                nz.indel_size =  abs(len(nz.REF) - len(nz.ALT[0]))
+                # FILTER: Indel must be at least 50 bp.
+                if nz.indel_size <= 25:
+                    continue
+                nz.region_size = nz.indel_size*2 + 150
+            if self.mode == 'snip':
+                nz.region_size == 500
+
 
             t = template(nz, self.reference_file, self, self.use_template)
-
             yield t
 
     def fetch_variants(self, region=None):

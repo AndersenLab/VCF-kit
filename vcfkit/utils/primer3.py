@@ -29,11 +29,8 @@ class seqprimer:
         b = blast(reference, num_alignments = 10, word_size = 14)
         self.unique_copies = b.check_primer(self.SEQUENCE)
 
-    def unique(self):
-        return self.unique_copies == 1
-
-    def calc_position(template_start):
-        pass
+    def filter_unique(self, copies = 1):
+        return self.unique_copies <= copies
 
     def __str__(self):
         return self.SEQUENCE
@@ -49,22 +46,27 @@ class primer_group:
 
         Used to calculate PCR product, start site, etc. 
     """
-    def __init__(self, primer_values, template, reference):
+    def __init__(self, primer_values, template, reference, chrom, region_start):
         self.reference = reference
+        self.region_start = region_start
         pleft = {k.replace("PRIMER_LEFT_", ""):v for k,v in primer_values.items() if k.startswith("PRIMER_LEFT")}
         pright = {k.replace("PRIMER_RIGHT_", ""):v for k,v in primer_values.items() if k.startswith("PRIMER_RIGHT")}
         self.primer_left = seqprimer(pleft, template, reference)
         self.primer_right = seqprimer(pright, template, reference, False)
         self.amplicon = template[self.primer_left.START:self.primer_right.END]
+        self.amp_start = self.region_start + self.primer_left.START
+        self.amp_end = self.region_start + self.primer_right.END
+        self.amplicon_length = len(self.amplicon)
+        self.amplicon_region = "{chrom}:{self.amp_start}-{self.amp_end}".format(**locals())
         for k,v in primer_values.items():
             if not k.startswith("PRIMER_LEFT") and not k.startswith("PRIMER_RIGHT"):
                 setattr(self, k, v)
 
-    def unique_primer_group(self):
+    def filter_primer_group(self):
         """
             Return a set of filtered primers that are usable.
         """
-        return all([self.primer_left.unique(), self.primer_right.unique()])
+        return any([self.primer_left.filter_unique(1), self.primer_right.filter_unique(1)])
 
     def __repr__(self):
         return repr(self.primer_left) + "\t" + repr(self.primer_right)
@@ -106,7 +108,7 @@ class primer3:
         att_val = zip(attributes, values)
         return '\n'.join(["=".join(x) for x in att_val]) + "\n=\n"
 
-    def fetch_primers(self, sequence_template):
+    def fetch_primers(self, sequence_template, chrom, region_start):
         # Runs primer3 with the generated record.
         self.SEQUENCE_TEMPLATE = sequence_template
         primer3_run = Popen(["primer3_core"], stdin=PIPE, stdout=PIPE)
@@ -119,6 +121,7 @@ class primer3:
                                if x.split("=")[0] != ""])
         p3_results = {k: autoconvert(v) for k,v in p3_results.items()}
 
+
         if "PRIMER_LEFT_NUM_RETURNED" in p3_results:
             n_primers = p3_results["PRIMER_LEFT_NUM_RETURNED"]
             primer_return = []
@@ -127,5 +130,7 @@ class primer3:
                 primer_dataset = {k.replace(pn,"_"):v for k,v in p3_results.items() if pn in k}
                 primer_return.append(primer_group(primer_dataset,
                                                   self.SEQUENCE_TEMPLATE,
-                                                  self.reference))
+                                                  self.reference,
+                                                  chrom,
+                                                  region_start))
             return primer_return

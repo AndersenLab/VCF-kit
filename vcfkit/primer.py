@@ -18,6 +18,7 @@ options:
   --mark-variant              Use brackets to indicate the location of the variant in output.
   --size=<int>                Amplicon size/2 (Upstream and downstream length) [default: 50]
   --box-variants              Add second column for the sequence with the variant boxed.
+  --polymorphic               Only output variants that are polymorphic across specified samples.
 
 
 """
@@ -48,7 +49,7 @@ if __name__ == '__main__':
     if args["--ref"] is None:
         exit(message("Must specify a reference with --ref", color="red"))
 
-    v = primer_vcf(args["<vcf>"], reference=args["--ref"], use_template=args["--template"])
+    v = primer_vcf(args["<vcf>"], reference=args["--ref"], use_template=args["--template"], polymorphic=args["--polymorphic"])
 
     # Region
     if args["--region"]:
@@ -77,7 +78,7 @@ if __name__ == '__main__':
         if args["--size"]:
             message("Warning: --size ignored; size is set dynamically when genotyping indels.")
         v.mode = "indel"
-
+    
     elif args["snip"]:
         if args["--size"]:
             message("Warning: --size ignored; size is set to ~1000 bp templates.")
