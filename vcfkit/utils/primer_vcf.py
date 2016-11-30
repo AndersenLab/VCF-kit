@@ -244,7 +244,6 @@ class template:
                      "polymorphic"]
 
             self.print_header(hout)
-
             for primer_group in self.primers:
                 amp_start = self.region_start + primer_group.primer_left.START
                 amp_end = self.region_start + primer_group.primer_right.END
@@ -384,11 +383,12 @@ class primer_vcf(cyvcf2):
                 if variant.is_indel is False:
                     continue
             elif self.mode =='snip':
-                self.region_size == 500
                 if variant.is_snp is False:
                     continue
 
             nz = cvariant(variant)
+            if self.mode == 'snip':
+                nz.region_size = 500
             nz.use_template = self.use_template
             nz.mode = self.mode
             nz.filename = self.filename
