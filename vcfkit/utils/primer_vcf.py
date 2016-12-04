@@ -12,6 +12,7 @@ from subprocess import Popen, PIPE, check_output
 from reference import resolve_reference_genome
 np.set_printoptions(threshold=np.nan)
 import signal
+import sys
 signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
 
 from Bio.Seq import Seq
@@ -109,7 +110,7 @@ class template:
             # Generate a primary variant only seq to identify restriction
             # sites that target ALT sites.
             self.primary_variant_seq = Seq(ref_seq[0:500] + self.ALT[0] + ref_seq[501:])
-            self.fetch_restriction_sites()
+            self.fetch_restriction_sites(vcf.enzymes)
 
 
     def fetch_sequence(self, use_template):
@@ -138,15 +139,14 @@ class template:
             Spike in target variant first, generate list 
             restriction enzymes that will work.
         """
-
         if enzymes == "ALL":
             enzyme_group = AllEnzymes
         elif enzymes == "Common":
             enzyme_group = CommOnly
-        elif enzymes == "high_fidelity":
+        elif enzymes == "HF":
             enzyme_group = high_fidelity
         else:
-            enzyme_group = RestrictionBatch(','.split(enzymes))
+            enzyme_group = RestrictionBatch(enzymes.split(","))
 
         # Filter ambiguous cutters
         enzyme_group = RestrictionBatch([x for x in enzyme_group if x.is_ambiguous() is False])

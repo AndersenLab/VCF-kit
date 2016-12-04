@@ -19,7 +19,7 @@ options:
   --size=<int>                Amplicon size/2 (Upstream and downstream length) [default: 50]
   --box-variants              Add second column for the sequence with the variant boxed.
   --polymorphic               Only output variants that are polymorphic across specified samples.
-
+  --enzymes=<enzymes>         snip-SNP only: Specify groups of restriction enzymes or individual enzymes [default: Common]
 
 """
 from docopt import docopt
@@ -50,7 +50,7 @@ if __name__ == '__main__':
         exit(message("Must specify a reference with --ref", color="red"))
 
     v = primer_vcf(args["<vcf>"], reference=args["--ref"], use_template=args["--template"], polymorphic=args["--polymorphic"])
-
+    v.enzymes = args['--enzymes']
     # Region
     if args["--region"]:
         v.region = args["--region"]

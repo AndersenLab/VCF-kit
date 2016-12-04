@@ -5,6 +5,8 @@ import signal
 from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
 from Bio.Restriction import AllEnzymes, CommOnly, RestrictionBatch
+from clint.textui import colored, puts_err
+import sys
 signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
 
 
@@ -91,7 +93,13 @@ class primer3:
             self.generate_pcr_template = True
 
         # Global default
-        thermo_path = "/usr/local/share/primer3_config/"
+        thermo_paths = ["/usr/local/share/primer3_config/",
+                        "/usr/local/share/primer3/primer3_config/"]
+        paths = filter(lambda x: os.path.exists(x), thermo_paths)
+        if len(paths) == 0:
+            with indent(4):
+                exit(puts_err(colored.red("\nCannot find thermo path '/primer3_config/\n")))
+        thermo_path = paths[0]
         self.PRIMER_THERMODYNAMIC_PARAMETERS_PATH = thermo_path
 
         # Set primer returns:
