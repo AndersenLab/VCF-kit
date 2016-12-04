@@ -18,7 +18,6 @@ VCF-kit is a command-line based collection of utilities for performing analysis 
 | __primer__ | Generate  primers for variant validation.                                                     |
 | __rename__ | Add a prefix, suffix, or  substitute  a string  in  sample  names.                                |
 | __tajima__ | Calculate Tajima’s  D.                                                                        |
-| __vcf2sql__ | Generate  a tab-separated values  (TSV) and schema  for loading a VCF into  a database.         |
 | __vcf2tsv__ | Convert a VCF to  TSV.                                                                       |
 
 ## Installation

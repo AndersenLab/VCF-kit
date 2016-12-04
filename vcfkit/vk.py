@@ -17,7 +17,6 @@ commands:
   primer
   rename
   tajima
-  vcf2sql
   vcf2tsv
 
 """
