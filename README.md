@@ -23,7 +23,7 @@ VCF-kit is a command-line based collection of utilities for performing analysis 
 ## Installation
 
 ```
-pip install https://github.com/AndersenLab/vcf-kit/archive/0.0.2.tar.gz
+pip install https://github.com/AndersenLab/VCF-kit/archive/0.0.4.tar.gz
 ```
 
 __Installing Dependencies:__
