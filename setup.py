@@ -4,6 +4,7 @@ import os
 with open('requirements.txt') as f:
     required = f.read().splitlines()
 
+from vcfkit import __version__
 
 def gen_data_files(*dirs):
     results = []
@@ -15,7 +16,7 @@ def gen_data_files(*dirs):
 
 
 setup(name='vcfkit',
-      version='0.0.1',
+      version=__version__,
       packages=['vcfkit','vcfkit.utils'],
       description='Tools for working with VCF files',
       url='https://github.com/AndersenLab/VCF-kit',
