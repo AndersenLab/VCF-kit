@@ -14,6 +14,7 @@ options:
   --ref=<reference>           Reference Genome
   --region=<region>           Restrict to region.
   --samples=<samples>         Output genotypes for a sample or set of samples. [default: ALL]
+  --template=<template>       The sample template to output [default: ALT]
   --size=<int>                Amplicon size [default: 600-800]
   --box-variants              Add second column for the sequence with the variant boxed.
   --polymorphic               Only output variants that are polymorphic across specified samples.
@@ -49,7 +50,7 @@ if __name__ == '__main__':
     if args["--ref"] is None:
         exit(message("Must specify a reference with --ref", color="red"))
 
-    v = primer_vcf(args["<vcf>"], reference=args["--ref"], use_template="ALT", polymorphic=args["--polymorphic"])
+    v = primer_vcf(args["<vcf>"], reference=args["--ref"], use_template=args['--template'], polymorphic=args["--polymorphic"])
     v.enzymes = args['--enzymes']
     v.nprimers = int(args['--nprimers'])
     # Region
@@ -77,7 +78,11 @@ if __name__ == '__main__':
     # Check for std. input
     if args["template"]:
         v.mode = "template"
-
+        if args['--size'] == '600-800':
+            v.region_size = 300 # Sets region to 600 bp.
+            message("Region size set to 600")
+        else:
+            v.region_size = int(args["--size"])//2
     elif args["indel"]:
         if args["--size"]:
             message("Warning: --size ignored; size is set dynamically when genotyping indels.")

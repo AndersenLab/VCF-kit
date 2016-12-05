@@ -188,12 +188,6 @@ class template:
         return len(list(v(self.region)))
 
 
-    def box_variants(self, sequence, start):
-        """
-            Add boxed variants from the VCF to the sequence.
-            Start is used to indicate the start position.
-        """
-
     def print_header(self, hout):
         global header_printed
         if header_printed is False:
@@ -206,13 +200,15 @@ class template:
                 "POS",
                 "region",
                 "REF",
-                "ALT"]
+                "ALT",
+                "template_sample"]
 
         out = [self.CHROM,
                self.POS,
                self.region,
                self.REF,
-               ','.join(self.ALT)]
+               ','.join(self.ALT),
+               self.use_template]
 
         homozygous_ref = ','.join(map(str,self.gt_collection[0]))
         homozygous_alt = ','.join(map(str,self.gt_collection[3]))
@@ -319,6 +315,7 @@ class template:
                      "primer_right",
                      "amplicon_length",
                      "amplicon_region",
+                     "amplicon_sequence",
                      "0/0",
                      "1/1",
                      "polymorphic"]
@@ -341,8 +338,8 @@ class template:
 
         else:
             # Output template
-            hout += ["Template_Sample", "Template"]
-            out += [self.use_template, self.alt_seq]
+            hout += ["template"]
+            out += [self.alt_seq]
             self.print_header(hout)
             print('\t'.join(map(str, out)))
 
@@ -428,7 +425,7 @@ class primer_vcf(cyvcf2):
                 nz.region_size = nz.indel_size*2 + 150
                 if nz.indel_size <= 25:
                     continue   
-            elif self.mode == 'sanger':
+            elif self.mode in ['sanger', 'template']:
                 nz.region_size = self.region_size
             nz.use_template = self.use_template
             nz.mode = self.mode

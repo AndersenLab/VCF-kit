@@ -1,14 +1,32 @@
 # Overview
 
-The `primer` command can be used to generate primers for the purpose of verifying genotype calls present within a VCF. Primers can be generated for verifying genotypes using snip-SNPs, indels (based on product size), and for sanger sequencing.
+The `primer` command can be used to generate primers for the purpose of verifying genotype calls present within a VCF. Primers can be generated for verifying genotypes using snip-SNPs, indels (based on product size), and using sanger sequencing.
 
-Output is in tab-seperated value (TSV) format, and the columns below are output regardless of method used:
+All of the `primer` subcommands require you to specify a reference using `--ref`. A reference can be obtained using the `vk genome` command.
+
+## Options
+
+* __--ref__ - Set the reference genome to use. Obtain genomes using `vk genome`.
+* __--region__ - Restrict primer generation to a specific region.
+* __--samples__ - Output genotypes for a sample or set of samples.
+* __--template__ - The template to use for generating primers.
+* __--size__ - For the `template` command, sets the size of the region output. For `snip`, `indel`, and `sanger`, sets the target amplicon size, specified as a range (e.g. 400-600).
+* __--polymorphic__ - Only outputs variants where there is at least one 0/0 and one 1/1 genotype.
+* __--nprimers__ - Specify the number of primer sets desired for each variant.
+
+## Output
+
+Output is in tab-seperated value (TSV) format. The following columns are always output:
 
 * __CHROM__ - chromosome/contig
 * __POS__ - chromosomal position
 * __region__ - The region used as a template to generate primers. Note that the amplicons will be smaller
 * __REF__ - Reference allele
 * __ALT__ - Alternative allele
+* __template_sample__ - Template used for generating primers. Default is to use ALT calls.
+
+These additional columns are output for `snip`, `indel`, and `sanger` options:
+
 * __primer_left__ - Left PCR primer
 * __primer_right__ - Right PCR primer
 * __amplicon_length__ - Sequence of the amplified piece of DNA
@@ -18,17 +36,11 @@ Output is in tab-seperated value (TSV) format, and the columns below are output 
 * __1/1__ - Comma-delimited samples with homozygous alternative genotypes
 * __polymorphic__ - True when there is at least one 0/0 and one 1/1 genotype.
 
-All of the `primer` subcommands require you to specify a reference using `--ref`. A reference can be obtained using the `vk genome` command.
+## Commands
 
-## Options
+### Template
 
-* __--ref__ - Set the reference genome to use. Obtain genomes using `vk genome`.
-* __--region__ - Restrict primer generation to a specific region.
-* __--samples__ - Output genotypes for a sample or set of samples.
-* __--size__ - Sets the target amplicon size, specified as a range (e.g. 400-600).
-* __--polymorphic__ - Only outputs variants where there is at least one 0/0 and one 1/1 genotype.
-* __--nprimers__ - Specify the number of primer sets desired for each variant.
-
+Template can be used to fetch the region surrounding variants. Set the size of the desired region using `--size=<int>`.
 
 ### snip-SNP
 
@@ -80,11 +92,13 @@ In addition to the common columns listed above, snip-SNP output includes the fol
 * __indel_size__ - basepair size of interval
 * __indel_type__ - Deletion or Insertion relative to the reference
 * __REF_product_size__ - PCR product size with homozygous reference genotype
-* __ALT_product_size__ PCR product size with homozygous alternative genotype
+* __ALT_product_size__ - PCR product size with homozygous alternative genotype
 
 ## Sanger
 
-The `sanger` command will generate PCR primers that can be used to amplify a region of interest. The left primer can be used to perform Sanger sequencing.
+The `sanger` command will generate PCR primers that can be used to amplify a region of interest. The left primer can then also be used to initiate Sanger sequencing. `sanger` can be used to verify both indels and snps.
+
+##### sanger output
 
 __variant_distance__ - Indicates the distance from the start of the amplicon to the variant position. 
 
