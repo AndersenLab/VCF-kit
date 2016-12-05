@@ -71,7 +71,7 @@ class cvariant:
 
 class template:
 
-    def __init__(self, variant, reference_file, vcf, use_template):
+    def __init__(self, variant, reference_file, vcf, use_template, nprimers):
         # Copy variant attributes over
         for i in filter(lambda x: x.startswith("_") is False, dir(variant)):
             setattr(self, i, getattr(variant, i))
@@ -88,16 +88,19 @@ class template:
             self.alt_seq = self.ref_seq
         else:
             self.alt_seq = self.fetch_sequence(use_template)
-        self.edit_distance = lev(self.ref_seq.tostring().lower(), self.alt_seq.tostring().lower())
+        self.edit_distance = lev(str(self.ref_seq).lower(), str(self.alt_seq).lower())
 
         # Retrieve primers
         if self.mode != 'template':
             p3 = primer3(reference_file)
+            p3.PRIMER_NUM_RETURN = nprimers
             # Modify amplicon size if indel.
             if self.mode == 'indel':
                 max_amplicon_length = max([len(self.ref_seq), len(self.alt_seq)])
                 min_amplicon_length = max_amplicon_length - 200
                 p3.PRIMER_PRODUCT_SIZE_RANGE = "{min_amplicon_length}-{max_amplicon_length}".format(**locals())
+            elif self.mode == 'sanger':
+                p3.PRIMER_PRODUCT_SIZE_RANGE = "{self.amplicon_lower}-{self.amplicon_upper}".format(**locals())
             primers = p3.fetch_primers(self.ref_seq, self.CHROM, self.region_start)
             if primers:
                 self.primers = [x for x in primers if x.filter_primer_group()]
@@ -157,15 +160,7 @@ class template:
         self.rflps = {k: (self.ref_sites[k], self.primary_variant_sites[k]) for k, v in self.ref_sites.items() 
                         if len(v) > 0 and len(v) <= 3
                         and self.ref_sites[k] != self.primary_variant_sites[k]}
-        
-        #print(self.rflps)
-        # Filter cut sites that are too similar
-        #for k,v in self.rflps.items():
-        #    ref_cuts = self.calculate_cuts(1000, v[0])
-        #    alt_cuts = self.calculate_cuts(1000, v[1])
-        #    ref_cuts = [x for x in ref_cuts if x not in alt_cuts]
-        #    alt_cuts = [x for x in alt_cuts if x not in ref_cuts]
-        #    print ref_cuts, "ref", alt_cuts, "alt"
+
 
     def calculate_cuts(self, length, positions):
         """
@@ -219,13 +214,8 @@ class template:
                self.REF,
                ','.join(self.ALT)]
 
-        if self.mode == 'template':
-            hout += ["Template_Sample", "Template"]
-            out += [self.use_template, self.alt_seq]
-
         homozygous_ref = ','.join(map(str,self.gt_collection[0]))
         homozygous_alt = ','.join(map(str,self.gt_collection[3]))
-
 
         if self.mode == 'snip':
             hout += ["variant_count",
@@ -296,11 +286,13 @@ class template:
                      "ALT_product_size",
                      "primer_left",
                      "primer_right",
-                     "amplicon_length",
+                     "amplicon_length_ref",
+                     "amplicon_length_alt",
                      "amplicon_region",
                      "amplicon_sequence",
                      "0/0",
-                     "1/1"]
+                     "1/1",
+                     "polymorphic"]
 
             self.print_header(hout)
             for primer_group in self.primers:
@@ -309,17 +301,48 @@ class template:
                 out_indel = out + [variant_count,
                                    self.indel_size,
                                    self.indel_type,
+                                   primer_group.primer_left,
+                                   primer_group.primer_right,
                                    primer_group.amplicon_length,
                                    primer_group.amplicon_length + self.indel_size,
+                                   primer_group.amplicon_region,
+                                   primer_group.amplicon,
+                                   homozygous_ref,
+                                   homozygous_alt,
+                                   self.is_polymorphic]
+                print('\t'.join(map(str, out_indel)))
+
+        elif self.mode == 'sanger':
+            hout += ["variant_count",
+                     "variant_distance",
+                     "primer_left",
+                     "primer_right",
+                     "amplicon_length",
+                     "amplicon_region",
+                     "0/0",
+                     "1/1",
+                     "polymorphic"]
+            self.print_header(hout)
+            for primer_group in self.primers:
+                amp_start = self.region_start + primer_group.primer_left.START
+                # Fetch variant Count
+                variant_count = self.fetch_variant_count(primer_group.amplicon_region)
+                out_indel = out + [variant_count,
+                                   self.POS - amp_start,
                                    primer_group.primer_left,
                                    primer_group.primer_right,
                                    primer_group.amplicon_length,
                                    primer_group.amplicon_region,
                                    primer_group.amplicon,
                                    homozygous_ref,
-                                   homozygous_alt]
+                                   homozygous_alt,
+                                   self.is_polymorphic]
                 print('\t'.join(map(str, out_indel)))
+
         else:
+            # Output template
+            hout += ["Template_Sample", "Template"]
+            out += [self.use_template, self.alt_seq]
             self.print_header(hout)
             print('\t'.join(map(str, out)))
 
@@ -387,8 +410,26 @@ class primer_vcf(cyvcf2):
                     continue
 
             nz = cvariant(variant)
+
+            # Process Indels
+            if nz.is_indel:
+                # Size is dynamically set for indels
+                nz.indel_size =  len(nz.REF) - len(nz.ALT[0])
+                nz.indel_size_abs =  abs(len(nz.REF) - len(nz.ALT[0]))
+                # Indel type:
+                if len(nz.REF) > len(nz.ALT[0]):
+                    nz.indel_type = "deletion"
+                else:
+                    nz.indel_type = "insertion"
+
             if self.mode == 'snip':
                 nz.region_size = 500
+            elif self.mode == 'indel':
+                nz.region_size = nz.indel_size*2 + 150
+                if nz.indel_size <= 25:
+                    continue   
+            elif self.mode == 'sanger':
+                nz.region_size = self.region_size
             nz.use_template = self.use_template
             nz.mode = self.mode
             nz.filename = self.filename
@@ -412,23 +453,10 @@ class primer_vcf(cyvcf2):
             if self.use_polymorphic and not is_polymorphic:
                 continue
 
-            # Process Indels
-            if nz.is_indel:
-                # Size is dynamically set for indels
-                nz.indel_size =  len(nz.REF) - len(nz.ALT[0])
-                nz.indel_size_abs =  abs(len(nz.REF) - len(nz.ALT[0]))
-                # Indel type:
-                if len(nz.REF) > len(nz.ALT[0]):
-                    nz.indel_type = "deletion"
-                else:
-                    nz.indel_type = "insertion"
-                # FILTER: Indel must be at least 50 bp.
-                if nz.indel_size <= 25:
-                    continue
-                nz.region_size = nz.indel_size*2 + 150
+            nz.amplicon_lower = self.amplicon_lower
+            nz.amplicon_upper = self.amplicon_upper
 
-
-            t = template(nz, self.reference_file, self, self.use_template)
+            t = template(nz, self.reference_file, self, self.use_template, self.nprimers)
             yield t
 
     def fetch_variants(self, region=None):

@@ -9,6 +9,11 @@ from Bio.SeqRecord import SeqRecord
 from copy import copy
 from cStringIO import StringIO
 from vcfkit.utils import *
+import sys
+import signal
+signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
+
+
 
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)

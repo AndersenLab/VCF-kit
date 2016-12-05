@@ -1,12 +1,12 @@
 from subprocess import Popen, PIPE
 from vcfkit.utils import *
 from vcfkit.utils.blastn import blast
-import signal
 from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
 from Bio.Restriction import AllEnzymes, CommOnly, RestrictionBatch
 from clint.textui import colored, puts_err
 import sys
+import signal
 signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
 
 
@@ -80,6 +80,7 @@ class primer3:
     """
     def __init__(self, reference, method="pcr"):
         self.reference = reference
+        self.PRIMER_GC_CLAMP = 1
         self.PRIMER_OPT_SIZE = 20
         self.PRIMER_MIN_SIZE = 18  # Must be set
         self.PRIMER_MAX_SIZE = 20  # Must be set

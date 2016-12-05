@@ -14,12 +14,11 @@ options:
   --ref=<reference>           Reference Genome
   --region=<region>           Restrict to region.
   --samples=<samples>         Output genotypes for a sample or set of samples. [default: ALL]
-  --template=<sample>         Sequence to use for template. Use REF, ALT, or sample name. [default: ALT]
-  --mark-variant              Use brackets to indicate the location of the variant in output.
-  --size=<int>                Amplicon size/2 (Upstream and downstream length) [default: 50]
+  --size=<int>                Amplicon size [default: 600-800]
   --box-variants              Add second column for the sequence with the variant boxed.
   --polymorphic               Only output variants that are polymorphic across specified samples.
   --enzymes=<enzymes>         snip-SNP only: Specify groups of restriction enzymes or individual enzymes [default: Common]
+  --nprimers=<nprimers>       Maximum number of primers to generate [default: 5]
 
 """
 from docopt import docopt
@@ -30,8 +29,8 @@ from utils.fasta import *
 import sys
 from utils import check_program_exists
 
-#import signal
-#signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
+import signal
+signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
 
 debug = None
 if len(sys.argv) == 1:
@@ -44,13 +43,15 @@ if __name__ == '__main__':
                   options_first=False)
 
     check_program_exists("primer3_core")
+    check_program_exists("blastn")
 
     # Ensure user has specified a reference.
     if args["--ref"] is None:
         exit(message("Must specify a reference with --ref", color="red"))
 
-    v = primer_vcf(args["<vcf>"], reference=args["--ref"], use_template=args["--template"], polymorphic=args["--polymorphic"])
+    v = primer_vcf(args["<vcf>"], reference=args["--ref"], use_template="ALT", polymorphic=args["--polymorphic"])
     v.enzymes = args['--enzymes']
+    v.nprimers = int(args['--nprimers'])
     # Region
     if args["--region"]:
         v.region = args["--region"]
@@ -68,7 +69,10 @@ if __name__ == '__main__':
                     exit(message(sample + " not found in VCF", "red"))
 
     v.box_variants = args["--box-variants"]
-    v.region_size = int(args["--size"])
+    v.amplicon_size = args["--size"]
+    v.amplicon_lower = int(args["--size"].split("-")[0])
+    v.amplicon_upper = int(args["--size"].split("-")[1])
+    v.region_size = (v.amplicon_upper//2) + 100
 
     # Check for std. input
     if args["template"]:
@@ -84,6 +88,11 @@ if __name__ == '__main__':
             message("Warning: --size ignored; size is set to ~1000 bp templates.")
         v.mode = "snip"
         v.region_size = 500
+
+    elif args["sanger"]:
+      v.mode = "sanger"
+      if (v.amplicon_lower < 50 or 500 < v.amplicon_upper):
+          message("Warning: region size should be 50-500 for sanger sequencing.")
 
     for variant in v.variant_iterator():
         variant.out()
