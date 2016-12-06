@@ -61,4 +61,4 @@ def resolve_reference_genome(loc):
             return reference_location
         else:
             with indent(4):
-                puts_err(colored.red("\nGenome does not exist\n"))
+                exit(puts_err(colored.red("\nGenome '%s' does not exist\n" % loc)))
