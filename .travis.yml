@@ -4,7 +4,7 @@ python:
 notifications:
   slack: elegans:a2SjpI50s67LmdQ0tzsxjFKe
 cache: 
-  - pip
+  pip: true
   directories:
     - "~/.genome/"
  
