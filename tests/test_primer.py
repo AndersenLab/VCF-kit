@@ -2,7 +2,7 @@ from vcfkit import primer, genome
 from subprocess import Popen, PIPE
 import hashlib
 from tests.test_utilities import Capturing
-
+import os
 
 def test_template():
     if not os.path.exists(os.path.expanduser("~/.genome/WBcel235/WBcel235.fa.gz")):
