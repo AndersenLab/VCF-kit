@@ -7,7 +7,7 @@ from copy import copy
 import os
 import numpy as np
 from cyvcf2 import VCFReader
-from utils.primer3 import primer3
+from vcfkit.utils.primer3 import primer3
 from subprocess import Popen, PIPE, check_output
 from reference import resolve_reference_genome
 np.set_printoptions(threshold=np.nan)

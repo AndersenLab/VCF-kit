@@ -37,8 +37,7 @@ debug = None
 if len(sys.argv) == 1:
     debug = ['primer', "--ref=WBcel235", "test.vcf.gz"]
 
-
-if __name__ == '__main__':
+def main(debug=None):
     args = docopt(__doc__,
                   argv=debug,
                   options_first=False)
@@ -102,4 +101,6 @@ if __name__ == '__main__':
     for variant in v.variant_iterator():
         variant.out()
 
+if __name__ == '__main__':
+    main()
 
