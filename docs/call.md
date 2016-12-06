@@ -1,5 +1,6 @@
 # Overview
 
+The `call` command can be used to compare variants identified from Sanger sequencing with those present within a VCF.
 
 ### call
 
