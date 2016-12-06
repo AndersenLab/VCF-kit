@@ -2,7 +2,6 @@
 """
 usage:
     vk call <seq> --ref=<reference> [--all-sites --vcf-targets <vcf>]
-    vk call alignments <seq>  [--ref=<reference>]
 
 options:
     -h --help                   Show this screen.
@@ -35,8 +34,8 @@ def seq_type(filename):
         extension = 'fasta'
     elif ext in [".fastq",".fq"]:
         extension = 'fastq'
-    elif ext in [".ab1"]:
-        extension = 'ab1'
+    elif ext in [".ab1", '.abi']:
+        extension = 'abi'
     else:
         raise Exception("Unknown sequence file type: " + filename)
 
@@ -45,13 +44,13 @@ def seq_type(filename):
     return extension
 
 
-def resolve_sample_from_fasta_line(samples, fasta_line):
+def resolve_sample_from_line(samples, line):
     """
         Resolves sample names by splitting fasta line
         on non-word characters.
     """
-    fasta_line = re.split("\W",fasta_line)
-    matched_sample = [x for x in samples if x in fasta_line]
+    line = re.split("\W", line)
+    matched_sample = [x for x in samples if x in line]
     if len(matched_sample) == 1:
         return matched_sample[0]
     return ""
@@ -83,7 +82,7 @@ if __name__ == '__main__':
 
 
     module_path = os.path.split(os.path.realpath(__file__))[0]
-    handle = open(args["<seq>"], "rU")
+    handle = open(args["<seq>"], "rb")
     reference = resolve_reference_genome(args["--ref"])
 
     if args["<vcf>"]:
@@ -106,7 +105,10 @@ if __name__ == '__main__':
     print("\t".join(blast_variant.output_order))
     for record in SeqIO.parse(handle, sequence_file_type):
         # Resolve sample within fasta line
-        sample = resolve_sample_from_fasta_line(v.samples, record.name)
+        if sequence_file_type == 'abi':
+            sample = resolve_sample_from_line(v.samples, handle.name)
+        else:
+            sample = resolve_sample_from_line(v.samples, record.name)
         blast_results = b.blast_call(record)
         classification = ""
         for n, variant in enumerate(blast_results):

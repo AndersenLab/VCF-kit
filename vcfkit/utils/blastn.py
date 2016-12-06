@@ -75,7 +75,7 @@ class blast_variant:
         self.vcf_gt = ""
         self.alignment_start = blast_result["sstart"]
         self.alignment_end = blast_result["send"]
-        self.strand = blast_result["strand"]
+        self.strand = {"plus": "+", "minus": "-"}[blast_result["sstrand"]]
         self.context = context
         self.gaps = gaps
         self.mismatch = mismatch
@@ -128,7 +128,8 @@ class blast:
                               "evalue",
                               "bitscore",
                               "qseq",
-                              "sseq"]
+                              "sseq",
+                              "sstrand"]
         self.output_string = ' '.join(self.output_format)
         self.blastn_query_str = ' '.join(["echo {self.query} | blastn -query - -db={self.db} ",
                              "-outfmt '6 {self.output_string}'",
@@ -204,66 +205,67 @@ class blast:
         if blast_result is None:
             yield None
         else:
-            CHROM = blast_result["sacc"]
-            start = blast_result["sstart"]
-            end = blast_result["send"]
-            ref = blast_result["sseq"]
-            alt = blast_result["qseq"]
-            gaps = blast_result["gaps"]
-            mismatch = blast_result["mismatch"]
+            for bresult in blast_result:
+                CHROM = bresult["sacc"]
+                start = bresult["sstart"]
+                end = bresult["send"]
+                ref = bresult["sseq"]
+                alt = bresult["qseq"]
+                gaps = bresult["gaps"]
+                mismatch = bresult["mismatch"]
 
-            # Compare fasta sites
-            ref_out = ""
-            alt_out = ""
-            len_insertions = 0
-            len_deletions = 0
-            phred_quality = ""
-            phred_quality_window = ""
-            i = 0
-            while i < len(ref)-1:
-                if alt[i+1] == "-":
-                    ref_out = ref[i]
-                    alt_out = alt[i]
-                    while alt[i+1] == "-":
-                        i += 1
-                        ref_out += ref[i]
-                        alt_out += alt[i]
-                    len_deletions += len(alt_out) - 1
-                elif ref[i+1] == "-":
-                    ref_out = ref[i]
-                    alt_out = alt[i]
-                    while ref[i+1] == "-":
-                        i += 1
-                        ref_out += ref[i]
-                        alt_out += alt[i]
-                    len_insertions += len(ref_out) - 1
-                else:
-                    ref_out, alt_out = ref[i], alt[i]
-                
+                # Compare fasta sites
+                ref_out = ""
+                alt_out = ""
+                len_insertions = 0
+                len_deletions = 0
+                phred_quality = ""
+                phred_quality_window = ""
+                i = 0
+                while i < len(ref)-1:
+                    if alt[i+1] == "-":
+                        ref_out = ref[i]
+                        alt_out = alt[i]
+                        while alt[i+1] == "-":
+                            i += 1
+                            ref_out += ref[i]
+                            alt_out += alt[i]
+                        len_deletions += len(alt_out) - 1
+                    elif ref[i+1] == "-":
+                        ref_out = ref[i]
+                        alt_out = alt[i]
+                        while ref[i+1] == "-":
+                            i += 1
+                            ref_out += ref[i]
+                            alt_out += alt[i]
+                        len_insertions += len(ref_out) - 1
+                    else:
+                        ref_out, alt_out = ref[i], alt[i]
+                    
 
-                POS = i - len_insertions
-                context_start = clamp(i-10,0,len(ref))
-                context_end = clamp(i+10,0,len(ref))
-                context = alt[context_start:i] + "[" + alt_out + "]" + alt[i+1:context_end]
-                context = context.replace("-","")
-                index = i + blast_result["qstart"] - len_deletions - len(alt_out)
+                    POS = i - len_insertions
+                    context_start = clamp(i-10,0,len(ref))
+                    context_end = clamp(i+10,0,len(ref))
+                    context = alt[context_start:i] + "[" + alt_out + "]" + alt[i+1:context_end]
+                    context = context.replace("-","")
+                    index = i + bresult["qstart"] - len_deletions - len(alt_out)
 
-                if 'qqual' in blast_result:
-                    window_start = clamp(i-6, 0, len(blast_result["qqual"]))
-                    window_end = clamp(i+7, 0, len(blast_result["qqual"]))
-                    phred_quality_window = fastq_mean([x for x in blast_result["qqual"][window_start:window_end] if x != "NA"])
-                    phred_quality = blast_result["qqual"][i]
+                    if 'qqual' in bresult:
+                        window_start = clamp(i-6, 0, len(bresult["qqual"]))
+                        window_end = clamp(i+7, 0, len(bresult["qqual"]))
+                        phred_quality_window = fastq_mean([x for x in bresult["qqual"][window_start:window_end] if x != "NA"])
+                        phred_quality = bresult["qqual"][i]
 
-                variant_out = blast_variant(blast_result=blast_result,
-                                            POS=POS + start,
-                                            ref_out=ref_out,
-                                            alt_out=alt_out,
-                                            index=index,
-                                            context=context,
-                                            gaps=gaps,
-                                            mismatch=mismatch,
-                                            phred_quality=phred_quality,
-                                            phred_quality_window=phred_quality_window)
-                yield variant_out
-                i += 1
+                    variant_out = blast_variant(blast_result=bresult,
+                                                POS=POS + start,
+                                                ref_out=ref_out,
+                                                alt_out=alt_out,
+                                                index=index,
+                                                context=context,
+                                                gaps=gaps,
+                                                mismatch=mismatch,
+                                                phred_quality=phred_quality,
+                                                phred_quality_window=phred_quality_window)
+                    yield variant_out
+                    i += 1
 
