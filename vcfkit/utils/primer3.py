@@ -98,7 +98,9 @@ class primer3:
         thermo_paths = ["/usr/local/share/primer3_config/",
                         "/usr/local/share/primer3/primer3_config/",
                         "~/.linuxbrew/share/primer3_config/",
-                        "~/.linuxbrew/share/primer3/primer3_config/"]
+                        "~/.linuxbrew/share/primer3/primer3_config/",
+                        "/.linuxbrew/share/primer3_config/",
+                        "/.linuxbrew/share/primer3/primer3_config/"]
         paths = filter(lambda x: os.path.exists(os.path.expanduser(x)), thermo_paths)
         if len(paths) == 0:
             with indent(4):
