@@ -68,16 +68,10 @@ def format_args(args, add_missing_stdin = False):
     if add_missing_stdin:
         pass # Test for vcf
 
-debug = None
-if len(sys.argv) == 1:
-    debug = ['tb','call', "test.vcf.gz"]
-
 def main(debug=None):
-    args = sys.argv
-    args = args[1:]
     args = docopt(__doc__,
                   version='VCF-Toolbox v0.1',
-                  argv=args,
+                  argv=debug,
                   options_first=False)
 
 

@@ -10,7 +10,7 @@ All of the `primer` subcommands require you to specify a reference using `--ref`
 * __--region__ - Restrict primer generation to a specific region.
 * __--samples__ - Output genotypes for a sample or set of samples.
 * __--template__ - The template to use for generating primers.
-* __--size__ - For the `template` command, sets the size of the region output. For `snip`, `indel`, and `sanger`, sets the target amplicon size, specified as a range (e.g. 400-600).
+* __--size__ - For the `template` command, sets the size of the region output, specified as an integer (e.g. 300). For  `sanger`, sets the target amplicon size, specified as a range (e.g. 400-600).
 * __--polymorphic__ - Only outputs variants where there is at least one 0/0 and one 1/1 genotype.
 * __--nprimers__ - Specify the number of primer sets desired for each variant.
 
@@ -83,24 +83,10 @@ Restriction enzymes can be set using the `--enzymes` option as a tab-delimited l
 * `Common` - A common set of restriction enzymes.
 * `HF` - [High fidelity enzymes as denoted by NEB](https://international.neb.com/products/restriction-endonucleases/hf-nicking-master-mix-time-saver-other/high-fidelity-restriction-enzymes).
 
-Lists of restriction enzymes to use can be specified using a comma delimited list:
-
-Specify a group of restriction enzymes to use:
-
 ```
-vk primer snip --enzymes=HF ...
-```
-
-Specify a list of specific restriction enzymes to use:
-
-```
-vk primer snip --enzymes=DraI,BssAI ...
-```
-
-__Examples__
-
-```
-vk primer snip --ref=WBcel235 --enzymes=DraI data/test.vcf.gz
+vk primer snip --ref=WBcel235 --enzymes=DraI data/test.vcf.gz # Specify a single restriction enzyme
+vk primer snip --ref=WBcel235 --enzymes=DraI,BssAI <vcf> # Specify a list by delimiting with a comma
+vk primer snip --ref=WBcel235 --enzymes=HF <vcf> # Specify a group of enzymes; All/Common/HF
 ```
 
 ##### snip-SNP output
@@ -113,6 +99,24 @@ In addition to the common columns listed above, snip-SNP output includes the fol
 * __restriction_enzyme__ - The restriction enzyme to use.
 * __restriction_site__ - The sequence/motif used by the restriction enzyme
 * __restriction_site_length__ - Length of the restriction site
+
+__Examples__
+
+```
+vk primer snip --ref=WBcel235 data/test.vcf.gz
+```
+
+The table has been formatted for easier reading. Normal output is tab-seperated. 
+
+```
+ CHROM | POS     | region            | REF | ALT | template_sample | variant_count | ref_sites           | alt_sites                   | restriction_enzyme | restriction_site | restriction_site_length | primer_left          | primer_right         | melting_temperature | amplicon_length | amplicon_region   | amplicon_sequence | 0/0 | 1-Jan | polymorphic |
+-------|---------|-------------------|-----|-----|-----------------|---------------|---------------------|-----------------------------|--------------------|------------------|-------------------------|----------------------|----------------------|---------------------|-----------------|-------------------|-------------------|-----|-------|-------------|
+ I     | 1198228 | I:1197728-1198727 | G   | A   | ALT             | 1             | 93,283:93,190,471   | 93:93,661                   | NdeI               | CATATG           | 6                       | gtattcagtgggcaagcagc | GGATTAGGCCACCATCCGAG | 59.547,59.965       | 754             | I:1197943-1198697 | gtatt…            |     |       | FALSE       |
+ I     | 1487691 | I:1487191-1488190 | A   | C   | ALT             | 1             | 548,654:548,106,100 | 356,548,654:356,192,106,100 | BsuRI              | GGCC             | 4                       | TCAAAGCTGTTTTTGGCGGG | CTTCCCGACAACTTTGCTGC | 59.896,60.04        | 754             | I:1487335-1488089 | TCAAA…            |     |       | FALSE       |
+ I     | 1487691 | I:1487191-1488190 | A   | C   | ALT             | 1             | 548,654:548,106,100 | 356,548,654:356,192,106,100 | BsnI               | GGCC             | 4                       | TCAAAGCTGTTTTTGGCGGG | CTTCCCGACAACTTTGCTGC | 59.896,60.04        | 754             | I:1487335-1488089 | TCAAA…            |     |       | FALSE       |
+```
+
+__Note__: Amplicon sequences are truncated in the above output.
 
 ## Indels
 

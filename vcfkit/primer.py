@@ -68,35 +68,54 @@ def main(debug=None):
                 if sample not in v.samples + ["REF", "ALT", ]:
                     exit(message(sample + " not found in VCF", "red"))
 
-    v.box_variants = args["--box-variants"]
-    v.amplicon_size = args["--size"]
-    v.amplicon_lower = int(args["--size"].split("-")[0])
-    v.amplicon_upper = int(args["--size"].split("-")[1])
-    v.region_size = (v.amplicon_upper//2) + 100
+    v.box_variants = args["--box-variants"] # Needs to be implemented.
+    #v.amplicon_size = args["--size"]
 
     # Check for std. input
     if args["template"]:
         v.mode = "template"
-        if args['--size'] == '600-800':
-            v.region_size = 300 # Sets region to 600 bp.
-            message("Region size set to 600")
-        else:
-            v.region_size = int(args["--size"])//2
+        if '-' in args['--size']:
+            try:
+                v.region_size = int(args['--size'].split("-")[0])
+                message("Warning: region size set to {s}".format(s=v.region_size))
+            except:
+                exit(message("Error: Invalid --size"))
+        elif str.isdigit(args['--size']):
+            v.region_size = int(args['--size'])
+        v.amplicon_lower = 0
+        v.amplicon_upper = 0
     elif args["indel"]:
-        if args["--size"]:
-            message("Warning: --size ignored; size is set dynamically when genotyping indels.")
+        message("--size ignored; size is set dynamically when genotyping indels.")
         v.mode = "indel"
-    
     elif args["snip"]:
-        if args["--size"]:
-            message("Warning: --size ignored; size is set to ~1000 bp templates.")
+        message("--size ignored; Set to 600-800 bp.")
         v.mode = "snip"
-        v.region_size = 500
+        v.amplicon_lower = 600
+        v.amplicon_upper = 800
+        v.region_size = 500 #x2=1000
 
     elif args["sanger"]:
-      v.mode = "sanger"
-      if (v.amplicon_lower < 50 or 500 < v.amplicon_upper):
-          message("Warning: region size should be 50-500 for sanger sequencing.")
+        v.mode = "sanger"
+        if args['--size'] is None:
+            size = "600-800"
+            message("Warning: --size set to 600-800 for sanger sequencing.")
+        elif str.isdigit(args['--size']):
+            exit(message("Error: You must specify a amplicon --size range for Sanger; e.g. 600-800."))
+        else:
+            size = args['--size']
+        
+        if "-" in size:
+            try:
+                v.amplicon_lower = int(size.split("-")[0])
+                v.amplicon_upper = int(size.split("-")[1])
+            except:
+                exit(message("Error: Invalid --size"))
+        else:
+            v.amplicon_lower = 600
+            v.amplicon_upper = 800
+        v.region_size = (v.amplicon_upper//2) + 100
+        if (v.amplicon_lower < 300 or 800 < v.amplicon_upper):
+            message("Warning: --size range should (probably) be between 300-800 for sanger sequencing.")
 
     for variant in v.variant_iterator():
         variant.out()
