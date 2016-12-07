@@ -29,6 +29,7 @@ These additional columns are output for `snip`, `indel`, and `sanger` options:
 
 * __primer_left__ - Left PCR primer
 * __primer_right__ - Right PCR primer
+* __melting_temperature__ - Melting temperature for the left and right primers (TM).
 * __amplicon_length__ - Sequence of the amplified piece of DNA
 * __amplicon_region__ - Genomic region (Chromsome:Start-End) of the amplified region.
 * __amplicon_sequence__ - Sequence of the amplified region.
