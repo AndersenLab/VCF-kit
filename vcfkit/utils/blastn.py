@@ -31,6 +31,7 @@ class blast_variant:
     """
     output_order = ["CHROM",
                     "POS",
+                    "reference",
                     "REF",
                     "ALT",
                     "seq_gt",
@@ -54,9 +55,11 @@ class blast_variant:
     def __init__(self,
                  blast_result,
                  POS,
-                 ref_out,
-                 alt_out,
+                 reference_seq,
+                 query_seq,
+                 seq_out,
                  index,
+                 reference_index,
                  context,
                  gaps,
                  mismatch,
@@ -68,10 +71,8 @@ class blast_variant:
         posp1 = self.POS + 1
         self.CHROM_POS = "{self.CHROM}:{self.POS}-{posp1}".format(**locals())
         self.classification = None
-        self.REF = ref_out.strip("-")
-        self.ALT = alt_out
-        self.seq_gt = alt_out.strip("-")
-        self.is_variant = (self.REF != self.seq_gt)
+        self.reference = reference_seq[reference_index]
+        self.seq_gt = seq_out.strip("-")
         self.vcf_gt = ""
         self.alignment_start = blast_result["sstart"]
         self.alignment_end = blast_result["send"]
@@ -82,21 +83,20 @@ class blast_variant:
         self.index = index
         self.evalue = blast_result["evalue"]
         self.bitscore = blast_result["bitscore"]
-        if self.REF != self.seq_gt:
-            if len(self.REF) == len(self.seq_gt):
-                self.variant_type = "snp"
-            elif len(self.REF) > len(self.seq_gt):
-                self.variant_type = "deletion"
-            elif len(self.REF) < len(self.seq_gt):
-                self.variant_type = "insertion"
-        else:
-            self.variant_type = ""
         self.phred_quality = phred_quality
         self.phred_quality_window = phred_quality_window
 
-    def classify_variant(self):
-        # Determines whether variant is TP, TN, FP, FN
-        pass
+    def fetch_variant_type(self):
+        if self.REF != self.ALT:
+            if len(self.REF) == len(self.seq_gt):
+                variant_type = "snp"
+            elif len(self.REF) > len(self.seq_gt):
+                variant_type = "deletion"
+            elif len(self.REF) < len(self.seq_gt):
+                variant_type = "insertion"
+        else:
+            variant_type = ""
+        self.variant_type = variant_type
 
     def chrom_pos_allele(self):
         """
@@ -136,11 +136,21 @@ class blast:
                              "-num_alignments {self.num_alignments}",
                              "-word_size {self.word_size}"])
 
+    def fetch_reference_seq(self, chrom, start, end):
+        end += 20
+        fetch_ref_cmd = ["samtools",
+         "faidx",
+         self.db,
+         "{chrom}:{start}-{end}".format(**locals())]
+        resp, err = Popen(fetch_ref_cmd,
+               stdout=PIPE,
+               stderr=PIPE).communicate()
+        return ''.join(resp.splitlines()[1:]).upper()
+
+
     def print_alignment(self, q, start=0, end=None):
         """ 
             Print the alignment with matches
-
-            * [ ] Add qstart/qend; sstart/ssend
         """
         blast_result = self.blast_search(q)
         if end is None:
@@ -214,9 +224,12 @@ class blast:
                 gaps = bresult["gaps"]
                 mismatch = bresult["mismatch"]
 
+                # Retrieve reference sequence
+                reference_seq = self.fetch_reference_seq(CHROM, start, end)
+
                 # Compare fasta sites
                 ref_out = ""
-                alt_out = ""
+                seq_out = ""
                 len_insertions = 0
                 len_deletions = 0
                 phred_quality = ""
@@ -225,30 +238,30 @@ class blast:
                 while i < len(ref)-1:
                     if alt[i+1] == "-":
                         ref_out = ref[i]
-                        alt_out = alt[i]
+                        seq_out = alt[i]
                         while alt[i+1] == "-":
                             i += 1
                             ref_out += ref[i]
-                            alt_out += alt[i]
-                        len_deletions += len(alt_out) - 1
+                            seq_out += alt[i]
+                        len_deletions += len(seq_out) - 1
                     elif ref[i+1] == "-":
                         ref_out = ref[i]
-                        alt_out = alt[i]
+                        seq_out = alt[i]
                         while ref[i+1] == "-":
                             i += 1
                             ref_out += ref[i]
-                            alt_out += alt[i]
+                            seq_out += alt[i]
                         len_insertions += len(ref_out) - 1
                     else:
-                        ref_out, alt_out = ref[i], alt[i]
+                        ref_out, seq_out = ref[i], alt[i]
                     
 
                     POS = i - len_insertions
                     context_start = clamp(i-10,0,len(ref))
                     context_end = clamp(i+10,0,len(ref))
-                    context = alt[context_start:i] + "[" + alt_out + "]" + alt[i+1:context_end]
+                    context = alt[context_start:i] + "[" + seq_out + "]" + alt[i+1:context_end]
                     context = context.replace("-","")
-                    index = i + bresult["qstart"] - len_deletions - len(alt_out)
+                    index = i + bresult["qstart"] - len_deletions - len(seq_out)
 
                     if 'qqual' in bresult:
                         window_start = clamp(i-6, 0, len(bresult["qqual"]))
@@ -258,9 +271,11 @@ class blast:
 
                     variant_out = blast_variant(blast_result=bresult,
                                                 POS=POS + start,
-                                                ref_out=ref_out,
-                                                alt_out=alt_out,
+                                                reference_index=POS,
                                                 index=index,
+                                                seq_out=seq_out,
+                                                query_seq=q,
+                                                reference_seq=reference_seq,
                                                 context=context,
                                                 gaps=gaps,
                                                 mismatch=mismatch,
