@@ -26,6 +26,8 @@ def test_snip():
 
 
 def test_sanger():
+    if not os.path.exists(os.path.expanduser("~/.genome/WBcel235/WBcel235.fa.gz")):
+        genome.main(["genome","ncbi","--ref=WBcel235"])
     with Capturing() as out:
         primer.main(["primer", "sanger", "--ref=WBcel235","--region=I:542216-543215", "data/test.vcf.gz"])
     
