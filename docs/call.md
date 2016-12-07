@@ -6,7 +6,7 @@ The `call` command can be used to compare variants identified from Sanger sequen
 
 VCF-kit first tries to identify the sample from sequences using their filename. Because `ABI/AB1` files can only contain one sequence, you must specify their sample using the filename. To identify the sample, VCF-kit searches for the sample name after splitting the string using the `\W` regular expression. For example:
 
-The following all work if the `DL238` sample is located in your VCF:
+The following Sanger sequence files (in AB1, fa, and fastq format) are all acceptable ways of specifying that the sample from the VCF is `DL238`:
 ```
 DL238.AB1
 DL238.fa
@@ -16,7 +16,7 @@ DL238_20161205.fq.gz
 DL238-20161205.fq.gz
 ```
 
-In the first line, `DL238.AB1` is split into `DL238` and `AB1`. Note that among these split pieces, the name of a sample must match exactly.
+In the first line, `DL238.AB1` is split into `DL238` and `AB1`. Among the split pieces, the name of a sample must match exactly.
 
 The examples below do not work:
 
@@ -59,7 +59,7 @@ Perform variant calling using blast. Useful for validating variants using sanger
 * __&lt;seq&gt;__ - Fasta (fa), Fastq (fq, fastq), or ab1 format, determined by file extension containing sanger reads.
 * __--ref__ - The reference genome used to perform calling.
 * __--all-sites__ - Outputs comparison of every site that aligns within the alignment.
-* __--vcf-targets__ - Only outputs sites present within the VCF.
+* __--vcf-sites__ - Only outputs sites present within the VCF.
 
 ## Output
 
@@ -71,7 +71,7 @@ The following columns are output when using the `call` command:
 * __REF__ - The reference genotype within the VCF. Only listed when a variant is present.
 * __ALT__ - The alternative genotype within the VCF. Only listed when a variant is present.
 * __seq_gt__ - The Sanger genotype for the sample listed.
-* __vcf_gt__ - The VCF genotype for the sample listed.
+* __vcf_gt__ - The VCF genotype for the sample listed. Homozygous calls are listed as a single base.
 * __sample__ - The sample being compared. Must be matched to the Sanger sequence and present within the VCF.
 * __variant_type__ - The type of variant observed as compared to the Sanger sequence: SNV, Insertion, or Deletion.
 * __classification__ - True/False Positive/Negative, assuming the Sanger sequence is correct.
@@ -94,27 +94,27 @@ Shows all calls from Sanger and VCF. Notice the absence of REF/ALT calls below.
 vk call DL238_sanger.AB1 --ref=WBcel235 --all-sites illumina_sequencing.vcf.gz
 ```
 
-| CHROM   |      POS | REF   | ALT   | seq_gt   | vcf_gt   | sample   | variant_type   | classification   | index   |   alignment_start |   alignment_end |   strand | context   | gaps                   |   mismatch |   evalue |   bitscore |   phred_quality |
-|:--------|---------:|:------|:------|:---------|:---------|:---------|:---------------|:-----------------|:--------|------------------:|----------------:|---------:|:----------|:-----------------------|-----------:|---------:|-----------:|----------------:|
-| X       | 14557223 | G     |       |          | G        |          | DL238          |                  |         |               264 |        14556961 | 14557595 | +         | TTATGTTGTT[G]GTTCGCCAG |          6 |        5 |          0 |            1112 |
-| X       | 14557224 | G     |       |          | G        |          | DL238          |                  |         |               265 |        14556961 | 14557595 | +         | TATGTTGTTG[G]TTCGCCAGG |          6 |        5 |          0 |            1112 |
-| X       | 14557225 | T     |       |          | T        |          | DL238          |                  |         |               266 |        14556961 | 14557595 | +         | ATGTTGTTGG[T]TCGCCAGGA |          6 |        5 |          0 |            1112 |
-| X       | 14557226 | T     |       |          | T        |          | DL238          |                  |         |               267 |        14556961 | 14557595 | +         | TGTTGTTGGT[T]CGCCAGGAT |          6 |        5 |          0 |            1112 |
-| X       | 14557227 | C     |       |          | C        |          | DL238          |                  |         |               268 |        14556961 | 14557595 | +         | GTTGTTGGTT[C]GCCAGGATC |          6 |        5 |          0 |            1112 |
-| X       | 14557228 | G     | G     | A        | G        | G        | DL238          | snp              | TN      |               269 |        14556961 | 14557595 | +         | TTGTTGGTTC[G]CCAGGATCG |          6 |        5 |          0 |            1112 |
-| X       | 14557229 | C     |       |          | C        |          | DL238          |                  |         |               270 |        14556961 | 14557595 | +         | TGTTGGTTCG[C]CAGGATCGG |          6 |        5 |          0 |            1112 |
+| CHROM   |      POS | reference   | REF   | ALT   | seq_gt   | vcf_gt   | sample   | variant_type   | classification   |   index |   alignment_start |   alignment_end |
+|:--------|---------:|:------------|:------|:------|:---------|:---------|:---------|:---------------|:-----------------|--------:|------------------:|----------------:|
+| X       | 14557504 | C           |       |       | C        |          | DL238    |                |                  |     545 |          14556961 |        14557595 |
+| X       | 14557505 | T           |       |       | T        |          | DL238    |                |                  |     546 |          14556961 |        14557595 |
+| X       | 14557506 | G           | A     | G     | G        | G        | DL238    | snp            | TP               |     547 |          14556961 |        14557595 |
+| X       | 14557507 | C           |       |       | C        |          | DL238    |                |                  |     548 |          14556961 |        14557595 |
 
 __--vcf-targets__
 
 Only show variants present in the VCF.
 
 ```
-vk call DL238_sanger.AB1 --ref=WBcel235 --vcf-targets illumina_resequencing.vcf.gz
+vk call DL238_sanger.AB1 --ref=WBcel235 --vcf-sites illumina_resequencing.vcf.gz
 ```
 
-| CHROM   |      POS | reference   | REF   | ALT   | seq_gt   | vcf_gt   | sample   | variant_type   | classification   |   index |   alignment_start |   alignment_end | strand   | context                |   gaps |   mismatch |   evalue |   bitscore |
-|:--------|---------:|:------------|:------|:------|:---------|:---------|:---------|:---------------|:-----------------|--------:|------------------:|----------------:|:---------|:-----------------------|-------:|-----------:|---------:|-----------:|
-| X       | 14557228 | G           | G     | A     | G        | G        | DL238    | snp            | TN               |     269 |          14556961 |        14557595 | +        | TTGTTGGTTC[G]CCAGGATCG |      6 |          5 |        0 |       1112 |
-| X       | 14557388 | T           | T     | C     | T        | T        | DL238    | snp            | TN               |     429 |          14556961 |        14557595 | +        | ATTCGCTGGG[T]CCGGCCTCC |      6 |          5 |        0 |       1112 |
-| X       | 14557506 | G           | A     | G     | G        | G        | DL238    | snp            | TP               |     547 |          14556961 |        14557595 | +        | TATACTAGCT[G]CATAGACAA |      6 |          5 |        0 |       1112 |
-| X       | 14557521 | T           | T     | A     | T        | T        | DL238    | snp            | TN               |     562 |          14556961 |        14557595 | +        | GACAACTGAC[T]GTGTATGTG |      6 |          5 |        0 |       1112 |
+| CHROM   |      POS | reference   | REF   | ALT   | seq_gt   | vcf_gt   | sample   | variant_type   | classification   |   index |   alignment_start |   alignment_end |
+|:--------|---------:|:------------|:------|:------|:---------|:---------|:---------|:---------------|:-----------------|--------:|------------------:|----------------:|
+| X       | 14557228 | G           | G     | A     | G        | G        | DL238    | snp            | TN               |     269 |          14556961 |        14557595 |
+| X       | 14557388 | T           | T     | C     | T        | T        | DL238    | snp            | TN               |     429 |          14556961 |        14557595 |
+| X       | 14557506 | A           | A     | G     | G        | G        | DL238    | snp            | TP               |     547 |          14556961 |        14557595 |
+| X       | 14557521 | T           | T     | A     | T        | T        | DL238    | snp            | TN               |     562 |          14556961 |        14557595 |
+
+<small>__Note:__ Some columns removed</small>
+

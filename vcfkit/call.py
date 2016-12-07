@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-    vk call <seq> --ref=<reference> [--all-sites --vcf-targets <vcf>]
+    vk call <seq> --ref=<reference> (--all-sites|--vcf-sites) <vcf>
 
 options:
     -h --help                   Show this screen.
@@ -91,9 +91,9 @@ if __name__ == '__main__':
         samples = v.samples
 
 
-    if args["--vcf-targets"] and args["<vcf>"] is None:
+    if args["--vcf-sites"] and args["<vcf>"] is None:
         with indent(4):
-            exit(puts_err(colored.red("\nMust specify <vcf> with --vcf-targets\n")))
+            exit(puts_err(colored.red("\nMust specify <vcf> with --vcf-sites\n")))
 
     # Setup reference for blast call
     b = blast(reference)
@@ -105,9 +105,8 @@ if __name__ == '__main__':
     print("\t".join(blast_variant.output_order))
     for record in SeqIO.parse(handle, sequence_file_type):
         # Resolve sample within fasta line
-        if sequence_file_type == 'abi':
-            sample = resolve_sample_from_line(samples, handle.name)
-        else:
+        sample = resolve_sample_from_line(samples, handle.name)
+        if not sample:
             sample = resolve_sample_from_line(samples, record.name)
         blast_results = b.blast_call(record)
         classification = ""
@@ -124,7 +123,9 @@ if __name__ == '__main__':
                             gt = format_gt(vcf_variant.gt_bases[v.samples.index(sample)])
                             vcf_variants.append([vcf_variant.CHROM,
                                                  vcf_variant.POS,
-                                                 gt])
+                                                 gt,
+                                                 vcf_variant.REF,
+                                                 vcf_variant.ALT])
                             vcf_variant_positions = [x[0:2] for x in vcf_variants]
 
                 chrom_pos =  variant.chrom_pos_allele()[0:2]
@@ -132,6 +133,9 @@ if __name__ == '__main__':
                 if vcf_variant_match:
                     vcf_variant_match = vcf_variant_match[0]
                     variant.vcf_gt = vcf_variant_match[2]
+                    variant.REF = vcf_variant_match[3]
+                    variant.ALT = ','.join(vcf_variant_match[4])
+                    variant.fetch_variant_type()
                     if variant.REF == variant.seq_gt and variant.seq_gt == variant.vcf_gt:
                         variant.classification = "TN"
                     elif variant.REF != variant.seq_gt and variant.seq_gt == variant.vcf_gt:
@@ -141,14 +145,14 @@ if __name__ == '__main__':
                     elif variant.REF != variant.seq_gt and variant.seq_gt != variant.vcf_gt:
                         variant.classification = "FN"
                 else:
-                    if variant.REF != variant.seq_gt:
-                        variant.classification = "FN"
-                    else:
-                        variant.classification = ""
+                    variant.REF = ""
+                    variant.ALT = ""
+                    variant.fetch_variant_type()
+                    variant.classification = ""
 
-                if args["--vcf-targets"] and variant.vcf_gt:
+                if args["--vcf-sites"] and variant.classification != "":
                     output_line = True
-                elif args["--all-sites"]:
+                elif args["--all-sites"] is True:
                     output_line = True
             else:
                 if args["--all-sites"]:
@@ -156,6 +160,10 @@ if __name__ == '__main__':
                 elif variant.is_variant:
                     output_line = True
             if output_line:
+
                 variant.sample = sample
-                variant.description = record.description
+                if record.description:
+                    variant.description = record.description
+                else:
+                    variant.description = os.path.split(handle.name)[1]
                 print '\t'.join([str(variant)])
