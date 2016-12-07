@@ -5,8 +5,6 @@ notifications:
   slack: elegans:a2SjpI50s67LmdQ0tzsxjFKe
 cache: 
   pip: true
-  directories:
-    - ".genome/"
  
 addons:
   apt:
