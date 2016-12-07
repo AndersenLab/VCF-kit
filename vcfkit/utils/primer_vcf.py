@@ -222,6 +222,7 @@ class template:
                      "restriction_site_length",
                      "primer_left",
                      "primer_right",
+                     "melting_temperature",
                      "amplicon_length",
                      "amplicon_region",
                      "amplicon_sequence",
@@ -244,12 +245,15 @@ class template:
                         ref_product_sizes = self.calculate_cuts(amplicon_length, ref_cut_sites)
                         alt_product_sizes = self.calculate_cuts(amplicon_length, alt_cut_sites)
 
-                        # FILTER: If product sizes are less than 75, ignore.
+                        # FILTER: If product sizes are less than 25, ignore.
                         product_sizes = ref_product_sizes + alt_product_sizes
                         if any([x < 25 for x in product_sizes]):
                             break
 
-                        # Cleanup cut sites / product sites
+                        # FILTER: Remove sites where the number of restriction sites does not change.
+                        if len(ref_cut_sites) == len(alt_cut_sites):
+                            break
+
                         ref_cut_sites = ','.join(map(str, ref_cut_sites))
                         ref_product_sizes = ','.join(map(str, ref_product_sizes))
                         alt_cut_sites = ','.join(map(str, alt_cut_sites))
@@ -267,6 +271,7 @@ class template:
                                              rflp.size,
                                              primer_group.primer_left,
                                              primer_group.primer_right,
+                                             primer_group.primer_tm,
                                              primer_group.amplicon_length,
                                              primer_group.amplicon_region,
                                              primer_group.amplicon,
@@ -282,6 +287,7 @@ class template:
                      "ALT_product_size",
                      "primer_left",
                      "primer_right",
+                     "melting_temperature",
                      "amplicon_length_ref",
                      "amplicon_length_alt",
                      "amplicon_region",
@@ -299,6 +305,7 @@ class template:
                                    self.indel_type,
                                    primer_group.primer_left,
                                    primer_group.primer_right,
+                                   primer_group.primer_tm,
                                    primer_group.amplicon_length,
                                    primer_group.amplicon_length + self.indel_size,
                                    primer_group.amplicon_region,
@@ -313,6 +320,7 @@ class template:
                      "variant_distance",
                      "primer_left",
                      "primer_right",
+                     "melting_temperature",
                      "amplicon_length",
                      "amplicon_region",
                      "amplicon_sequence",
@@ -328,6 +336,7 @@ class template:
                                    self.POS - amp_start,
                                    primer_group.primer_left,
                                    primer_group.primer_right,
+                                   primer_group.primer_tm,
                                    primer_group.amplicon_length,
                                    primer_group.amplicon_region,
                                    primer_group.amplicon,
