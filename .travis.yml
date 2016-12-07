@@ -6,7 +6,7 @@ notifications:
 cache: 
   pip: true
   directories:
-    - "~/.genome/"
+    - ".genome/"
  
 addons:
   apt:
