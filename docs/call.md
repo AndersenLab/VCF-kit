@@ -86,9 +86,12 @@ The following columns are output when using the `call` command:
 
 ## Examples
 
+<small>__Note:__ Some columns removed from examples for conciseness.</small>
+
 __--all-sites__
 
-Shows all calls from Sanger and VCF. Notice the absence of REF/ALT calls below.
+Shows all calls from Sanger and VCF. Will output every position that was aligned to reference from Sanger sequence and corresponding VCF calls.
+Notice the absence of REF/ALT for sites not called in the VCF below.
 
 ```
 vk call DL238_sanger.AB1 --ref=WBcel235 --all-sites illumina_sequencing.vcf.gz
@@ -115,6 +118,4 @@ vk call DL238_sanger.AB1 --ref=WBcel235 --vcf-sites illumina_resequencing.vcf.gz
 | X       | 14557388 | T           | T     | C     | T        | T        | DL238    | snp            | TN               |     429 |          14556961 |        14557595 |
 | X       | 14557506 | A           | A     | G     | G        | G        | DL238    | snp            | TP               |     547 |          14556961 |        14557595 |
 | X       | 14557521 | T           | T     | A     | T        | T        | DL238    | snp            | TN               |     562 |          14556961 |        14557595 |
-
-<small>__Note:__ Some columns removed</small>
 
