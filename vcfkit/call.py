@@ -72,7 +72,7 @@ debug = None
 if len(sys.argv) == 1:
     debug = ['tb','call', "test.vcf.gz"]
 
-if __name__ == '__main__':
+def main(debug=None):
     args = sys.argv
     args = args[1:]
     args = docopt(__doc__,
@@ -167,3 +167,6 @@ if __name__ == '__main__':
                 else:
                     variant.description = os.path.split(handle.name)[1]
                 print '\t'.join([str(variant)])
+
+if __name__ == '__main__':
+    main()
