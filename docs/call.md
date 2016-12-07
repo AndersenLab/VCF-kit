@@ -67,8 +67,9 @@ The following columns are output when using the `call` command:
 
 * __CHROM__ - chromosome
 * __POS__ - position
-* __REF__ - The alternative genotype within the VCF.
-* __ALT__ - The reference genotype within the VCF.
+* __reference__ - The base at the genomic position within the reference genome. Should always be identical to `REF`, when `REF` is listed.
+* __REF__ - The reference genotype within the VCF. Only listed when a variant is present.
+* __ALT__ - The alternative genotype within the VCF. Only listed when a variant is present.
 * __seq_gt__ - The Sanger genotype for the sample listed.
 * __vcf_gt__ - The VCF genotype for the sample listed.
 * __sample__ - The sample being compared. Must be matched to the Sanger sequence and present within the VCF.
@@ -85,30 +86,35 @@ The following columns are output when using the `call` command:
 
 ## Examples
 
+__--all-sites__
+
+Shows all calls from Sanger and VCF. Notice the absence of REF/ALT calls below.
+
 ```
 vk call DL238_sanger.AB1 --ref=WBcel235 --all-sites illumina_sequencing.vcf.gz
 ```
 
-| CHROM   |      POS | REF   | ALT   | seq_gt   | vcf_gt   | sample   | variant_type   | classification   |   index |   alignment_start |   alignment_end | strand   | context           |   gaps |   mismatch |   evalue |   bitscore |
-|:--------|---------:|:------|:------|:---------|:---------|:---------|:---------------|:-----------------|--------:|------------------:|----------------:|:---------|:------------------|-------:|-----------:|---------:|-----------:|
-| X       | 14556961 | A     | None  | A        |          | DL238    |                |                  |       3 |          14556961 |        14557595 | +        | [A]TTCACTTTT      |      6 |          5 |        0 |       1112 |
-| X       | 14556962 | T     | None  | T        |          | DL238    |                |                  |       4 |          14556961 |        14557595 | +        | A[T]TCACTTTTA     |      6 |          5 |        0 |       1112 |
-| X       | 14556963 | T     | None  | TC       |          | DL238    | insertion      | FN               |       5 |          14556961 |        14557595 | +        | ATT[TC]ACTTTTATT  |      6 |          5 |        0 |       1112 |
-| X       | 14556964 | A     | None  | A        |          | DL238    |                |                  |       7 |          14556961 |        14557595 | +        | ATTC[A]CTTTTATTC  |      6 |          5 |        0 |       1112 |
-| X       | 14556965 | C     | None  | C        |          | DL238    |                |                  |       8 |          14556961 |        14557595 | +        | ATTCA[C]TTTTATTCT |      6 |          5 |        0 |       1112 |                                                                                                                 |
+| CHROM   |      POS | REF   | ALT   | seq_gt   | vcf_gt   | sample   | variant_type   | classification   | index   |   alignment_start |   alignment_end |   strand | context   | gaps                   |   mismatch |   evalue |   bitscore |   phred_quality |
+|:--------|---------:|:------|:------|:---------|:---------|:---------|:---------------|:-----------------|:--------|------------------:|----------------:|---------:|:----------|:-----------------------|-----------:|---------:|-----------:|----------------:|
+| X       | 14557223 | G     |       |          | G        |          | DL238          |                  |         |               264 |        14556961 | 14557595 | +         | TTATGTTGTT[G]GTTCGCCAG |          6 |        5 |          0 |            1112 |
+| X       | 14557224 | G     |       |          | G        |          | DL238          |                  |         |               265 |        14556961 | 14557595 | +         | TATGTTGTTG[G]TTCGCCAGG |          6 |        5 |          0 |            1112 |
+| X       | 14557225 | T     |       |          | T        |          | DL238          |                  |         |               266 |        14556961 | 14557595 | +         | ATGTTGTTGG[T]TCGCCAGGA |          6 |        5 |          0 |            1112 |
+| X       | 14557226 | T     |       |          | T        |          | DL238          |                  |         |               267 |        14556961 | 14557595 | +         | TGTTGTTGGT[T]CGCCAGGAT |          6 |        5 |          0 |            1112 |
+| X       | 14557227 | C     |       |          | C        |          | DL238          |                  |         |               268 |        14556961 | 14557595 | +         | GTTGTTGGTT[C]GCCAGGATC |          6 |        5 |          0 |            1112 |
+| X       | 14557228 | G     | G     | A        | G        | G        | DL238          | snp              | TN      |               269 |        14556961 | 14557595 | +         | TTGTTGGTTC[G]CCAGGATCG |          6 |        5 |          0 |            1112 |
+| X       | 14557229 | C     |       |          | C        |          | DL238          |                  |         |               270 |        14556961 | 14557595 | +         | TGTTGGTTCG[C]CAGGATCGG |          6 |        5 |          0 |            1112 |
+
+__--vcf-targets__
+
+Only show variants present in the VCF.
 
 ```
-CHROM   POS REF ALT seq_gt  vcf_gt  sample  variant_type    classification  index   alignment_start alignment_end   strand  context gaps    mismatch    evalue  bitscore    phred_quality   phred_quality_window    description
-X   14556963    T   None    TC      DL238   insertion   FN  5   14556961    14557595    +   ATT[TC]ACTTTTATT    6   5   0.0 1112
-X   14556984    AA  None    A       DL238   deletion    FN  25  14556961    14557595    +   TTTTTAGGAA[A]TTGCAAGT   6   5   0.0 1112
-X   14556989    CA  None    C       DL238   deletion    FN  29  14556961    14557595    +   AGGAATTGC[C]AAGTCTTAC   6   5   0.0 1112
-X   14557228    G   None    G   G   DL238       TN  269 14556961    14557595    +   TTGTTGGTTC[G]CCAGGATCG  6   5   0.0 1112
-X   14557388    T   None    T   T   DL238       TN  429 14556961    14557595    +   ATTCGCTGGG[T]CCGGCCTCC  6   5   0.0 1112
-X   14557506    A   None    G   G   DL238   snp TP  547 14556961    14557595    +   TATACTAGCT[G]CATAGACAA  6   5   0.0 1112
-X   14557521    T   None    T   T   DL238       TN  562 14556961    14557595    +   GACAACTGAC[T]GTGTATGTG  6   5   0.0 1112
-X   14557572    T   None    AA      DL238   insertion   FN  613 14556961    14557595    +   ATTGATCTCA[AA]GAAAAAATA 6   5   0.0 1112
-X   14557576    C   None    A       DL238   snp FN  618 14556961    14557595    +   ATCTCAAGAA[A]AAATAACCG  6   5   0.0 1112
-X   14557578    T   None    AA      DL238   insertion   FN  620 14556961    14557595    +   TCAAGAAAAA[AA]TAACCGCAC 6   5   0.0 1112
-X   14557586    T   None    A       DL238   snp FN  629 14556961    14557595    +   AAATAACCGC[A]CGCTGGAA   6   5   0.0 1112
-X   14557591    TT  None    T       DL238   deletion    FN  632 14556961    14557595    +   ACCGCACGCT[T]GGAA   6   5   0.0 1112
+vk call DL238_sanger.AB1 --ref=WBcel235 --vcf-targets illumina_resequencing.vcf.gz
 ```
+
+| CHROM   |      POS | reference   | REF   | ALT   | seq_gt   | vcf_gt   | sample   | variant_type   | classification   |   index |   alignment_start |   alignment_end | strand   | context                |   gaps |   mismatch |   evalue |   bitscore |
+|:--------|---------:|:------------|:------|:------|:---------|:---------|:---------|:---------------|:-----------------|--------:|------------------:|----------------:|:---------|:-----------------------|-------:|-----------:|---------:|-----------:|
+| X       | 14557228 | G           | G     | A     | G        | G        | DL238    | snp            | TN               |     269 |          14556961 |        14557595 | +        | TTGTTGGTTC[G]CCAGGATCG |      6 |          5 |        0 |       1112 |
+| X       | 14557388 | T           | T     | C     | T        | T        | DL238    | snp            | TN               |     429 |          14556961 |        14557595 | +        | ATTCGCTGGG[T]CCGGCCTCC |      6 |          5 |        0 |       1112 |
+| X       | 14557506 | G           | A     | G     | G        | G        | DL238    | snp            | TP               |     547 |          14556961 |        14557595 | +        | TATACTAGCT[G]CATAGACAA |      6 |          5 |        0 |       1112 |
+| X       | 14557521 | T           | T     | A     | T        | T        | DL238    | snp            | TN               |     562 |          14556961 |        14557595 | +        | GACAACTGAC[T]GTGTATGTG |      6 |          5 |        0 |       1112 |
