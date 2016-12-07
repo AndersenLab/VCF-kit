@@ -55,6 +55,7 @@ class primer_group:
         pright = {k.replace("PRIMER_RIGHT_", ""):v for k,v in primer_values.items() if k.startswith("PRIMER_RIGHT")}
         self.primer_left = seqprimer(pleft, template, reference)
         self.primer_right = seqprimer(pright, template, reference, False)
+        self.primer_tm = "{self.primer_left.TM},{self.primer_right.TM}".format(**locals())
         self.amplicon = template[self.primer_left.START:self.primer_right.END]
         self.amp_start = self.region_start + self.primer_left.START
         self.amp_end = self.region_start + self.primer_right.END
@@ -95,8 +96,10 @@ class primer3:
 
         # Global default
         thermo_paths = ["/usr/local/share/primer3_config/",
-                        "/usr/local/share/primer3/primer3_config/"]
-        paths = filter(lambda x: os.path.exists(x), thermo_paths)
+                        "/usr/local/share/primer3/primer3_config/",
+                        "~/.linuxbrew/share/primer3_config/",
+                        "~/.linuxbrew/share/primer3/primer3_config/"]
+        paths = filter(lambda x: os.path.exists(os.path.expanduser(x)), thermo_paths)
         if len(paths) == 0:
             with indent(4):
                 exit(puts_err(colored.red("\nCannot find thermo path '/primer3_config/\n")))
