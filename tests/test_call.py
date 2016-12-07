@@ -1,4 +1,4 @@
-from vcfkit import call
+from vcfkit import call, genome
 from subprocess import Popen, PIPE
 import hashlib
 from tests.test_utilities import Capturing
