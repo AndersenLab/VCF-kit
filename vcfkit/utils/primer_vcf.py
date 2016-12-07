@@ -75,6 +75,7 @@ class template:
         # Copy variant attributes over
         for i in filter(lambda x: x.startswith("_") is False, dir(variant)):
             setattr(self, i, getattr(variant, i))
+        self.output_samples = vcf.output_samples
         self.reference_file = reference_file
         self.region_start = variant.POS - variant.region_size
         if self.region_start <= 0:
@@ -180,12 +181,19 @@ class template:
             return [length]
 
 
-    def fetch_variant_count(self, region):
+    def fetch_variant_count(self, region, sample_set = None):
         """
             Fetches variant count in a region.
         """
         v = VCFReader(self.filename)
-        return len(list(v(self.region)))
+        sample_indices = [v.samples.index(x) for x in sample_set]
+        vc = 0
+        for i in v(self.region):
+            gt_len = len(set([i.gt_types[x] for x in sample_indices]))
+            if gt_len > 1:
+                vc += 1
+        return vc
+
 
 
     def print_header(self, hout):
@@ -209,7 +217,6 @@ class template:
                self.REF,
                ','.join(self.ALT),
                self.use_template]
-
         homozygous_ref = ','.join(map(str,self.gt_collection[0]))
         homozygous_alt = ','.join(map(str,self.gt_collection[3]))
 
@@ -260,7 +267,7 @@ class template:
                         alt_product_sizes = ','.join(map(str, alt_product_sizes))
 
                         # Fetch variant Count
-                        variant_count = self.fetch_variant_count(primer_group.amplicon_region)
+                        variant_count = self.fetch_variant_count(primer_group.amplicon_region, self.output_samples)
 
                         # out_primers represents variables that are specific to the primer/rflp
                         out_primers = out + [variant_count,
@@ -299,7 +306,7 @@ class template:
             self.print_header(hout)
             for primer_group in self.primers:
                 # Fetch variant Count
-                variant_count = self.fetch_variant_count(primer_group.amplicon_region)
+                variant_count = self.fetch_variant_count(primer_group.amplicon_region, self.output_samples)
                 out_indel = out + [variant_count,
                                    self.indel_size,
                                    self.indel_type,
@@ -331,7 +338,7 @@ class template:
             for primer_group in self.primers:
                 amp_start = self.region_start + primer_group.primer_left.START
                 # Fetch variant Count
-                variant_count = self.fetch_variant_count(primer_group.amplicon_region)
+                variant_count = self.fetch_variant_count(primer_group.amplicon_region, self.output_samples)
                 out_indel = out + [variant_count,
                                    self.POS - amp_start,
                                    primer_group.primer_left,

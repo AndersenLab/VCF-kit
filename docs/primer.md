@@ -27,6 +27,7 @@ Output is in tab-seperated value (TSV) format. The following columns are always 
 
 These additional columns are output for `snip`, `indel`, and `sanger` options:
 
+* __variant_count__ - Number of variable sites within interval __among the samples specified__. Includes missing/heterozygous sites. A high variant count should be avoided. 
 * __primer_left__ - Left PCR primer
 * __primer_right__ - Right PCR primer
 * __melting_temperature__ - Melting temperature for the left and right primers (TM), separated by a comma.
@@ -93,7 +94,6 @@ vk primer snip --ref=WBcel235 --enzymes=HF <vcf> # Specify a group of enzymes; A
 
 In addition to the common columns listed above, snip-SNP output includes the following:
 
-* __variant_count__ - Number of variants within interval
 * __ref_sites__ - Cut Position : Product Sizes for Reference genotype
 * __alt_sites__ - Cut positions : Product Sizes for Alternative genotype
 * __restriction_enzyme__ - The restriction enzyme to use.
