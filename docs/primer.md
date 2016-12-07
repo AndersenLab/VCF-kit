@@ -29,13 +29,41 @@ These additional columns are output for `snip`, `indel`, and `sanger` options:
 
 * __primer_left__ - Left PCR primer
 * __primer_right__ - Right PCR primer
-* __melting_temperature__ - Melting temperature for the left and right primers (TM).
+* __melting_temperature__ - Melting temperature for the left and right primers (TM), separated by a comma.
 * __amplicon_length__ - Sequence of the amplified piece of DNA
 * __amplicon_region__ - Genomic region (Chromsome:Start-End) of the amplified region.
 * __amplicon_sequence__ - Sequence of the amplified region.
 * __0/0__ - Comma-delimited samples with homozygous reference genotypes
 * __1/1__ - Comma-delimited samples with homozygous alternative genotypes
 * __polymorphic__ - True when there is at least one 0/0 and one 1/1 genotype.
+
+## Primer3 Records
+
+The section below describes how primers are generated using Primer3. When __VCF-kit__ generates primers, it creates a primer configuration file in the [Boulder-IO](http://primer3.sourceforge.net/primer3_manual.htm) format. The options are set as follows. 
+
+The options below are always used:
+```
+PRIMER_GC_CLAMP=1
+PRIMER_MAX_SIZE=20
+PRIMER_MIN_SIZE=18
+PRIMER_OPT_SIZE=20
+PRIMER_TASK=pick_pcr_primers
+```
+
+The options below depend on specified options or the type of primers being generated.
+```
+PRIMER_NUM_RETURN=5 # Can be set using -nprimers
+PRIMER_PRODUCT_SIZE_RANGE=600-800 # Can be set for template and sanger options.
+```
+
+```
+PRIMER_THERMODYNAMIC_PARAMETERS_PATH # set to either /usr/local/share/primer3_config/ or /usr/local/share/primer3/primer3_config/
+```
+
+Changes for each variant; The region down- and upstream of the variant:
+```
+SEQUENCE_TEMPLATE
+```
 
 ## Commands
 
