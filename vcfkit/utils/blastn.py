@@ -69,7 +69,7 @@ class blast_variant:
         self.CHROM_POS = "{self.CHROM}:{self.POS}-{posp1}".format(**locals())
         self.classification = None
         self.REF = ref_out.strip("-")
-        self.ALT = None
+        self.ALT = alt_out
         self.seq_gt = alt_out.strip("-")
         self.is_variant = (self.REF != self.seq_gt)
         self.vcf_gt = ""

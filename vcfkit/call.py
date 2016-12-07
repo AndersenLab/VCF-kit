@@ -106,9 +106,9 @@ if __name__ == '__main__':
     for record in SeqIO.parse(handle, sequence_file_type):
         # Resolve sample within fasta line
         if sequence_file_type == 'abi':
-            sample = resolve_sample_from_line(v.samples, handle.name)
+            sample = resolve_sample_from_line(samples, handle.name)
         else:
-            sample = resolve_sample_from_line(v.samples, record.name)
+            sample = resolve_sample_from_line(samples, record.name)
         blast_results = b.blast_call(record)
         classification = ""
         for n, variant in enumerate(blast_results):
@@ -146,9 +146,9 @@ if __name__ == '__main__':
                     else:
                         variant.classification = ""
 
-                if args["--vcf-targets"] and variant.classification != "":
+                if args["--vcf-targets"] and variant.vcf_gt:
                     output_line = True
-                elif args["--all-sites"] is True:
+                elif args["--all-sites"]:
                     output_line = True
             else:
                 if args["--all-sites"]:
