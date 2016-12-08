@@ -38,6 +38,35 @@ These additional columns are output for `snip`, `indel`, and `sanger` options:
 * __1/1__ - Comma-delimited samples with homozygous alternative genotypes
 * __polymorphic__ - True when there is at least one 0/0 and one 1/1 genotype.
 
+Additionally, there are columns specific to the type of primers being generated.
+
+### snip output columns
+
+* __ref_sites__ - Cut Position : Product Sizes for Reference genotype (see example below)
+* __alt_sites__ - Cut positions : Product Sizes for Alternative genotype (see example below)
+* __restriction_enzyme__ - The restriction enzyme to use.
+* __restriction_site__ - The sequence/motif used by the restriction enzyme
+* __restriction_site_length__ - Length of the restriction site
+
+__ref_sites/alt_sites__ are denoted as the following example illustrates:
+
+ref_sites: `183:183,472` - There is one restriction site at position 183; Cutting that site produces two products. One is `183` bp, the other is `472` bp.
+
+The alternative genotypes produce a different set of restriction sites and product sizes:
+
+`183,258:183,75,397` - Cut at `183` and `258`; Product sizes are `183`, `75`, and `397`.
+
+### indel output columns
+
+* __indel_size__ - basepair size of interval
+* __indel_type__ - Deletion or Insertion relative to the reference
+* __REF_product_size__ - PCR product size with homozygous reference genotype
+* __ALT_product_size__ - PCR product size with homozygous alternative genotype
+
+### sanger output columns
+
+__variant_distance__ - Indicates the distance from the start of the amplicon to the variant position. 
+
 ## Primer3 Records
 
 The section below describes how primers are generated using Primer3. When __VCF-kit__ generates primers, it creates a primer configuration file in the [Boulder-IO](http://primer3.sourceforge.net/primer3_manual.htm) format. The options are set as follows. 
@@ -68,11 +97,11 @@ SEQUENCE_TEMPLATE
 
 ## Commands
 
-### Template
+## template
 
 Template can be used to fetch the region surrounding variants. Set the size of the desired region using `--size=<int>`.
 
-### snip-SNP
+## snip
 
 [snip-SNPs](http://www.wormbook.org/wli/wbg16.1p28/) are single-nucleotide polymorphisms that modify a restriction site, resulting in a restriction fragment length polymorphism (RFLP). They are useful because they can be used to determine the genotype of a sample using only PCR and restriction enzymes. VCF-kit takes the context of SNPs and determines whether a snip-SNP is present. Then it generates primers and estimates product sizes with and without the restriction site present. snip-SNP primers can be generated using `vk primer snip`.
 
@@ -89,16 +118,6 @@ vk primer snip --ref=WBcel235 --enzymes=DraI data/test.vcf.gz # Specify a single
 vk primer snip --ref=WBcel235 --enzymes=DraI,BssAI <vcf> # Specify a list by delimiting with a comma
 vk primer snip --ref=WBcel235 --enzymes=HF <vcf> # Specify a group of enzymes; All/Common/HF
 ```
-
-##### snip-SNP output
-
-In addition to the common columns listed above, snip-SNP output includes the following:
-
-* __ref_sites__ - Cut Position : Product Sizes for Reference genotype
-* __alt_sites__ - Cut positions : Product Sizes for Alternative genotype
-* __restriction_enzyme__ - The restriction enzyme to use.
-* __restriction_site__ - The sequence/motif used by the restriction enzyme
-* __restriction_site_length__ - Length of the restriction site
 
 __Examples__
 
@@ -120,20 +139,9 @@ __Note__: Amplicon sequences are truncated in the above output.
 
 ## Indels
 
-##### Indel output
-
-* __indel_size__ - basepair size of interval
-* __indel_type__ - Deletion or Insertion relative to the reference
-* __REF_product_size__ - PCR product size with homozygous reference genotype
-* __ALT_product_size__ - PCR product size with homozygous alternative genotype
-
 ## Sanger
 
 The `sanger` command will generate PCR primers that can be used to amplify a region of interest. The left primer can then also be used to initiate Sanger sequencing. `sanger` can be used to verify both indels and snps.
-
-##### sanger output
-
-__variant_distance__ - Indicates the distance from the start of the amplicon to the variant position. 
 
 !!! tip
 
