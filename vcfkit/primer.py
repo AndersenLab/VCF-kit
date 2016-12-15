@@ -6,8 +6,6 @@ usage:
   vk primer snip     [options] <vcf>
   vk primer indel    [options] <vcf>
 
-Example
-
 options:
   -h --help                   Show this screen.
   --version                   Show version.
@@ -29,6 +27,7 @@ from utils.reference import *
 from utils.fasta import *
 import sys
 from utils import check_program_exists
+
 
 import signal
 signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
