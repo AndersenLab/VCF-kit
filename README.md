@@ -18,18 +18,24 @@ VCF-kit is a command-line based collection of utilities for performing analysis 
 | __primer__ | Generate  primers for variant validation.                                                     |
 | __rename__ | Add a prefix, suffix, or  substitute  a string  in  sample  names.                                |
 | __tajima__ | Calculate Tajima’s  D.                                                                        |
-| __vcf2sql__ | Generate  a tab-separated values  (TSV) and schema  for loading a VCF into  a database.         |
 | __vcf2tsv__ | Convert a VCF to  TSV.                                                                       |
 
 ## Installation
 
 ```
-pip install https://github.com/AndersenLab/vcf-kit/archive/0.0.2.tar.gz
+pip install numpy # You may need to install numpy independently.
+pip install vcfkit
 ```
 
 __Installing Dependencies:__
 
-In addition to python, VCF-kit requires that a number of additional programs be installed. `vk setup` can be used to install these dependencies. `vk setup` requires [homebrew](http://brew.sh/) (or if on linux, [linux-brew](http://linuxbrew.sh/)) to install programs used by VCF-kit. The programs are listed below followed by the versions they have been tested with.
+In addition to python, VCF-kit requires that a number of additional programs be installed. We recommend using [homebrew](http://brew.sh/) to manage dependencies. `vk setup` can be used to install these dependencies. Alternatively, you may use:
+
+```
+brew install bwa samtools bcftools blast muscle
+```
+
+`vk setup` requires [homebrew](http://brew.sh/) (or if on linux, [linux-brew](http://linuxbrew.sh/)) to install programs  used by VCF-kit. The programs are listed below followed by the versions they have been tested with.
 
 * bwa (v 0.7.12)
 * samtools (v 1.3)

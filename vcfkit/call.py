@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 """
 usage:
-    vk call <seq> --ref=<reference> [--all-sites --vcf-targets <vcf>]
-    vk call alignments <seq>  [--ref=<reference>]
+    vk call <seq> --ref=<reference> (--all-sites|--vcf-sites) <vcf>
 
 options:
     -h --help                   Show this screen.
@@ -35,8 +34,8 @@ def seq_type(filename):
         extension = 'fasta'
     elif ext in [".fastq",".fq"]:
         extension = 'fastq'
-    elif ext in [".ab1"]:
-        extension = 'ab1'
+    elif ext in [".ab1", '.abi']:
+        extension = 'abi'
     else:
         raise Exception("Unknown sequence file type: " + filename)
 
@@ -45,13 +44,13 @@ def seq_type(filename):
     return extension
 
 
-def resolve_sample_from_fasta_line(samples, fasta_line):
+def resolve_sample_from_line(samples, line):
     """
         Resolves sample names by splitting fasta line
         on non-word characters.
     """
-    fasta_line = re.split("\W",fasta_line)
-    matched_sample = [x for x in samples if x in fasta_line]
+    line = re.split("\W", line)
+    matched_sample = [x for x in samples if x in line]
     if len(matched_sample) == 1:
         return matched_sample[0]
     return ""
@@ -69,21 +68,15 @@ def format_args(args, add_missing_stdin = False):
     if add_missing_stdin:
         pass # Test for vcf
 
-debug = None
-if len(sys.argv) == 1:
-    debug = ['tb','call', "test.vcf.gz"]
-
-if __name__ == '__main__':
-    args = sys.argv
-    args = args[1:]
+def main(debug=None):
     args = docopt(__doc__,
                   version='VCF-Toolbox v0.1',
-                  argv=args,
+                  argv=debug,
                   options_first=False)
 
 
     module_path = os.path.split(os.path.realpath(__file__))[0]
-    handle = open(args["<seq>"], "rU")
+    handle = open(args["<seq>"], "rb")
     reference = resolve_reference_genome(args["--ref"])
 
     if args["<vcf>"]:
@@ -92,9 +85,9 @@ if __name__ == '__main__':
         samples = v.samples
 
 
-    if args["--vcf-targets"] and args["<vcf>"] is None:
+    if args["--vcf-sites"] and args["<vcf>"] is None:
         with indent(4):
-            exit(puts_err(colored.red("\nMust specify <vcf> with --vcf-targets\n")))
+            exit(puts_err(colored.red("\nMust specify <vcf> with --vcf-sites\n")))
 
     # Setup reference for blast call
     b = blast(reference)
@@ -106,7 +99,9 @@ if __name__ == '__main__':
     print("\t".join(blast_variant.output_order))
     for record in SeqIO.parse(handle, sequence_file_type):
         # Resolve sample within fasta line
-        sample = resolve_sample_from_fasta_line(v.samples, record.name)
+        sample = resolve_sample_from_line(samples, handle.name)
+        if not sample:
+            sample = resolve_sample_from_line(samples, record.name)
         blast_results = b.blast_call(record)
         classification = ""
         for n, variant in enumerate(blast_results):
@@ -122,7 +117,9 @@ if __name__ == '__main__':
                             gt = format_gt(vcf_variant.gt_bases[v.samples.index(sample)])
                             vcf_variants.append([vcf_variant.CHROM,
                                                  vcf_variant.POS,
-                                                 gt])
+                                                 gt,
+                                                 vcf_variant.REF,
+                                                 vcf_variant.ALT])
                             vcf_variant_positions = [x[0:2] for x in vcf_variants]
 
                 chrom_pos =  variant.chrom_pos_allele()[0:2]
@@ -130,6 +127,9 @@ if __name__ == '__main__':
                 if vcf_variant_match:
                     vcf_variant_match = vcf_variant_match[0]
                     variant.vcf_gt = vcf_variant_match[2]
+                    variant.REF = vcf_variant_match[3]
+                    variant.ALT = ','.join(vcf_variant_match[4])
+                    variant.fetch_variant_type()
                     if variant.REF == variant.seq_gt and variant.seq_gt == variant.vcf_gt:
                         variant.classification = "TN"
                     elif variant.REF != variant.seq_gt and variant.seq_gt == variant.vcf_gt:
@@ -139,12 +139,12 @@ if __name__ == '__main__':
                     elif variant.REF != variant.seq_gt and variant.seq_gt != variant.vcf_gt:
                         variant.classification = "FN"
                 else:
-                    if variant.REF != variant.seq_gt:
-                        variant.classification = "FN"
-                    else:
-                        variant.classification = ""
+                    variant.REF = ""
+                    variant.ALT = ""
+                    variant.fetch_variant_type()
+                    variant.classification = ""
 
-                if args["--vcf-targets"] and variant.classification != "":
+                if args["--vcf-sites"] and variant.classification != "":
                     output_line = True
                 elif args["--all-sites"] is True:
                     output_line = True
@@ -154,6 +154,13 @@ if __name__ == '__main__':
                 elif variant.is_variant:
                     output_line = True
             if output_line:
+
                 variant.sample = sample
-                variant.description = record.description
+                if record.description:
+                    variant.description = record.description
+                else:
+                    variant.description = os.path.split(handle.name)[1]
                 print '\t'.join([str(variant)])
+
+if __name__ == '__main__':
+    main()

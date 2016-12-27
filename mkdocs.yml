@@ -12,7 +12,6 @@ pages:
   - primer: 'primer.md'
   - rename: rename.md
   - tajima: tajima.md
-  - vcf2sql: vcf2sql.md
   - vcf2tsv: vcf2tsv.md
 repo_url: https://github.com/Andersenlab/vcf-kit
 site_favicon: favicon.png

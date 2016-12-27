@@ -4,7 +4,9 @@ python:
 notifications:
   slack: elegans:a2SjpI50s67LmdQ0tzsxjFKe
 cache: 
-  - pip
+  pip: true
+  directories:
+    - ".genome/"
  
 addons:
   apt:
@@ -33,7 +35,7 @@ before_install:
   - sudo ln -s /run/shm /dev/shm
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION pytest pytest-cov numpy scipy cython biopython bwa samtools bcftools vcftools
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION pytest pytest-cov numpy scipy cython biopython bwa samtools bcftools vcftools blast primer3=2.3.7
   - pip install coveralls
   - pip install pytest-cov
   - python setup.py develop

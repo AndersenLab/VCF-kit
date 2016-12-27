@@ -17,7 +17,6 @@ commands:
   primer
   rename
   tajima
-  vcf2sql
   vcf2tsv
 
 """
@@ -32,9 +31,9 @@ import vk
 import os
 import signal
 signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
-
-
 command_list = [x.strip() for x in filter(len, __doc__.splitlines()[8:])]
+
+
 
 debug = None
 if len(sys.argv) == 1:

@@ -13,7 +13,8 @@ VCF-kit is open source and is licensed under [the MIT License](https://raw.githu
 VCF-kit can be installed using `pip`:
 
 ```
-pip install https://github.com/AndersenLab/vcf-kit/archive/0.0.2.tar.gz
+pip install numpy # You may need to install numpy independently.
+pip install vcfkit
 ```
 
 __Installing Dependencies:__
