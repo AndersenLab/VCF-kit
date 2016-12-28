@@ -4,7 +4,7 @@
 vk hmm [options] --alt=<alt_sample> <vcf>
 ```
 
-The `vk hmm` uses a hidden-markov-model to call near-isogenic lines (NILs) or recombinant-inbred lines (RILs).
+The `vk hmm` uses a hidden-markov-model to call near-isogenic lines (NILs) or recombinant-inbred lines (RILs). The `hmm` command is designed for use with low-coverage sequence data from RIL or NIL populations and is designed for its ease of use in these cases. However, it is not designed to replace alternatives such as  such as [Impute2](https://mathgen.stats.ox.ac.uk/impute/impute_v2.html) or [Beagle](http://faculty.washington.edu/browning/beagle/b3.html) which can be used in many additional types of analysis..
 
 * `--alt=<alt_sample>` - The name of the alternative sample.
 
@@ -24,6 +24,8 @@ The `vk hmm` command iterates through the VCF, assembles an array of genotypes f
 * `--all-sites` - By default, when using --vcf-out only sites where the `alt_sample` == 1/1 are output. This option can be used to output all sites in a VCF.
 * `--endfill` - When outputting genomic regions, if a parental genotype is assigned at the very beginning or end of a chromosome use 1 or the length of the chromosome, respectively. The endfill option is recommended for near-isogenic lines, and __not__ for recombinant inbred lines.
 * `--infill` - Assume genotypes switch at the end position of the previous block + 1 rather than the next observed genotype. This removes gaps and is useful for aesthetics, but should probably not be used for analysis.
+* `--state` - Probability of ref/alt state, accounting for errors. For example, if --state=0.97, the probability the calls are reference is 97% and 3% of calls will be alt (attributable to errors). 
+* `--transition` - Probability of transition occuring. We set this very low by default because the state probability accounts for some level of error.
 
 ![hmm options](hmm_opts.png)
 <small>__Effect of using `--infill` and `--endfill` options__ - Orange and blue parental haplotypes can extend to the beginning or end of chromosomes using the `--endfill` option whereas regions between adjacent SNVs where haplotypes switch can be filled in with the next haplotype.</small>

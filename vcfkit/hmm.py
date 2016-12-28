@@ -13,6 +13,9 @@ options:
   --all-sites                 Output all sites with --vcf-out; Default is sites where alt_sample == 1/1.
   --endfill                   Don't leave gaps at the ends of chromosomes.
   --infill                    Fill in missing portions.
+  --state=<state>             State probability [default: 0.97].
+  --transition=<transition>   Transition probability [default: 1e-9]
+
 
 """
 from docopt import docopt
@@ -32,28 +35,31 @@ from itertools import groupby
 from operator import itemgetter
 from intervaltree import IntervalTree
 from vk import __version__
+from clint.textui import colored, puts_err, indent
 signal(SIGPIPE, SIG_DFL)
 
-# Setup hmm
-model = Model(name="RIL_GT")
 
-ref = State(DiscreteDistribution({'ref': 0.97, 'alt': 0.03}), name='ref')
-alt = State(DiscreteDistribution({'ref': 0.03, 'alt': 0.97}), name='alt')
+def generate_model(state, transition):
+    # Setup hmm
+    model = Model(name="RIL_GT")
 
-model.add_transition(model.start, ref, 0.5)
-model.add_transition(model.start, alt, 0.5)
+    ref = State(DiscreteDistribution({'ref': state, 'alt': 1-state}), name='ref')
+    alt = State(DiscreteDistribution({'ref': 1-state, 'alt': state}), name='alt')
 
-# Transition matrix, with 0.05 subtracted from each probability to add to
-# the probability of exiting the hmm
-model.add_transition(ref, ref, 0.999999799)
-model.add_transition(ref, alt, 0.0000000001)
-model.add_transition(alt, ref, 0.0000000001)
-model.add_transition(alt, alt, 0.999999799)
+    model.add_transition(model.start, ref, 0.5)
+    model.add_transition(model.start, alt, 0.5)
 
-model.add_transition(ref, model.end, 0.01)
-model.add_transition(alt, model.end, 0.01)
 
-model.bake(verbose=False)
+    model.add_transition(ref, ref, 1-transition)
+    model.add_transition(ref, alt, transition)
+    model.add_transition(alt, ref, transition)
+    model.add_transition(alt, alt, 1-transition)
+
+    model.add_transition(ref, model.end, 0.5)
+    model.add_transition(alt, model.end, 0.5)
+
+    model.bake(verbose=False)
+    return model
 
 to_model = {0: 'ref', 1: 'alt'}
 to_gt = {0: '0/0', 1: '1/1'}
@@ -138,6 +144,7 @@ if __name__ == '__main__':
         sample_gt = zip(chromosome, positions, column)
         sample_gt = [x for x in sample_gt if x[2] in [0, 1]]
         sequence = [to_model[x[2]] for x in sample_gt]
+        model = generate_model(float(args['--state']), float(args['--transition']))
         if sequence:
             results = model.forward_backward(sequence)[1]
             if model.states[0].name == 'ref':
