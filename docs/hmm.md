@@ -4,7 +4,7 @@
 vk hmm [options] --alt=<alt_sample> <vcf>
 ```
 
-The `vk hmm` uses a hidden-markov-model to call near-isogenic lines (NILs) or recombinant-inbred lines (RILs). The `hmm` command is designed for use with low-coverage sequence data from RIL or NIL populations and is designed for its ease of use in these cases. However, it is not designed to replace alternatives such as  such as [Impute2](https://mathgen.stats.ox.ac.uk/impute/impute_v2.html) or [Beagle](http://faculty.washington.edu/browning/beagle/b3.html) which can be used in many additional types of analysis.
+The `vk hmm` uses a hidden-markov-model to call near-isogenic lines (NILs) or recombinant-inbred lines (RILs). The `hmm` command is designed for use with low-coverage sequence data from RIL or NIL populations and is designed for its ease of use in these cases. The HMM is designed to detect parental haplotypes while ignoring sequencing errors. However, it is not as sophisticated as alternatives such as  such as [Impute2](https://mathgen.stats.ox.ac.uk/impute/impute_v2.html) or [Beagle](http://faculty.washington.edu/browning/beagle/b3.html) which can also be used to perform this type of analysis, although you may need to modify your VCF or generate input files. 
 
 * `--alt=<alt_sample>` - The name of the alternative sample.
 
