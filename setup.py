@@ -15,10 +15,10 @@ def gen_data_files(*dirs):
     return results
 
 
-setup(name='vcfkit',
+setup(name='VCF-kit',
       version=__version__,
       packages=['vcfkit','vcfkit.utils'],
-      description='Tools for working with VCF files',
+      description='Assorted utilities for the variant call format',
       url='https://github.com/AndersenLab/VCF-kit',
       author='Daniel E. Cook',
       author_email='danielecook@gmail.com',

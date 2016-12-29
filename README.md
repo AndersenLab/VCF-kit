@@ -22,6 +22,18 @@ VCF-kit is a command-line based collection of utilities for performing analysis 
 
 ## Installation
 
+You may need to install matplotlib. On linux this can be done with:
+
+```
+sudo apt-get build-dep python-matplotlib
+```
+
+On OSX it can be installed using:
+
+```
+pip install matplotlib
+```
+
 ```
 pip install numpy # You may need to install numpy independently.
 pip install vcfkit
