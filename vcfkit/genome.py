@@ -158,7 +158,11 @@ def main(debug=None):
         if args["wormbase"]:
             asm_url = "ftp://ftp.wormbase.org/pub/wormbase/releases/{asm_name}/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.{asm_name}.genomic.fa.gz"
             reference_download = asm_url.format(asm_name=args["--ref"])
-            urllib.urlretrieve(reference_download, ref_filename)
+            comm = "curl {reference_download} > {ref_filename}".format(**locals())
+            print(comm)
+            call(comm, shell = True)
+            # Unzip wormbase genome
+            call(["gunzip", "-f", ref_filename])
         else:
             # NCBI
             with open(genome_db, "r") as f:
@@ -216,6 +220,7 @@ def main(debug=None):
             comm_bgzip = "bgzip -fc {ref_filename} > {ref_out}"
             comm_bgzip = comm_bgzip.format(ref_filename=ref_filename.replace(".fa.gz", ".fa"),
                                            ref_out=ref_filename.replace(".tmp", ""))
+            print(comm_bgzip)
             call(comm_bgzip, shell=True)
             ref_filename = ref_filename.replace(".tmp", "")
         else:
