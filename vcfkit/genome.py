@@ -258,8 +258,11 @@ def main(debug=None):
             os.remove(ref_filename.replace(".fa.gz", ".tmp.fa.gz"))
 
         # Remove temporary files
-        os.remove(ref_filename.replace(".fa.gz", ".tmp.fa.gz"))
-        os.remove(ref_filename.replace(".fa.gz", ".tmp.fa"))
+        try:
+            os.remove(ref_filename.replace(".fa.gz", ".tmp.fa.gz"))
+            os.remove(ref_filename.replace(".fa.gz", ".tmp.fa"))
+        except:
+            pass
 
         # Add error checking here...
 
