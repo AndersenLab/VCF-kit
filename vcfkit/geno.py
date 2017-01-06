@@ -14,6 +14,7 @@ options:
 
 
 """
+from vk import __version__
 from docopt import docopt
 from utils.vcf import *
 from utils.fasta import *
@@ -69,6 +70,7 @@ if __name__ == '__main__':
             line = line.strip()
             if line.startswith("#CHROM"):
                 # Get Sample information and count
+                line = "##VCF-kit(version {v}) command=geno het-polarization\n".format(v = __version__) + line
                 samples = line.split("\t")[9:]
             elif line.startswith("##FORMAT=<ID=GL,"):
                 line = """##FORMAT=<ID=PL,Number=G,Type=Integer,Description="List of Phred-scaled genotype likelihoods">"""
