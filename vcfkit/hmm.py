@@ -102,7 +102,10 @@ if __name__ == '__main__':
     for n, line in enumerate(v):
         if args["--alt"]:
             # Check if gt is 1/1 for alt sample.
-            append_gt = (line.gt_types[v.samples.index(args["--alt"])] == 3)
+            if (args["--alt"] == "ALT"):
+                append_gt = True
+            else:
+                append_gt = (line.gt_types[v.samples.index(args["--alt"])] == 3)
         if args["--ref"]:
             # If a reference sample is used, remove SNVs with the alt genotype as
             # these are likely errors.
