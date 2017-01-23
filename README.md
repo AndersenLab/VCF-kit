@@ -36,7 +36,7 @@ pip install matplotlib
 
 ```
 pip install numpy # You may need to install numpy independently.
-pip install vcfkit
+pip install VCF-kit
 ```
 
 __Installing Dependencies:__
