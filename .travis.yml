@@ -49,6 +49,7 @@ deploy:
       tags: true
       distributions: sdist bdist_wheel
       repo: AndersenLab/VCF-kit
+    skip_upload_docs: true
   - provider: releases
     api_key:
       secure: NPLxEY3ha14iawE9t4xifAGNuEtML5RHJtQji6BEJv2xdxcjeorYQ6at6IwNWxFZI++d45/3nyEJm0ryVUyCJ05xR8YW+ZjT6j59yXSfwow6hn+TFD1JCAL/sJrwd0c8CCer3d6E5TcUU6kF285OFXti2/Ho4XhyWg5QfR2+pJg=
