@@ -89,11 +89,6 @@ if __name__ == '__main__':
         1/1 -> 3
     """
 
-    # Get contig lengths
-    contigs = [x for x in v.raw_header.splitlines() if x.startswith("##contig")]
-    contigs = [re.findall("ID=([^,]+),length=([0-9]+)", x)[0] for x in contigs]
-    contigs = {x: int(v) for x, v in contigs}
-
     gt_list, dp_list, dv_list = [], [], []
     chromosome = []
     positions = []
@@ -194,7 +189,7 @@ if __name__ == '__main__':
                         if args["--endfill"] and interval_n == 0:
                             start = 1
                         if args["--endfill"] and interval_n == interval_set_len - 1:
-                            end = contigs[chrom]
+                            end = v.contigs[chrom]
                         output = [chrom,
                                   start,
                                   end,
