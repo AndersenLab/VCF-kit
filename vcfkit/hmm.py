@@ -217,7 +217,7 @@ if __name__ == '__main__':
                                 "Number": "1"})
         print(v.raw_header.strip())
         for n, line in enumerate(v):
-            output_line = (line.gt_types[v.samples.index(args["--alt"])] == 3) or (args["--alt"] == "ALT")
+            output_line = (args["--alt"] == "ALT") or (line.gt_types[v.samples.index(args["--alt"])] == 3)
             line = variant_line(line, v.samples)
             if output_line:
                 for sample_n, sample in enumerate(v.samples):
