@@ -11,7 +11,7 @@ The `phylo` command can be used to generate dendrograms, tree files, or a fasta 
 
 ## Generate fasta-alignment from variant calls
 
-The `phylo fasta` command generates a fasta file by concatenating all single-nucleotide variants from a VCF for each sample. Missing values are replaced with a `-`. The fasta sequence is constructed in memory - so it can be somewhat resource intensive for larger files.
+The `phylo fasta` command generates a fasta file by concatenating all single-nucleotide variants from a VCF for each sample. The first allele of each genotype is used (for example, for diploid organisms with an A/T genotype, A would always be used). Heterozygous calls should be avoided when using the `phylo` command. Missing values are replaced with a `-`. The fasta sequence is constructed in memory - so it can be somewhat resource intensive for larger files.
 
 ```
 vk phylo fasta <vcf>
