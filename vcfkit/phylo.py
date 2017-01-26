@@ -42,20 +42,13 @@ def main(debug=None):
         """
             Generate an aligned fasta from a VCF file.
         """
-        seqs = {}
         gt_set = np.chararray((0,len(v.samples)))
-        for sample in v.samples:
-            seqs[sample] = []
         for line in v:
             if line.is_snp:
-                non_missing = [x.replace(".", "-") for x in line.gt_bases]
-                sample_gt = zip(v.samples, [x[-1] for x in non_missing])
                 gt_set = np.vstack((gt_set, firstv(line.gt_bases)))
-                for sample, gt in sample_gt:
-                    seqs[sample].append(gt)
-        gt_set = zip(v.samples, np.transpose(gt_set))
+        seqs = zip(v.samples, np.transpose(gt_set))
         if args["fasta"]:
-            for sample, seq in seqs.items():
+            for sample, seq in seqs:
                 print(">" + sample)
                 print(''.join(seq))
 
@@ -69,7 +62,7 @@ def main(debug=None):
             fasta = ""
             with indent(4):
                 puts_err(colored.blue("\nGenerating Fasta\n"))
-            for sample, seq in seqs.items():
+            for sample, seq in seqs:
                 fasta += ">" + sample + "\n" + ''.join(seq) + "\n"
             tree_type = "upgma"  # default is upgma
             if args["nj"]:
