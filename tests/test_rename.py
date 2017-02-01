@@ -22,14 +22,14 @@ def test_rename_suffix():
 
 
 def test_rename_subst():
-    comm = "vk rename --subst N2:TEST --subst WN2001,TEST2 --subst AB1=TEST3 data/test.vcf.gz | bcftools query --list-samples"
+    comm = "vk rename --subst N2:TEST --subst WN2001,TEST2 --subst AB1=TEST3 test_data/test.vcf.gz | bcftools query --list-samples"
     rename.main(["rename","--subst","N2:TEST","--subst","WN2001,TEST2","--subst","AB1=TEST3", "test_data/test.vcf.gz"])
     out, err = Popen(comm, stdout=PIPE, stderr=PIPE, shell=True).communicate()
     assert sum([x.startswith("TEST") for x in out.splitlines()]) == 3
 
 
 def test_rename_combo():    
-    comm = "vk rename --prefix PREFIX_ --suffix _SUFFIX --subst N2:TEST --subst WN2001,TEST2 --subst AB1=TEST3 data/test.vcf.gz | bcftools query --list-samples"
+    comm = "vk rename --prefix PREFIX_ --suffix _SUFFIX --subst N2:TEST --subst WN2001,TEST2 --subst AB1=TEST3 test_data/test.vcf.gz | bcftools query --list-samples"
     rename.main(["rename","--prefix","PREFIX_","--suffix","_SUFFIX","--subst","N2:TEST","--subst","WN2001,TEST2","--subst","AB1=TEST3","test_data/test.vcf.gz"])
     out, err = Popen(comm, stdout=PIPE, stderr=PIPE, shell=True).communicate()
     assert all([x.startswith("PREFIX_") for x in out.splitlines()])
