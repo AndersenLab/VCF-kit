@@ -35,7 +35,7 @@ pip install matplotlib
 ```
 
 You may need to install a few additional dependencies:
-
+ 
 ```
 pip install yahmm
 pip install numpy
