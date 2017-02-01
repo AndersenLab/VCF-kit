@@ -43,9 +43,11 @@ def main(debug=None):
             Generate an aligned fasta from a VCF file.
         """
         gt_set = np.chararray((0,len(v.samples)))
+        gt_set = []
         for line in v:
             if line.is_snp:
-                gt_set = np.vstack((gt_set, firstv(line.gt_bases)))
+                gt_set.append(firstv(line.gt_bases))
+        gt_set = np.vstack(gt_set)
         seqs = zip(v.samples, np.transpose(gt_set))
         if args["fasta"]:
             for sample, seq in seqs:
