@@ -28,7 +28,6 @@ from utils.fasta import *
 import sys
 from utils import check_program_exists
 
-
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
 

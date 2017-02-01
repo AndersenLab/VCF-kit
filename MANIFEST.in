@@ -1,2 +1,6 @@
 include requirements.txt
+include static/*
+include static/jsphylosvg-1.55/*
+include static/primer3_config/*
 recursive include static *
+recursive-include static *
