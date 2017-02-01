@@ -81,8 +81,9 @@ def main(debug=None):
                 from jinja2 import Template
                 import webbrowser
                 import tempfile
-                prefix = os.path.dirname(sys.modules['vcfkit'].__file__)  +"/static"
-                tree_template = Template(get_data('vk', 'static/tree.html'))
+                prefix = os.path.dirname(os.path.abspath(sys.modules['vcfkit'].__file__)) + "/static"
+                template = open(prefix + "/tree.html",'r').read()
+                tree_template = Template(template)
                 html_out = tempfile.NamedTemporaryFile(suffix=".html", delete=False)
                 with html_out as f:
                     tree = tree.replace("\n", "")
