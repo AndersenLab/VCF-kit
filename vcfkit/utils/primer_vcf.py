@@ -11,9 +11,8 @@ from vcfkit.utils.primer3 import primer3
 from subprocess import Popen, PIPE, check_output
 from reference import resolve_reference_genome
 np.set_printoptions(threshold=np.nan)
-import signal
-import sys
-signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE, SIG_DFL)
 
 from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
@@ -99,6 +98,8 @@ class template:
             if self.mode == 'indel':
                 max_amplicon_length = max([len(self.ref_seq), len(self.alt_seq)])
                 min_amplicon_length = max_amplicon_length - 200
+                if (min_amplicon_length < 50):
+                    min_amplicon_length = 50
                 p3.PRIMER_PRODUCT_SIZE_RANGE = "{min_amplicon_length}-{max_amplicon_length}".format(**locals())
             elif self.mode == 'sanger':
                 p3.PRIMER_PRODUCT_SIZE_RANGE = "{self.amplicon_lower}-{self.amplicon_upper}".format(**locals())
@@ -290,13 +291,11 @@ class template:
             hout += ["variant_count",
                      "indel_size",
                      "indel_type",
-                     "REF_product_size",
-                     "ALT_product_size",
                      "primer_left",
                      "primer_right",
                      "melting_temperature",
-                     "amplicon_length_ref",
-                     "amplicon_length_alt",
+                     "REF_product_size",
+                     "ALT_product_size",
                      "amplicon_region",
                      "amplicon_sequence",
                      "0/0",
@@ -314,7 +313,7 @@ class template:
                                    primer_group.primer_right,
                                    primer_group.primer_tm,
                                    primer_group.amplicon_length,
-                                   primer_group.amplicon_length + self.indel_size,
+                                   primer_group.amplicon_length - self.indel_size,
                                    primer_group.amplicon_region,
                                    primer_group.amplicon,
                                    homozygous_ref,
@@ -418,7 +417,7 @@ class primer_vcf(cyvcf2):
             if self.mode == 'indel':
                 if variant.is_indel is False:
                     continue
-            elif self.mode =='snip':
+            elif self.mode == 'snip':
                 if variant.is_snp is False:
                     continue
 
@@ -427,10 +426,10 @@ class primer_vcf(cyvcf2):
             # Process Indels
             if nz.is_indel:
                 # Size is dynamically set for indels
-                nz.indel_size =  len(nz.REF) - len(nz.ALT[0])
-                nz.indel_size_abs =  abs(len(nz.REF) - len(nz.ALT[0]))
+                nz.indel_size = len(nz.REF) - len(nz.ALT[0])
+                nz.indel_size_abs = abs(len(nz.ALT[0]) - len(nz.REF))
                 # Indel type:
-                if len(nz.REF) > len(nz.ALT[0]):
+                if nz.indel_size > 0:
                     nz.indel_type = "deletion"
                 else:
                     nz.indel_type = "insertion"
@@ -438,9 +437,9 @@ class primer_vcf(cyvcf2):
             if self.mode == 'snip':
                 nz.region_size = 500
             elif self.mode == 'indel':
-                nz.region_size = nz.indel_size*2 + 150
-                if nz.indel_size <= 25:
-                    continue   
+                nz.region_size = nz.indel_size * 2 + 150
+                if nz.indel_size_abs <= 25:
+                    continue
             elif self.mode in ['sanger', 'template']:
                 nz.region_size = self.region_size
             nz.use_template = self.use_template
@@ -466,8 +465,9 @@ class primer_vcf(cyvcf2):
             if self.use_polymorphic and not is_polymorphic:
                 continue
 
-            nz.amplicon_lower = self.amplicon_lower
-            nz.amplicon_upper = self.amplicon_upper
+            if self.mode == 'sanger':
+                nz.amplicon_lower = self.amplicon_lower
+                nz.amplicon_upper = self.amplicon_upper
 
             t = template(nz, self.reference_file, self, self.use_template, self.nprimers)
             yield t

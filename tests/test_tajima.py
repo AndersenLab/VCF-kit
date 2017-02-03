@@ -11,7 +11,7 @@ def nearly_equal(a,b,sig_fig=5):
 
 def test_tajima():
     with Capturing() as out:
-        tajima.main(["tajima","--no-header","100000", "1000", "data/test.vcf.gz"])
+        tajima.main(["tajima","--no-header","100000", "1000", "test_data/test.vcf.gz"])
     assert out[0] == 'I\t6000\t106000\t2\t1\t-0.740993868265'
     assert out[-1] == 'X\t17567000\t17667000\t2\t1\t-0.740993868265'
 
@@ -20,12 +20,12 @@ def test_compare_vcftools():
     """
         Compare the Tajima's D Calculation with vcftools output.
     """
-    comm = ["vcftools", "--TajimaD", "100000", "--gzvcf", "data/test.vcf.gz"]
+    comm = ["vcftools", "--TajimaD", "100000", "--gzvcf", "test_data/test.vcf.gz"]
     out, err = Popen(comm, stdout=PIPE, stderr=PIPE).communicate()
     vcftools_tajima = open("out.Tajima.D", 'r').read().splitlines()
     vcftools_tajima = [x.split("\t")[0:4] for x in vcftools_tajima]
     with Capturing() as out:
-        tajima.main(["tajima","--no-header","100000", "100000", "data/test.vcf.gz"])
+        tajima.main(["tajima","--no-header","100000", "100000", "test_data/test.vcf.gz"])
     vcftools_tajima = dict([(x[0] + ":" + x[1], autoconvert(x[3])) for x in vcftools_tajima if x[3] != "nan"])
     out = [x.split("\t") for x in out]
     vcfkit_tajima = dict([(x[0] + ":" + x[1], autoconvert(x[5])) for x in out])

@@ -46,13 +46,13 @@ deploy:
     password:
       secure: Tf2ZmJgPHpjeO1OEssMlSFsL0XgllD6ZwmVLIJtzZUmyEwYk/NHkPlzW/HEbIBW9HmZkudcZO23vQPxJZm26u7QAdXm2ApVG26ddE49pvuGYM09vNRmCu+n00kQgHhrldZQA6kEb/yM1vmYKLaGqDyqwT5yev3/seaOiHi/fJOU=
     on:
-      branch: release
+      tags: true
       distributions: sdist bdist_wheel
       repo: AndersenLab/VCF-kit
+    skip_upload_docs: true
   - provider: releases
     api_key:
       secure: NPLxEY3ha14iawE9t4xifAGNuEtML5RHJtQji6BEJv2xdxcjeorYQ6at6IwNWxFZI++d45/3nyEJm0ryVUyCJ05xR8YW+ZjT6j59yXSfwow6hn+TFD1JCAL/sJrwd0c8CCer3d6E5TcUU6kF285OFXti2/Ho4XhyWg5QfR2+pJg=
     on:
-      branch: release
       tags: true
       repo: AndersenLab/VCF-kit

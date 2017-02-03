@@ -8,7 +8,7 @@ def test_call_DL238():
     if not os.path.exists(os.path.expanduser("~/.genome/WBcel235/WBcel235.fa.gz")):
         genome.main(["genome","ncbi","--ref=WBcel235"])
     with Capturing() as out:
-        call.main(["call", "data/DL238.ab1", "--ref=WBcel235", "--vcf-sites", "data/DL238.vcf.gz"])
+        call.main(["call", "test_data/DL238.ab1", "--ref=WBcel235", "--vcf-sites", "test_data/DL238.vcf.gz"])
     out = eval(str(out))
     assert len(out) == 5
     out = out[1].split("\t")

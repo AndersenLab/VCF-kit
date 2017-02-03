@@ -28,9 +28,8 @@ from utils.fasta import *
 import sys
 from utils import check_program_exists
 
-
-import signal
-signal.signal(signal.SIGINT, lambda x, y: sys.exit(0))
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE, SIG_DFL)
 
 debug = None
 if len(sys.argv) == 1:

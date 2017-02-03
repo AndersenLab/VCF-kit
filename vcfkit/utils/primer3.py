@@ -9,8 +9,7 @@ from clint.textui import colored, puts_err
 import sys
 import signal
 signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
-
-primer3_config = os.path.split(os.path.dirname(vk.__file__))[0] + "/static/primer3_config/"
+primer3_config =  os.path.dirname(os.path.abspath(sys.modules['vcfkit'].__file__)) + "/static/primer3_config/"
 
 class seqprimer:
     """

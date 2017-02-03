@@ -6,27 +6,27 @@ from tests.test_utilities import Capturing
 
 def test_phylo_fasta():
     with Capturing() as out:
-        phylo.main(["phylo", "fasta", "data/test.vcf.gz"])
+        phylo.main(["phylo", "fasta", "test_data/test.vcf.gz"])
     h = hashlib.sha224(str(out)).hexdigest()
-    assert h == "610ba5d2b533d730b6e9fb3005453d3d94710c9021fa5ca46fb5d7d8"
+    assert h == "81eda4b80e96eed31749e0a28d1acbd345fcd216023d17735978e999"
 
 
 def test_phylo_nj():
     with Capturing() as out:
-        phylo.main(["phylo", "tree", "nj", "data/test.vcf.gz"])
+        phylo.main(["phylo", "tree", "nj", "test_data/test.vcf.gz"])
     h = hashlib.sha224(str(out)).hexdigest()
-    assert h == "6c21e0508729c604d403a29cb40dca810455009fec793a9a99da9927"
+    assert h == "96cdd2d7221bcbea8d86e099fdc1af02594d9dcad4daf8a5f85d0557"
 
 
 def test_phylo_upgma():
     with Capturing() as out:
-        comm = ["phylo", "tree", "upgma", "data/test.vcf.gz"]
+        comm = ["phylo", "tree", "upgma", "test_data/test.vcf.gz"]
         phylo.main(comm)
     h = hashlib.sha224(str(out)).hexdigest()
-    assert h == "cd58f6912c40715ef5b2b1d8a381743454eb42cc6d0ba8a6c847ea83"
+    assert h == "e3ef017c77bca5fd3feef7ed6215a37a5f0bb41101c125b3e493049e"
 
 
 def test_phylo_plot():
-    comm = ["phylo", "tree", "upgma", "--plot", "data/test.vcf.gz"]
+    comm = ["phylo", "tree", "upgma", "--plot", "test_data/test.vcf.gz"]
     out = phylo.main(comm)
     h = hashlib.sha224(str(out)).hexdigest()

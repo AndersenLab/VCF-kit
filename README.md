@@ -34,9 +34,12 @@ On OSX it can be installed using:
 pip install matplotlib
 ```
 
+You may need to install a few additional dependencies:
+ 
 ```
-pip install numpy # You may need to install numpy independently.
-pip install vcfkit
+pip install yahmm
+pip install numpy
+pip install VCF-kit
 ```
 
 __Installing Dependencies:__
