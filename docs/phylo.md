@@ -70,7 +70,12 @@ The `phylo tree` command sends output to stdout  is newick format. Newick format
 
 ### Plot a phylogeny using R
 
-The following script can be used to plot your phylogeny using R. You may need to install the three required packages: `ape`, `ggmap`, and `phyloseq`. You can install them using `install.packages("ape", "ggmap", "phyloseq")`.
+The following script can be used to plot your phylogeny using R. You may need to install the three required packages: `ape`, `ggmap`, and `phyloseq`. You can install them using 
+
+```
+source('http://bioconductor.org/biocLite.R')
+biocLite(c('ape','phyloseq','ggmap'), suppressUpdates=TRUE)
+```
 
 ```
 library(ape)
