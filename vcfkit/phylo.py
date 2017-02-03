@@ -1,11 +1,10 @@
 #! /usr/bin/env python
 """
 usage:
-  vk phylo fasta <vcf>
-  vk phylo tree (nj|upgma) [--plot] <vcf>
+  vk phylo fasta <vcf> [<region>]
+  vk phylo tree (nj|upgma) [--plot] <vcf> [<region>]
 
 options:
-  --het
   -h --help                   Show this screen.
   --version                   Show version.
 
@@ -37,6 +36,11 @@ def main(debug=None):
 
     if len(v.samples) <= 1:
         exit(puts_err(colored.red("\n\tVCF must have at least two samples.\n")))
+    
+    if args["<region>"]:
+        variant_set = v(args["<region>"])
+    else:
+        variant_set = v
 
     if args["fasta"] or args["tree"]:
         """
@@ -44,7 +48,7 @@ def main(debug=None):
         """
         gt_set = np.chararray((0,len(v.samples)))
         gt_set = []
-        for line in v:
+        for line in variant_set:
             if line.is_snp:
                 gt_set.append(firstv(line.gt_bases))
         gt_set = np.vstack(gt_set)

@@ -4,7 +4,7 @@ matplotlib
 scipy
 numpy
 cython
-cyvcf2>=0.1.9
+cyvcf2>=0.6.5
 docopt
 biopython
 yahmm

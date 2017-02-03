@@ -30,7 +30,7 @@ class vcf(cyvcf2):
         # Contigs
         self.contigs = OrderedDict(zip(
             re.compile("##contig=<ID=(.*?),").findall(self.raw_header),
-            map(int, re.compile("##contig.*length=(.*?)>").findall(self.raw_header))
+            map(int, re.compile("##contig.*length=([^,>]*?)>").findall(self.raw_header))
         ))
 
         self.info_set = [x for x in self.header_iter() if x.type == "INFO"]
