@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """
 usage:
-  vk phylo fasta <vcf>
-  vk phylo tree (nj|upgma) [--plot] <vcf>
+  vk phylo fasta <vcf> [<region>]
+  vk phylo tree (nj|upgma) [--plot] <vcf> [<region>]
 
 options:
   -h --help                   Show this screen.
@@ -26,6 +26,10 @@ def main(debug=None):
                   version=__version__)
     module_path = os.path.split(os.path.realpath(__file__))[0]
     v = vcf(args["<vcf>"])
+    if args["<region>"]:
+        variant_set = v(args["<region>"])
+    else:
+        variant_set = v
     samples = v.samples
     _ROOT = os.path.split(os.path.dirname(vk.__file__))[0]
     if args["fasta"] or args["tree"]:
@@ -35,7 +39,7 @@ def main(debug=None):
         seqs = {}
         for sample in samples:
             seqs[sample] = []
-        for line in v:
+        for line in variant_set:
             if line.is_snp:
                 non_missing = [x.replace(".", "-") for x in line.gt_bases]
                 sample_gt = zip(samples, [x[-1] for x in non_missing])
