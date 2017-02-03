@@ -1,8 +1,8 @@
 # Overview
 
 ```
-vk phylo fasta <vcf>
-vk phylo tree (nj|upgma) [--plot] <vcf>
+vk phylo fasta <vcf> [<region>]
+vk phylo tree (nj|upgma) [--plot] <vcf> [<region>]
 ```
 
 The `phylo` command can be used to generate dendrograms, tree files, or a fasta file of variants concatenated together (equivelent to a multiple sequence alignment) from a VCF. Tree files are generated in [Newick format](http://evolution.genetics.washington.edu/phylip/newicktree.html)) with [MUSCLE](http://drive5.com/muscle/) using [UPGMA](https://en.wikipedia.org/wiki/UPGMA) or [neighbor-joining](https://en.wikipedia.org/wiki/Neighbor_joining). VCF-kit can use the output tree file to  generate a plot of the tree/phylogeny.
@@ -46,6 +46,22 @@ An unweighted pair group method with arithmetic-mean (UPGMA) tree can be constru
 
 ```
 vk phylo tree upgma <vcf>
+```
+
+### Operating on regions
+
+The phylo command can be used on specific regions or chromosomes.
+
+__Operate on specific chromosome__
+
+```
+vk phylo tree upgma <vcf> I
+```
+
+__Operate on specific region__
+
+```
+vk phylo tree upgma <vcf> I:1-10000
 ```
 
 ### Generate a neighbor-joining tree
