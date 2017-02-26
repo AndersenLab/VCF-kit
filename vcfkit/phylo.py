@@ -28,7 +28,7 @@ def main(debug=None):
 
 
     def first(s):
-        return s[0].replace(".", "-")
+        return s[0].replace(".", "N")
 
     firstv = np.vectorize(first)
 
@@ -51,6 +51,8 @@ def main(debug=None):
         for line in variant_set:
             if line.is_snp:
                 gt_set.append(firstv(line.gt_bases))
+        if len(gt_set) == 0:
+            exit(puts_err("No genotypes"))
         gt_set = np.vstack(gt_set)
         seqs = zip(v.samples, np.transpose(gt_set))
         if args["fasta"]:
