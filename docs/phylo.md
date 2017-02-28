@@ -86,14 +86,16 @@ The `phylo tree` command sends output to stdout  is newick format. Newick format
 
 ### Plot a phylogeny using R
 
-The following script can be used to plot your phylogeny using R. You may need to install the three required packages: `ape`, `ggmap`, and `phyloseq`. You can install them using 
+The following script can be used to plot your phylogeny using R. You will need to install `tidyverse`, `ape`, `ggmap`, and `phyloseq` to use it. You can install them using :
 
 ```
+install.packages("tidyverse")
 source('http://bioconductor.org/biocLite.R')
 biocLite(c('ape','phyloseq','ggmap'), suppressUpdates=TRUE)
 ```
 
 ```
+library(tidyverse)
 library(ape)
 library(ggmap)
 library(phyloseq)
@@ -134,7 +136,7 @@ The above script will output something that looks like this:
 
 ### Plot a phylogeny in your web browser
 
-`phylo tree` can be used to generate a plot of a phylogeny by adding the `--plot` flag. 
+`phylo tree` can be used to generate a plot of a phylogeny in your web browser by adding the `--plot` flag. 
 
 ```
 vk phylo tree nj --plot <vcf>
