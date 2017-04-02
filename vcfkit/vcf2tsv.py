@@ -84,6 +84,7 @@ if __name__ == '__main__':
     if args["--ANN"]:
         ANN_loc = info.index("ANN") + 7
     for n, line in enumerate(comm.stdout):
+        line = line.replace("u'","") # No idea why u' is prefixed...
         if n == 0 and args["--print-header"] and args["wide"]:
             # Split out snpeff annotations
             if "ANN" in info and args["--ANN"]:
@@ -117,7 +118,7 @@ if __name__ == '__main__':
                     out_line = line[:ANN_loc - 1] + var_effect.split("|") + line[ANN_loc + 2:]
                     print('\t'.join(out_line).strip("\n").replace("-->", ""))
             else:
-                print "\t".join(line).replace("-->", "")
+                print("\t".join(line).replace("-->", ""))
         else:
             # Print wide format
             if "ANN" in info and args["--ANN"]:

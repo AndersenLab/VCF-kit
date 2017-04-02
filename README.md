@@ -31,7 +31,7 @@ sudo apt-get build-dep python-matplotlib
 On OSX it can be installed using:
 
 ```
-pip install matplotlib 
+pip install matplotlib  
 ```
 
 You may need to install a few additional dependencies:
