@@ -31,7 +31,7 @@ from utils.vcf import *
 from math import isinf
 import os
 from signal import signal, SIGPIPE, SIG_DFL
-from clint.textui import puts_err
+from clint.textui import puts_err, colored
 signal(SIGPIPE, SIG_DFL)
 
 
