@@ -1,14 +1,13 @@
 #! /usr/bin/env python
 """
 usage:
-  vk hmm [options] --alt=<alt_sample> <vcf>
+  vk hmm [options] --A=<parent_1> --B=<parent_2> <vcf>
 
 Example
 
 options:
   -h --help                   Show this screen.
   --version                   Show version.
-  --ref=<ref_sample>          Provide a reference sample to remove reference errors.
   --vcf-out                   Output VCF instead of intervals.
   --all-sites                 Output all sites with --vcf-out; Default is sites where alt_sample == 1/1.
   --endfill                   Don't leave gaps at the ends of chromosomes.
@@ -43,36 +42,36 @@ def generate_model(state, transition):
     # Setup hmm
     model = Model(name="RIL_GT")
 
-    ref = State(DiscreteDistribution({'ref': state, 'alt': 1-state}), name='ref')
-    alt = State(DiscreteDistribution({'ref': 1-state, 'alt': state}), name='alt')
+    A = State(DiscreteDistribution({'A': state, 'B': 1-state}), name='A')
+    B = State(DiscreteDistribution({'A': 1-state, 'B': state}), name='B')
 
-    model.add_transition(model.start, ref, 0.5)
-    model.add_transition(model.start, alt, 0.5)
+    model.add_transition(model.start, A, 0.5)
+    model.add_transition(model.start, B, 0.5)
 
 
-    model.add_transition(ref, ref, 1-transition)
-    model.add_transition(ref, alt, transition)
-    model.add_transition(alt, ref, transition)
-    model.add_transition(alt, alt, 1-transition)
+    model.add_transition(A, A, 1-transition)
+    model.add_transition(A, B, transition)
+    model.add_transition(B, A, transition)
+    model.add_transition(B, B, 1-transition)
 
-    model.add_transition(ref, model.end, 0.5)
-    model.add_transition(alt, model.end, 0.5)
+    model.add_transition(A, model.end, 0.5)
+    model.add_transition(B, model.end, 0.5)
 
     model.bake(verbose=False)
     return model
 
-to_model = {0: 'ref', 1: 'alt'}
+to_model = {0: 'A', 1: 'B'}
 to_gt = {0: '0/0', 1: '1/1'}
 from_model = {True: 1, False: 0}
 
 debug = None
 if len(sys.argv) == 1:
-    debug = ["hmm", "--alt=CB4856", "--vcf-out", "../test.vcf.gz"]
+    debug = ["hmm","--A=REF", "--B=ALT", "--vcf-out", "../test.vcf.gz"]
 
 
 def generate_cigar(arr):
     grouped = [(k, sum(1 for i in g)) for k, g in groupby(arr)]
-    return "".join([{0: "R", 1: "A"}[x] + str(y) for x, y in grouped]), len(grouped) - 1
+    return "".join([{0: "A", 1: "B"}[x] + str(y) for x, y in grouped]), len(grouped) - 1
 
 
 if __name__ == '__main__':
@@ -92,31 +91,39 @@ if __name__ == '__main__':
     gt_list, dp_list, dv_list = [], [], []
     chromosome = []
     positions = []
+    p1_gt_set = []
+    p2_gt_set = []
 
     append_gt = True
     for n, line in enumerate(v):
-        if args["--alt"]:
-            # Check if gt is 1/1 for alt sample.
-            if (args["--alt"] == "ALT"):
-                append_gt = True
-            else:
-                append_gt = (line.gt_types[v.samples.index(args["--alt"])] == 3)
-        if args["--ref"]:
-            # If a reference sample is used, remove SNVs with the alt genotype as
-            # these are likely errors.
-            if line.gt_types[v.samples.index(args["--ref"])] == 3:
-                append_gt = False
-        if append_gt:
+        ref_alt = ["REF", "ALT"]
+        if args["--A"] == "REF":
+            p1_gt = 0
+        else:
+            p1_gt = line.gt_types[v.samples.index(args["--A"])]
+        if args["--B"] == "ALT":
+            p2_gt = 3
+        else:
+            p2_gt = line.gt_types[v.samples.index(args["--B"])]
+
+        if p1_gt != p2_gt and p1_gt in [0,3] and p2_gt in [0,3]:
             chromosome.append(line.CHROM)
             positions.append(line.POS)
             gt_list.append(np.array(line.gt_types))
             dp_list.append(np.array(line.format("DP", int)))
+            p1_gt_set.append(p1_gt)
+            p2_gt_set.append(p2_gt)
     gt_set = np.vstack([gt_list]).astype("int8").T
 
     dp_set = np.vstack([dp_list]).astype("int32").T
     gt_set[gt_set == 1] = -9  # Het
     gt_set[gt_set == 2] = -9  # Missing
-    gt_set[gt_set == 3] = 1  # Alt
+    
+    gt_set[gt_set == 3] = 1  # Alt GT
+    p1_gt_set = np.array(p1_gt_set)
+    p2_gt_set = np.array(p2_gt_set)
+    p1_gt_set[p1_gt_set == 3] = 1
+    p2_gt_set[p2_gt_set == 3] = 1
 
     dp_set[dp_set < 0] = 0
 
@@ -139,13 +146,14 @@ if __name__ == '__main__':
     s = 0
     tree = {}
     for sample, column in zip(v.samples, gt_set):
-        sample_gt = zip(chromosome, positions, column)
-        sample_gt = [x for x in sample_gt if x[2] in [0, 1]]
+        sample_gt = zip(chromosome, positions, column == p2_gt_set, column)
+        sample_gt = [x[:3] for x in sample_gt if x[3] in [0, 1]]
         sequence = [to_model[x[2]] for x in sample_gt]
+
         model = generate_model(float(args['--state']), float(args['--transition']))
         if sequence:
             results = model.forward_backward(sequence)[1]
-            if model.states[0].name == 'ref':
+            if model.states[0].name == 'A':
                 result_gt = [from_model[x]
                              for x in np.greater(results[:, 1], results[:, 0])]
             else:
