@@ -1,25 +1,24 @@
 # Overview
 
 ```
-vk hmm [options] --alt=<alt_sample> <vcf>
+vk hmm [options] --A=<parent_1> --B=<parent_2> <vcf>
 ```
 
-The `vk hmm` uses a hidden-markov-model to call near-isogenic lines (NILs) or recombinant-inbred lines (RILs). The `hmm` command is designed for use with low-coverage sequence data from RIL or NIL populations and is designed for its ease of use in these cases. The HMM is designed to detect parental haplotypes while ignoring sequencing errors. However, it is not as sophisticated as alternatives such as  such as [Impute2](https://mathgen.stats.ox.ac.uk/impute/impute_v2.html) or [Beagle](http://faculty.washington.edu/browning/beagle/b3.html) which can also be used to perform this type of analysis, although you may need to modify your VCF or generate input files. 
+The `vk hmm` uses a hidden-markov-model to call near-isogenic lines (NILs) or recombinant-inbred lines (RILs). The `hmm` command is designed for use with low-coverage sequence data from RIL or NIL populations. The HMM is designed to detect parental haplotypes while ignoring sequencing errors. However, it is not as sophisticated as alternatives such as  such as [Impute2](https://mathgen.stats.ox.ac.uk/impute/impute_v2.html) or [Beagle](http://faculty.washington.edu/browning/beagle/b3.html) which can also be used to perform this type of analysis, although you may need to modify your VCF or generate input files.
 
-* `--alt=<alt_sample>` - The name of the alternative sample.
+* `--A=<parent_1>` - The first parent. Can also be `REF`.
+* `--B=<parent_2>` - The second parent. Can also be `ALT`.
 
 To use the `vk hmm` command, you'll need a VCF with these requirements:
 
-1. The 'alternative' (non-reference) parent must be included in the VCF.
-1. One of the parents must be the reference, but it is not necessary that it be included in the VCF.
+1. The  parents must be represented within the VCF or their genotypes must be represented as REF (all 0/0) or ALT (all 1/1) calls.
 
 We have had success using the `vk hmm` command whole genome sequencing strains of _C. elegans_ at very low depth (~1.5x). Genotyping arrays can also be used.
 
-The `vk hmm` command iterates through the VCF, assembles an array of genotypes found to be alternative in the non-reference parent, and uses an hmm to assign parental haplotypes.
+The `vk hmm` command iterates through the VCF, assembles an array of genotypes, and uses an hmm to assign parental haplotypes.
 
 # Options
 
-* `--ref=<ref_sample>` - If the reference sample was sequenced, it can be used to filter out sites called alternative in the reference sample. As this is the reference sample, we expect to observe only reference sites. Therefore, these sites are more likely to be erronous due to being located in repetitive regions and the result of low coverage or alignment issues.
 * `--vcf-out` - Outputs a VCF, assigning genotypes based on parental haplotypes called by the hmm. A `GT_ORIG` format field is added to retain the original genotype call.
 * `--all-sites` - By default, when using --vcf-out only sites where the `alt_sample` == 1/1 are output. This option can be used to output all sites in a VCF.
 * `--endfill` - When outputting genomic regions, if a parental genotype is assigned at the very beginning or end of a chromosome use 1 or the length of the chromosome, respectively. The endfill option is recommended for near-isogenic lines, and __not__ for recombinant inbred lines.
@@ -37,7 +36,7 @@ The `vk hmm` command iterates through the VCF, assembles an array of genotypes f
 ```
 bcftools view <vcf> |\
 bcftools filter --set-GTs . --exclude '((FMT/DV)/(FMT/DP) < 0.75 && FMT/GT == "1/1")' |\
-vk hmm --alt=<alt_sample> --ref=<ref_sample> -
+vk hmm --A=<parent_1> --B=<parent_2> --ref=<ref_sample> -
 ```
 
 # Plotting Results
