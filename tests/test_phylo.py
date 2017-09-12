@@ -21,7 +21,6 @@ def test_phylo_nj():
 
 def test_phylo_upgma():
     with Capturing() as out:
-        comm = ["phylo", "tree", "upgma", "test_data/test.vcf.gz"]
-        phylo.main(comm)
+        phylo.main(["phylo", "tree", "upgma", "test_data/test.vcf.gz"])
     line = out[25]
-    assert line.startswith("RC301:085")
+    assert line.startswith("RC301:0.085")
