@@ -18,3 +18,5 @@ proj.*
 .eggs
 
 site
+
+work/
