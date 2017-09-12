@@ -36,7 +36,7 @@ install:
 - pip install pytest-cov
 - python setup.py develop
 script:
-- py.test --cov-report=term --cov=vcfkit tests
+- py.test --verbose --cov-report=term --cov=vcfkit tests
 after_success:
 - coveralls
 - conda remove --yes curl
