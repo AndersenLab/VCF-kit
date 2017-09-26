@@ -20,7 +20,6 @@ The `vk hmm` command iterates through the VCF, assembles an array of genotypes, 
 # Options
 
 * `--vcf-out` - Outputs a VCF, assigning genotypes based on parental haplotypes called by the hmm. A `GT_ORIG` format field is added to retain the original genotype call.
-* `--all-sites` - By default, when using --vcf-out only sites where the `alt_sample` == 1/1 are output. This option can be used to output all sites in a VCF.
 * `--endfill` - When outputting genomic regions, if a parental genotype is assigned at the very beginning or end of a chromosome use 1 or the length of the chromosome, respectively. The endfill option is recommended for near-isogenic lines, and __not__ for recombinant inbred lines.
 * `--infill` - Assume genotypes switch at the end position of the previous block + 1 rather than the next observed genotype. This removes gaps and is useful for aesthetics, but should probably not be used for analysis.
 * `--state` - Probability of ref/alt state, accounting for errors. For example, if --state=0.97, the probability the calls are reference is 97% and 3% of calls will be alt (attributable to errors). 

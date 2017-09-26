@@ -9,7 +9,6 @@ options:
   -h --help                   Show this screen.
   --version                   Show version.
   --vcf-out                   Output VCF instead of intervals.
-  --all-sites                 Output all sites with --vcf-out; Default is sites where alt_sample == 1/1.
   --endfill                   Don't leave gaps at the ends of chromosomes.
   --infill                    Fill in missing portions.
   --state=<state>             State probability [default: 0.97].
@@ -225,19 +224,14 @@ if __name__ == '__main__':
                                 "Number": "1"})
         print(v.raw_header.strip())
         for n, line in enumerate(v):
-            output_line = (args["--alt"] == "ALT") or (line.gt_types[v.samples.index(args["--alt"])] == 3)
             line = variant_line(line, v.samples)
-            if output_line:
-                for sample_n, sample in enumerate(v.samples):
-                    gt_orig = line.get_gt("GT", sample_n)
-                    try:
-                        new_gt = next(iter(tree[sample][line.chrom].search(line.pos))).data
-                    except:
-                        new_gt = None
-                    if new_gt is not None:
-                        line.set_gt("GT_ORIG", sample_n, gt_orig)
-                        line.set_gt("GT", sample_n, to_gt[new_gt])
-                if not args['--all-sites']:
-                    print(line)
-            if args['--all-sites']:
+            for sample_n, sample in enumerate(v.samples):
+                gt_orig = line.get_gt("GT", sample_n)
+                try:
+                    new_gt = next(iter(tree[sample][line.chrom].search(line.pos))).data
+                except:
+                    new_gt = None
+                if new_gt is not None:
+                    line.set_gt("GT_ORIG", sample_n, gt_orig)
+                    line.set_gt("GT", sample_n, to_gt[new_gt])
                 print(line)
