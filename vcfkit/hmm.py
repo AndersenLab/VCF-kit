@@ -69,7 +69,7 @@ if len(sys.argv) == 1:
     debug = ["hmm","--A=REF", "--B=ALT", "--vcf-out", "../test.vcf.gz"]
 
 
-def generate_cigar(arr):
+def generate_RLE(arr):
     grouped = [(k, sum(1 for i in g)) for k, g in groupby(arr)]
     return "".join([{0: "A", 1: "B"}[x] + str(y) for x, y in grouped]), len(grouped) - 1
 
@@ -141,7 +141,7 @@ if __name__ == '__main__':
             exit(puts_err(colored.blue("Cannot use vcf-out with stdin.")))
 
     if not args["--vcf-out"]:
-        print("chrom\tstart\tend\tsample\tgt\tsupporting_sites\tsites\tDP\tswitches\tCIGAR")
+        print("chrom\tstart\tend\tsample\tgt\tgt_name\tsupporting_sites\tsites\tDP\tswitches\trle")
 
     s = 0
     tree = {}
@@ -179,7 +179,7 @@ if __name__ == '__main__':
                     orig = [x[2] for x in interval]
                     pred = [x[3] for x in interval]
                     gt = pred[0]
-                    orig_cigar, switches = generate_cigar(orig)
+                    orig_RLE, switches = generate_RLE(orig)
                     supporting_sites = len([x for x in interval if x[2] == x[3]])
                     dp_avg = 0
                     if supporting_sites > 0:
@@ -198,16 +198,18 @@ if __name__ == '__main__':
                             start = 1
                         if args["--endfill"] and interval_n == interval_set_len - 1:
                             end = v.contigs[chrom]
+                        gt_name = {0: args['--A'], 1: args['--B']}[gt]
                         output = [chrom,
                                   start,
                                   end,
                                   sample,
                                   gt + 1,
+                                  gt_name,
                                   supporting_sites,
                                   sites,
                                   dp_avg,
                                   switches,
-                                  orig_cigar]
+                                  orig_RLE]
                         if not args["--vcf-out"]:
                             out_line = "\t".join(map(str, output))
                             print(out_line)
@@ -225,19 +227,17 @@ if __name__ == '__main__':
                                 "Number": "1"})
         print(v.raw_header.strip())
         for n, line in enumerate(v):
-            output_line = (args["--alt"] == "ALT") or (line.gt_types[v.samples.index(args["--alt"])] == 3)
             line = variant_line(line, v.samples)
-            if output_line:
-                for sample_n, sample in enumerate(v.samples):
-                    gt_orig = line.get_gt("GT", sample_n)
-                    try:
-                        new_gt = next(iter(tree[sample][line.chrom].search(line.pos))).data
-                    except:
-                        new_gt = None
-                    if new_gt is not None:
-                        line.set_gt("GT_ORIG", sample_n, gt_orig)
-                        line.set_gt("GT", sample_n, to_gt[new_gt])
-                if not args['--all-sites']:
-                    print(line)
+            for sample_n, sample in enumerate(v.samples):
+                gt_orig = line.get_gt("GT", sample_n)
+                try:
+                    new_gt = next(iter(tree[sample][line.chrom].search(line.pos))).data
+                except:
+                    new_gt = None
+                if new_gt is not None:
+                    line.set_gt("GT_ORIG", sample_n, gt_orig)
+                    line.set_gt("GT", sample_n, to_gt[new_gt])
+            if not args['--all-sites']:
+                print(line)
             if args['--all-sites']:
                 print(line)

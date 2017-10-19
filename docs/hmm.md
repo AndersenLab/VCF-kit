@@ -44,3 +44,34 @@ vk hmm --A=<parent_1> --B=<parent_2> --ref=<ref_sample> -
 [This R script](https://gist.github.com/danielecook/c9bf690eddb6ae2b6d4c45f1b93dfd75) can be used to plot. An example is below.
 
 ![hmm example](hmm_example.png)
+
+# Output
+
+## TSV
+
+If you do not use the `--vcf-out` flag, out put will be a tsv:
+
+| chrom   |   start |      end | sample   |   gt | gt_name |  supporting_sites |   sites |      DP |   switches | rle                                                                                                                                                                        |
+|:--------|--------:|---------:|:---------|-----:|--|-------------------:|--------:|--------:|-----------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| IV |   77451 |  7920553 | ECA651 | 1 | N2 | 1259 | 1265 | 1.06593 | 12 | B59A1A360A1A288A1A83A1A302A1A45A1A122 |
+| IV | 7930759 |  9519760 | ECA651 | 2 | CB4856 |  78 |   83 | 1.14103 | 10 | A32A1A20A1A3A1A4A1A14A1A5             |
+| IV | 9542273 | 17491919 | ECA651 | 1 | N2 | 1134 | 1139 | 1.12875 | 10 | B333A1A38A1A335A1A79A1A336A1A13       |
+
+The following columns will be listed
+
+* `chrom` - Chromosome
+* `start` - The start of the haplotype call.
+* `end` - The end of the haplotype call
+* `sample` - The sample
+* `gt` - A numeric representation of the parental haplotype called. Corresponds with the `gt_name` column.
+* `gt_name` - The parental haplotype called
+* `supporting_sites` - The number of genotypes supporting the parental haplotype call.
+* `sites` - The total number of genotypes found within the region (does not include missing).
+* `DP` - The average depth of genotype calls in the region.
+* `switches` - The number of switches that occur between parental genotypes within a haplotype.
+* `rle` - The run-length-encoding of the genotypes called. `B3A1B8` represents 3 B-parent calls, 1 A-parent call, and 8 B-parent calls.
+
+## VCF
+
+If you use the `--vcf-out` flag, the output will be a VCF. The `FORMAT/GT` field will be flipped for the appropriate genotype call. Additionally, a `FORMAT/GT_ORIG` field will be added indicating the original genotype.
+
