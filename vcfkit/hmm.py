@@ -9,7 +9,6 @@ options:
   -h --help                   Show this screen.
   --version                   Show version.
   --vcf-out                   Output VCF instead of intervals.
-  --all-sites                 Output all sites with --vcf-out; Default is sites where alt_sample == 1/1.
   --endfill                   Don't leave gaps at the ends of chromosomes.
   --infill                    Fill in missing portions.
   --state=<state>             State probability [default: 0.97].
@@ -237,7 +236,4 @@ if __name__ == '__main__':
                 if new_gt is not None:
                     line.set_gt("GT_ORIG", sample_n, gt_orig)
                     line.set_gt("GT", sample_n, to_gt[new_gt])
-            if not args['--all-sites']:
-                print(line)
-            if args['--all-sites']:
-                print(line)
+            print(line)
