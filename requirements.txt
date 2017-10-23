@@ -7,7 +7,7 @@ cython
 cyvcf2>=0.6.5
 docopt
 biopython
-yahmm==1.1.2
+https://github.com/jmschrei/pomegranate/archive/v0.8.0.tar.gz
 clint
 requests
 intervaltree
