@@ -27,6 +27,7 @@ setup(name='VCF-kit',
       [console_scripts]
       vk = vcfkit.vk:main
       """,
+      install_requires=required,
       zip_safe=False,
       package_data={
         '': ['static/*', 'static/**/*'],
