@@ -25,7 +25,7 @@ from utils.fasta import *
 from collections import defaultdict
 import sys
 from utils import autoconvert
-from yahmm import *
+from pomegranate import *
 import itertools
 import numpy as np
 from signal import signal, SIGPIPE, SIG_DFL
@@ -39,7 +39,7 @@ signal(SIGPIPE, SIG_DFL)
 
 def generate_model(state, transition):
     # Setup hmm
-    model = Model(name="RIL_GT")
+    model = HiddenMarkovModel()
 
     A = State(DiscreteDistribution({'A': state, 'B': 1-state}), name='A')
     B = State(DiscreteDistribution({'A': 1-state, 'B': state}), name='B')

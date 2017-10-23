@@ -7,10 +7,9 @@ cython
 cyvcf2>=0.6.5
 docopt
 biopython
-yahmm
+yahmm==1.1.2
 clint
 requests
 intervaltree
 tabulate
-yahmm
 jinja2
