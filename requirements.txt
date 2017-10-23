@@ -10,6 +10,7 @@ biopython
 yahmm==1.1.2
 clint
 requests
+networkx==1.11
 intervaltree==2.1.0
 tabulate
 jinja2
