@@ -55,7 +55,7 @@ def download_genomes(genome_db):
         with indent(2):
             puts(colored.blue('\nDownloading list of reference genomes\n'))
         r = requests.get("http://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/assembly_summary_refseq.txt")
-        genome_file = open(genome_db, "w")
+        genome_file = open(genome_db, "wb")
         with genome_file as f:
             f.write(r.text.encode('utf-8').strip())
 
@@ -178,6 +178,7 @@ def main(debug=None):
             if len(results) == 0:
                 with indent(2):
                     puts(colored.red('\nError: Genome ' + args["--ref"] + ' not found\n'))
+                    return
 
             with indent(2):
                 puts(colored.green('\nDownloading: ' + reference_name + "; " + url + '\n'))
