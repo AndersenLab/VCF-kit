@@ -42,9 +42,9 @@ class freq_vcf(vcf):
             for i in [sample for sample, gt in zip(self.samples, line.gt_types) if gt == 3]:
                 af_freq[i][line.num_hom_alt] += 1
         # Output results
-        print "\t".join(["sample", "freq_of_gt", "n_gt_at_freq"])
+        print("\t".join(["sample", "freq_of_gt", "n_gt_at_freq"]))
         for sample in af_freq.keys():
-            for i in xrange(1, len(self.samples) + 1):
+            for i in range(1, len(self.samples) + 1):
                 out = "\t".join(map(str, [sample, i, af_freq[sample][i]]))
                 print(out)
 
