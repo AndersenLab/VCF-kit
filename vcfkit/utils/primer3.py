@@ -34,7 +34,7 @@ class seqprimer:
             self.START = template.find(pright_rc)
         self.END = self.START + len(self.SEQUENCE)
 
-        # Blast primer sequence
+        # Blast primer sequence 
         b = blast(reference, num_alignments = 10, word_size = 14)
         self.unique_copies = b.check_primer(self.SEQUENCE)
 
