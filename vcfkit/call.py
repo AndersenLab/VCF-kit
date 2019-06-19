@@ -160,7 +160,7 @@ def main(debug=None):
                     variant.description = record.description
                 else:
                     variant.description = os.path.split(handle.name)[1]
-                print '\t'.join([str(variant)])
+                print('\t'.join([str(variant)]))
 
 if __name__ == '__main__':
     main()

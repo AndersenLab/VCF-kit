@@ -47,6 +47,7 @@ def main(debug=None):
     if args["--ref"] is None:
         exit(message("Must specify a reference with --ref", color="red"))
 
+    print("temp: " + str(args['--template']))
     v = primer_vcf(args["<vcf>"], reference=args["--ref"], use_template=args['--template'], polymorphic=args["--polymorphic"])
     v.enzymes = args['--enzymes']
     v.nprimers = int(args['--nprimers'])
@@ -114,7 +115,6 @@ def main(debug=None):
         v.region_size = (v.amplicon_upper//2) + 100
         if (v.amplicon_lower < 300 or 800 < v.amplicon_upper):
             message("Warning: --size range should (probably) be between 300-800 for sanger sequencing.")
-
     for variant in v.variant_iterator():
         variant.out()
 

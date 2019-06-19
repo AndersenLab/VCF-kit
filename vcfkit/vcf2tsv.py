@@ -84,14 +84,14 @@ if __name__ == '__main__':
     if args["--ANN"]:
         ANN_loc = info.index("ANN") + 7
     for n, line in enumerate(comm.stdout):
-        line = line.replace("u'","") # No idea why u' is prefixed...
+        line = line.decode('utf8').replace("u'","") # No idea why u' is prefixed...
         if n == 0 and args["--print-header"] and args["wide"]:
             # Split out snpeff annotations
             if "ANN" in info and args["--ANN"]:
                 line = line.split("\t")
                 line = line[:ANN_loc - 1] + ANN_header + line[ANN_loc + 1:]
                 line = '\t'.join(line)
-            print re.sub("\[[0-9]+\]", "", line).strip("#\n ").replace(":", "_")
+            print(re.sub("\[[0-9]+\]", "", line).strip("#\n ").replace(":", "_"))
         elif n == 0 and args["long"] and args["--print-header"]:
             # Fix header for long format.
             line = re.sub("\[[0-9]+\]", "", line).strip("#\n ").split("\t")

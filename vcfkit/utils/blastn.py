@@ -7,7 +7,8 @@ from clint.textui import puts_err
 from Bio.Blast import NCBIXML
 from Bio.SeqRecord import SeqRecord
 from copy import copy
-from cStringIO import StringIO
+#from cStringIO import StringIO
+from io import StringIO
 from vcfkit.utils import *
 import sys
 import signal
@@ -158,7 +159,7 @@ class blast:
         sseq = blast_result["sseq"]
         qseq = blast_result["qseq"]
         spacer = []
-        for i in xrange(len(sseq)):
+        for i in range(len(sseq)):
             if qseq[i] == sseq[i]:
                 spacer.append("|")
             else:

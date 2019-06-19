@@ -5,7 +5,7 @@ import re
 def message(message, n_indent = 4, color = "blue"):
     with indent(n_indent):
         if color == "blue":
-            puts_err(colored.blue('\n' + message + '\n'))
+            puts_err(str(colored.blue('\n' + message + '\n')))
         elif color == "red":
             puts_err(colored.blue('\n' + message + '\n'))
 

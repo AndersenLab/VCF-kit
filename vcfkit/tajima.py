@@ -51,8 +51,8 @@ class tajima(vcf):
     def calc_tajima(self, window_size, step_size, sliding, extra=False):
         # Tajima D Constants
         n = self.n * 2
-        a1 = sum([1.0 / i for i in xrange(1, n)])
-        a2 = sum([1.0 / i**2.0 for i in xrange(1, n)])
+        a1 = sum([1.0 / i for i in range(1, n)])
+        a2 = sum([1.0 / i**2.0 for i in range(1, n)])
         b1 = (n + 1.0) / (3.0 * (n - 1.0))
         b2 = (2.0 * (n**2 + n + 3.0)) / \
             (9.0 * n * (n - 1.0))
@@ -102,7 +102,7 @@ class tajima(vcf):
                         output += [os.path.split(self.filename)[1],
                                    window_size,
                                    step_size]
-                    yield "\t".join(map(str, output))
+                    yield("\t".join(map(str, output)))
             except:
                 pass
 
@@ -138,8 +138,13 @@ def main(debug=None):
             header_line += ["filename",
                             "window_size",
                             "step_size"]
-        print "\t".join(header_line)
-    for i in tajima(args["<vcf>"]).calc_tajima(wz, sz, args["--sliding"], extra=args["--extra"]):
+        print("\t".join(header_line))
+    #print("args " + args["<vcf>"])
+    print("Legit?" + str(os.path.isfile(args["<vcf>"])))
+    filename = args["<vcf>"]
+    tj = tajima(os.path.abspath(filename))
+    ct = tj.calc_tajima(wz, sz, args["--sliding"], extra=args["--extra"])
+    for i in tj:
         print(i)
 
 if __name__ == '__main__':

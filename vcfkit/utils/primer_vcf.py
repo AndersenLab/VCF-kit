@@ -9,10 +9,11 @@ import numpy as np
 from cyvcf2 import VCFReader
 from vcfkit.utils.primer3 import primer3
 from subprocess import Popen, PIPE, check_output
-from reference import resolve_reference_genome
+from vcfkit.utils.reference import resolve_reference_genome
 np.set_printoptions(threshold=np.nan)
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
+import pprint
 
 from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
@@ -64,7 +65,7 @@ class cvariant:
         Mutable variant object
     """
     def __init__(self, variant):
-        for i in filter(lambda x: x.startswith("_") is False, dir(variant)):
+        for i in [x for x in dir(variant) if x.startswith("_") is False]:
             setattr(self, i, getattr(variant, i))
 
 
@@ -72,7 +73,7 @@ class template:
 
     def __init__(self, variant, reference_file, vcf, use_template, nprimers):
         # Copy variant attributes over
-        for i in filter(lambda x: x.startswith("_") is False, dir(variant)):
+        for i in [x for x in dir(variant) if x.startswith("_") is False]:
             setattr(self, i, getattr(variant, i))
         self.output_samples = vcf.output_samples
         self.reference_file = reference_file
@@ -83,6 +84,7 @@ class template:
         self.region = "{self.CHROM}:{self.region_start}-{self.region_end}".format(**locals())
         
         # Retrieve sequences
+        
         self.ref_seq = self.fetch_sequence("REF")
         if use_template == 'REF':
             self.alt_seq = self.ref_seq
@@ -91,27 +93,36 @@ class template:
         self.edit_distance = lev(str(self.ref_seq).lower(), str(self.alt_seq).lower())
 
         # Retrieve primers
+        print(self.mode)
         if self.mode != 'template':
             p3 = primer3(reference_file)
+            #print("PROBLEM")
+            #print(p3)
             p3.PRIMER_NUM_RETURN = nprimers
+            print("nprimers " + str(nprimers))
             # Modify amplicon size if indel.
             if self.mode == 'indel':
+                #print("IN TEMPLATE")
                 max_amplicon_length = max([len(self.ref_seq), len(self.alt_seq)])
+                #print(max_amplicon_length)
                 min_amplicon_length = max_amplicon_length - 200
                 if (min_amplicon_length < 50):
                     min_amplicon_length = 50
                 p3.PRIMER_PRODUCT_SIZE_RANGE = "{min_amplicon_length}-{max_amplicon_length}".format(**locals())
+                print(p3.PRIMER_PRODUCT_SIZE_RANGE)
+
             elif self.mode == 'sanger':
                 p3.PRIMER_PRODUCT_SIZE_RANGE = "{self.amplicon_lower}-{self.amplicon_upper}".format(**locals())
+
             primers = p3.fetch_primers(self.ref_seq, self.CHROM, self.region_start)
             if primers:
                 self.primers = [x for x in primers if x.filter_primer_group()]
             else:
+                print('this will print')
                 self.primers = []
 
         # Identify restriction site locations
         if self.mode == 'snip':
-            ref_seq = str(self.ref_seq)
             # Generate a primary variant only seq to identify restriction
             # sites that target ALT sites.
             self.primary_variant_seq = Seq(ref_seq[0:500] + self.ALT[0] + ref_seq[501:])
@@ -122,17 +133,20 @@ class template:
         """
             Fetches sequence surrounding variant for REF, ALT, or given sample.
         """
+
         sample_flag = ""
         if use_template == "REF":
-            command = "samtools faidx {self.reference_file} {self.region}"
+            command = ("samtools faidx {}.fa.gz {}".format(self.reference_file, self.region))
         elif use_template == "ALT" or use_template is None:
-            command = "samtools faidx {self.reference_file} {self.region} | bcftools consensus {self.filename}"
+            command = ("samtools faidx {}.fa.gz {} | bcftools consensus {}".format(self.reference_file, self.region, self.filename))
+
         else:
             sample_flag = "--sample=" + use_template  # Get use_template for sample.
             command = "samtools faidx {self.reference_file} {self.region} | bcftools consensus {sample_flag} {self.filename}"
         command = command.format(**locals())
         try:
             seq = check_output(command, shell=True)
+            seq = seq.decode()
             seq = Seq(''.join(seq.splitlines()[1:]), DNA_SET)
         except:
             seq = Seq('')
@@ -157,9 +171,9 @@ class template:
         enzyme_group = RestrictionBatch([x for x in enzyme_group if x.is_ambiguous() is False])
 
         # Calculate rflps for ALT sites only
-        self.ref_sites = dict(enzyme_group.search(self.ref_seq).items())
-        self.primary_variant_sites = dict(enzyme_group.search(self.primary_variant_seq).items())
-        self.rflps = {k: (self.ref_sites[k], self.primary_variant_sites[k]) for k, v in self.ref_sites.items() 
+        self.ref_sites = dict(list(enzyme_group.search(self.ref_seq).items()))
+        self.primary_variant_sites = dict(list(enzyme_group.search(self.primary_variant_seq).items()))
+        self.rflps = {k: (self.ref_sites[k], self.primary_variant_sites[k]) for k, v in list(self.ref_sites.items()) 
                         if len(v) > 0 and len(v) <= 3
                         and self.ref_sites[k] != self.primary_variant_sites[k]}
 
@@ -204,7 +218,7 @@ class template:
             header_printed = True
 
     def out(self):
-
+        #print("in self.out")
         hout = ["CHROM",
                 "POS",
                 "region",
@@ -301,8 +315,9 @@ class template:
                      "0/0",
                      "1/1",
                      "polymorphic"]
-
+            #print("in indel out")
             self.print_header(hout)
+            print("primers" + str(self.primers))
             for primer_group in self.primers:
                 # Fetch variant Count
                 variant_count = self.fetch_variant_count(primer_group.amplicon_region, self.output_samples)
@@ -319,7 +334,9 @@ class template:
                                    homozygous_ref,
                                    homozygous_alt,
                                    self.is_polymorphic]
+                print("should print here")
                 print('\t'.join(map(str, out_indel)))
+                print(out_indel)
 
         elif self.mode == 'sanger':
             hout += ["variant_count",
@@ -379,10 +396,10 @@ class primer_vcf(cyvcf2):
         self.metadata = OrderedDict(comp.findall(self.raw_header))
 
         # Contigs
-        self.contigs = OrderedDict(zip(
+        self.contigs = OrderedDict(list(zip(
             re.compile("##contig=<ID=(.*?),").findall(self.raw_header),
-            map(int, re.compile("##contig.*length=(.*?)>").findall(self.raw_header))
-        ))
+            list(map(int, re.compile("##contig.*length=(.*?)>").findall(self.raw_header))
+        ))))
 
         self.info_set = [x for x in self.header_iter() if x.type == "INFO"]
         self.filter_set = [x for x in self.header_iter() if x.type == "FILTER"]
@@ -394,7 +411,7 @@ class primer_vcf(cyvcf2):
             message("VCF is not indexed; Indexing.")
             comm = "bcftools index {f}".format(f=self.filename)
             out = check_output(comm, shell=True)
-            message(out)
+            message(str(out))
 
         # Setup use_template
         if self.use_template not in self.samples + ["REF", "ALT"]:
@@ -410,7 +427,6 @@ class primer_vcf(cyvcf2):
             var_region = self.fetch_variants(self.region)
         else:
             var_region = self
-
         for variant in var_region:
 
             # Skip variants that are not applicable
@@ -433,6 +449,7 @@ class primer_vcf(cyvcf2):
                     nz.indel_type = "deletion"
                 else:
                     nz.indel_type = "insertion"
+                    
 
             if self.mode == 'snip':
                 nz.region_size = 500
@@ -448,19 +465,16 @@ class primer_vcf(cyvcf2):
             nz.use_polymorphic = self.use_polymorphic
 
             gt_collection = defaultdict(list)
-
             for vcf_sample, gt in zip(self.samples, variant.gt_types):
                 if vcf_sample in self.output_samples:
                     gt_collection[gt].append(vcf_sample)
-
             if gt_collection:
                 nz.gt_collection = gt_collection
                 nz.homozygous_ref = nz.gt_collection[0]
                 nz.heterozygous = nz.gt_collection[1]
                 nz.homozygous_alt = nz.gt_collection[3]
                 nz.missing = nz.gt_collection[2]
-            is_polymorphic = all(map(lambda x: len(x) > 0,[gt_collection[0], gt_collection[3]]))
-
+            is_polymorphic = all([len(x) > 0 for x in [gt_collection[0], gt_collection[3]]])
             nz.is_polymorphic = is_polymorphic
             if self.use_polymorphic and not is_polymorphic:
                 continue
@@ -468,9 +482,10 @@ class primer_vcf(cyvcf2):
             if self.mode == 'sanger':
                 nz.amplicon_lower = self.amplicon_lower
                 nz.amplicon_upper = self.amplicon_upper
-
             t = template(nz, self.reference_file, self, self.use_template, self.nprimers)
-            yield t
+
+            yield t                 
+            
 
     def fetch_variants(self, region=None):
         """

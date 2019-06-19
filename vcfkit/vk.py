@@ -21,13 +21,13 @@ commands:
 
 """
 from vcfkit import __version__
-from utils import lev, message
+from vcfkit.utils import lev, message
 from docopt import docopt
 from subprocess import call, check_output, CalledProcessError
-from utils.vcf import *
+from vcfkit.utils.vcf import *
 from clint.textui import colored, puts, indent
 import sys
-import vk
+from vcfkit import vk
 import os
 import signal
 signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
@@ -59,9 +59,9 @@ def main():
         """
             Use Homebrew to install programs!
         """
-        program_installed = program_list.keys()
+        program_installed = list(program_list)
         for install_name, program in program_list.items():
-            check_output(["brew", "tap", "homebrew/science"])
+            check_output(["brew", "tap", "homebrew/core"])
             try:
                 with indent(4):
                     puts(colored.blue("Installing " + install_name))

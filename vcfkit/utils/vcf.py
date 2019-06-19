@@ -5,21 +5,22 @@ import re
 from vcfkit.utils import message
 from copy import copy
 import os
+import sys #added
 import numpy as np
-from reference import resolve_reference_genome
-np.set_printoptions(threshold=np.nan)
+from vcfkit.utils.reference import resolve_reference_genome
+np.set_printoptions(threshold=sys.maxsize) #changed from np.nan to sys.maxsize
 
 
 class vcf(cyvcf2):
     def __init__(self, filename, reference=None):
-        if not os.path.isfile(filename) and filename != "-":
-            exit(message("Error: " + filename + " does not exist"))
+        if not os.path.isfile(str(filename)) and str(filename) != "-":
+            exit(message("Error: " + str(filename) + " does not exist"))
         self.filename = filename
         if reference:
             self.reference = reference
             self.reference_file = resolve_reference_genome(reference)
 
-        cyvcf2.__init__(self, self.filename)
+        cyvcf2.__init__(self, self.filename)#changed cyvcf2 to super()
         # Check if file exists
         self.n = len(self.samples)  # Number of Samples
 
