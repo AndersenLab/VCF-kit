@@ -22,6 +22,15 @@ VCF-kit is a command-line based collection of utilities for performing analysis 
 
 ## Installation
 
+#### Conda
+
+```
+conda config --add channels bioconda
+conda create -n vcf-kit python=2.7 vcfkit
+```
+
+#### Manually
+
 You may need to install matplotlib. On linux this can be done with:
 
 ```
