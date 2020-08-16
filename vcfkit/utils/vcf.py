@@ -1,13 +1,14 @@
+import os
+import re
+import sys
 from cyvcf2 import VCF as cyvcf2
 from collections import OrderedDict, deque
 from itertools import islice
-import re
 from vcfkit.utils import message
 from copy import copy
-import os
 import numpy as np
 from .reference import resolve_reference_genome
-np.set_printoptions(threshold=np.nan)
+np.set_printoptions(threshold=sys.maxsize)
 
 
 class vcf(cyvcf2):

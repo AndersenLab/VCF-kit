@@ -10,7 +10,7 @@ from cyvcf2 import VCFReader
 from vcfkit.utils.primer3 import primer3
 from subprocess import Popen, PIPE, check_output
 from .reference import resolve_reference_genome
-np.set_printoptions(threshold=np.nan)
+np.set_printoptions(threshold=sys.maxsize)
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
 

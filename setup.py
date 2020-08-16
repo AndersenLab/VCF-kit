@@ -1,6 +1,9 @@
 from setuptools import setup
 import glob
 import os
+from setuptools import dist
+dist.Distribution().fetch_build_eggs(['Cython>=0.24.1', 'numpy>=1.10'])
+
 with open('requirements.txt') as f:
     required = f.read().splitlines()
 

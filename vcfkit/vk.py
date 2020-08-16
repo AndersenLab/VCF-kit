@@ -61,7 +61,6 @@ def main():
         """
         program_installed = list(program_list.keys())
         for install_name, program in list(program_list.items()):
-            check_output(["brew", "tap", "homebrew/science"])
             try:
                 with indent(4):
                     puts(colored.blue("Installing " + install_name))
