@@ -362,8 +362,8 @@ class template:
 
 class primer_vcf(cyvcf2):
     def __init__(self, filename, reference=None, use_template="ALT", polymorphic=True):
-        if not os.path.isfile(filename) and filename != "-":
-            exit(message("Error: " + filename + " does not exist"))
+        if not filename.startswith("http") and not os.path.isfile(filename) and filename != "-":
+            exit(message(f"Error: {filename} does not exist", color='red'))
         self.filename = filename
         self.use_template = use_template
         self.use_polymorphic = polymorphic
@@ -391,7 +391,7 @@ class primer_vcf(cyvcf2):
         self.header = copy(self.raw_header)
 
         # Make sure index exists for this VCF.
-        if not os.path.isfile(self.filename + ".csi"):
+        if not self.filename.startswith("http") and not os.path.isfile(self.filename + ".csi"):
             message("VCF is not indexed; Indexing.")
             comm = "bcftools index {f}".format(f=self.filename)
             out = check_output(comm, shell=True)

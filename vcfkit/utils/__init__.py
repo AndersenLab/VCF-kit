@@ -15,7 +15,7 @@ def message(message, n_indent = 4, color = "blue"):
         if color == "blue":
             puts_err(colored.blue('\n' + message + '\n'))
         elif color == "red":
-            puts_err(colored.blue('\n' + message + '\n'))
+            puts_err(colored.red('\n' + message + '\n'))
 
 
 def boolify(s):
