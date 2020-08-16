@@ -13,7 +13,7 @@ options:
 
 """
 from docopt import docopt
-from vcfkit.utils import which
+from vcfkit.utils import which, run_command
 from vcfkit.utils.vcf import *
 from vcfkit.utils.reference import *
 from clint.textui import colored, puts, puts_err, indent, progress
@@ -156,13 +156,14 @@ def main(debug=None):
         ref_filename = reference_directory + reference_name + ".tmp.fa.gz"
 
         if args["wormbase"]:
-            asm_url = "ftp://ftp.wormbase.org/pub/wormbase/releases/{asm_name}/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.{asm_name}.genomic.fa.gz"
-            reference_download = asm_url.format(asm_name=args["--ref"])
-            comm = "curl {reference_download} > {ref_filename}".format(**locals())
-            print(comm)
-            call(comm, shell = True)
+            asm_name = args["--ref"]
+            asm_url = f"ftp://ftp.wormbase.org/pub/wormbase/releases/{asm_name}/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.{asm_name}.genomic.fa.gz"
+            comm = f"curl {asm_url} > {ref_filename}"
+            err = run_command(comm)
+            if err != 0:
+                raise Exception(colored.red(f"Wormbase genome {args['--ref']} not found."))
             # Unzip wormbase genome
-            call(["gunzip", "-f", ref_filename])
+            run_command(["gunzip", "-f", ref_filename])
         else:
             # NCBI
             with open(genome_db, "r") as f:

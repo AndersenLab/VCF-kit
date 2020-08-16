@@ -1,6 +1,14 @@
-from clint.textui import colored, puts, puts_err, indent, progress
-import os
 import re
+import os
+from subprocess import call
+from clint.textui import colored, puts, puts_err, indent, progress
+
+def command_out(message):
+    """
+        Used to print shell commands to stderr
+    """
+    puts_err(colored.green(message))
+    
 
 def message(message, n_indent = 4, color = "blue"):
     with indent(n_indent):
@@ -50,6 +58,14 @@ def which(program):
 def check_program_exists(program):
     if which(program) is None:
         exit(puts_err(colored.red("\n\t" + program + " not installed or on PATH.\n")))
+
+
+def run_command(comm, shell = True):
+    """
+        Runs a shell command
+    """
+    command_out(comm)
+    return call(comm, shell = shell)
 
 
 # Levenshtein edit distnace
