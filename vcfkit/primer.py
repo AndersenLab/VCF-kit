@@ -21,12 +21,12 @@ options:
 
 """
 from docopt import docopt
-from utils import message
-from utils.primer_vcf import primer_vcf
-from utils.reference import *
-from utils.fasta import *
+from .utils import message
+from .utils.primer_vcf import primer_vcf
+from .utils.reference import *
+from .utils.fasta import *
 import sys
-from utils import check_program_exists
+from .utils import check_program_exists
 
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)

@@ -6,7 +6,7 @@ from vcfkit.utils import message
 from copy import copy
 import os
 import numpy as np
-from reference import resolve_reference_genome
+from .reference import resolve_reference_genome
 np.set_printoptions(threshold=np.nan)
 
 
@@ -28,10 +28,10 @@ class vcf(cyvcf2):
         self.metadata = OrderedDict(comp.findall(self.raw_header))
 
         # Contigs
-        self.contigs = OrderedDict(zip(
+        self.contigs = OrderedDict(list(zip(
             re.compile("##contig=<ID=(.*?),").findall(self.raw_header),
-            map(int, re.compile("##contig.*length=([^,>]*?)>").findall(self.raw_header))
-        ))
+            list(map(int, re.compile("##contig.*length=([^,>]*?)>").findall(self.raw_header)))
+        )))
 
         self.info_set = [x for x in self.header_iter() if x.type == "INFO"]
         self.filter_set = [x for x in self.header_iter() if x.type == "FILTER"]
@@ -45,7 +45,7 @@ class vcf(cyvcf2):
         result_list = variant_interval(window_size=window_size, step_size=step_size, shift_method=shift_method)
         try:
             while True:
-                line = self.next()
+                line = next(self)
                 #
                 # SNP-Sliding and SNP-Interval
                 #
@@ -78,7 +78,7 @@ class vcf(cyvcf2):
                             yield result_list.filter_within_bounds()
                             result_list.iterate_interval()
                         if result_list.lower_bound <= line.POS < result_list.upper_bound:
-                            line = self.next()
+                            line = next(self)
                             result_list.append(line)
                         last_chrom = line.CHROM
                 #=============#

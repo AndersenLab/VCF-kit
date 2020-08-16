@@ -39,7 +39,7 @@ class Fasta:
             return seq
         self.chrom = chrom_pos
         self.chrom_name = chrom_pos
-        if chrom_pos in self.alt_contig_names.keys():
+        if chrom_pos in list(self.alt_contig_names.keys()):
             self.chrom = self.alt_contig_names[chrom_pos]
         return self
 

@@ -20,11 +20,11 @@ from docopt import docopt
 # Suppress the rocket ship!
 import matplotlib
 matplotlib.use("Agg")
-from utils.vcf import *
-from utils.fasta import *
+from .utils.vcf import *
+from .utils.fasta import *
 from collections import defaultdict
 import sys
-from utils import autoconvert
+from .utils import autoconvert
 from yahmm import *
 import itertools
 import numpy as np
@@ -32,7 +32,7 @@ from signal import signal, SIGPIPE, SIG_DFL
 from itertools import groupby
 from operator import itemgetter
 from intervaltree import IntervalTree
-from vk import __version__
+from .vk import __version__
 from clint.textui import colored, puts_err, indent
 signal(SIGPIPE, SIG_DFL)
 
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     s = 0
     tree = {}
     for sample, column in zip(v.samples, gt_set):
-        sample_gt = zip(chromosome, positions, column == p2_gt_set, column)
+        sample_gt = list(zip(chromosome, positions, column == p2_gt_set, column))
         sample_gt = [x[:3] for x in sample_gt if x[3] in [0, 1]]
         sequence = [to_model[x[2]] for x in sample_gt]
 
@@ -224,7 +224,7 @@ if __name__ == '__main__':
                                 "Description": "Original genotype",
                                 "Type": "Character",
                                 "Number": "1"})
-        print(v.raw_header.strip())
+        print((v.raw_header.strip()))
         for n, line in enumerate(v):
             line = variant_line(line, v.samples)
             for sample_n, sample in enumerate(v.samples):

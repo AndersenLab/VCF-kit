@@ -29,7 +29,7 @@ def test_compare_vcftools():
     vcftools_tajima = dict([(x[0] + ":" + x[1], autoconvert(x[3])) for x in vcftools_tajima if x[3] != "nan"])
     out = [x.split("\t") for x in out]
     vcfkit_tajima = dict([(x[0] + ":" + x[1], autoconvert(x[5])) for x in out])
-    for k in vcfkit_tajima.keys():
+    for k in list(vcfkit_tajima.keys()):
         assert nearly_equal(vcftools_tajima[k], vcfkit_tajima[k], sig_fig = 3) is True
 
 

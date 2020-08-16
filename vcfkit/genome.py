@@ -13,9 +13,9 @@ options:
 
 """
 from docopt import docopt
-from utils import which
-from utils.vcf import *
-from utils.reference import *
+from .utils import which
+from .utils.vcf import *
+from .utils.reference import *
 from clint.textui import colored, puts, puts_err, indent, progress
 import gzip
 from subprocess import call
@@ -23,7 +23,7 @@ from time import time
 from tabulate import tabulate as tab
 import requests
 import os
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from sys import exit  # Used by exit(); don't remove.
 from Bio import Entrez
 
@@ -35,7 +35,7 @@ def fetch_chrom_name(id):
         Entrez.email = "vcf-kit@vcf-kit.com"
         chrom = Entrez.read(Entrez.efetch(db="nuccore", id=id, rettype="gb", retmode="xml"))
         gb_feature_quals = chrom[0]["GBSeq_feature-table"][0]["GBFeature_quals"]
-        features = dict([x.values() for x in gb_feature_quals])
+        features = dict([list(x.values()) for x in gb_feature_quals])
         if "organelle" in features:
             if features["organelle"] == "mitochondrion":
                 return "MtDNA"

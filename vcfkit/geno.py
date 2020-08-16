@@ -14,10 +14,10 @@ options:
 
 
 """
-from vk import __version__
+from .vk import __version__
 from docopt import docopt
-from utils.vcf import *
-from utils.fasta import *
+from .utils.vcf import *
+from .utils.fasta import *
 import sys
 import math
 from signal import signal, SIGPIPE, SIG_DFL

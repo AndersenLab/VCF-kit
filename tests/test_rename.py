@@ -3,7 +3,7 @@ from cyvcf2 import VCF
 from subprocess import Popen, PIPE
 import hashlib
 from tests.test_utilities import terminal
-from cStringIO import StringIO
+from io import StringIO
 
 
 def test_rename_prefix():

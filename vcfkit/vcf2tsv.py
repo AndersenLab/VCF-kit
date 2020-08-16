@@ -9,7 +9,7 @@ options:
 
 """
 from docopt import docopt
-from utils.vcf import *
+from .utils.vcf import *
 from subprocess import Popen, PIPE
 import sys
 import os
@@ -79,7 +79,7 @@ if __name__ == '__main__':
         query_start = repr("%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER\t" +
                            '\t'.join(['%INFO/' + x for x in info]) +
                            "[\t%SAMPLE\t" + '\t'.join(['%' + x for x in format]) + "]\n").strip("'")
-    comm = filter(len, ["bcftools", "query", print_header, "-f", query_start, v.filename])
+    comm = list(filter(len, ["bcftools", "query", print_header, "-f", query_start, v.filename]))
     comm = Popen(comm, stdout=PIPE, stderr=PIPE)
     if args["--ANN"]:
         ANN_loc = info.index("ANN") + 7
@@ -91,7 +91,7 @@ if __name__ == '__main__':
                 line = line.split("\t")
                 line = line[:ANN_loc - 1] + ANN_header + line[ANN_loc + 1:]
                 line = '\t'.join(line)
-            print re.sub("\[[0-9]+\]", "", line).strip("#\n ").replace(":", "_")
+            print(re.sub("\[[0-9]+\]", "", line).strip("#\n ").replace(":", "_"))
         elif n == 0 and args["long"] and args["--print-header"]:
             # Fix header for long format.
             line = re.sub("\[[0-9]+\]", "", line).strip("#\n ").split("\t")
@@ -104,7 +104,7 @@ if __name__ == '__main__':
                 header = header[:ANN_loc - 1] + ANN_header + header[ANN_loc + 1:]
             # Add Format to FORMAT
             header = header[:-len(format)] + ["F_" + x for x in header[-len(format):]]
-            print("\t".join(header).replace("-->", ""))
+            print(("\t".join(header).replace("-->", "")))
         elif n < len(v.samples) and args["long"]:
             pass
         elif n >= len(v.samples) and args["long"]:
@@ -116,15 +116,15 @@ if __name__ == '__main__':
             if "ANN" in info and args["--ANN"]:
                 for var_effect in line[ANN_loc].split(","):
                     out_line = line[:ANN_loc - 1] + var_effect.split("|") + line[ANN_loc + 2:]
-                    print('\t'.join(out_line).strip("\n").replace("-->", ""))
+                    print(('\t'.join(out_line).strip("\n").replace("-->", "")))
             else:
-                print("\t".join(line).replace("-->", ""))
+                print(("\t".join(line).replace("-->", "")))
         else:
             # Print wide format
             if "ANN" in info and args["--ANN"]:
                 line = line.split("\t")
                 for var_effect in line[ANN_loc].split(","):
                     out_line = line[:ANN_loc - 1] + var_effect.split("|") + line[ANN_loc + 2:]
-                    print('\t'.join(out_line).strip("\n"))
+                    print(('\t'.join(out_line).strip("\n")))
             else:
-                print(line.strip("\n"))
+                print((line.strip("\n")))

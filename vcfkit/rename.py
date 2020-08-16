@@ -10,7 +10,7 @@ options:
 """
 from vcfkit import __version__
 from docopt import docopt
-from utils.vcf import *
+from .utils.vcf import *
 import re
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
@@ -36,9 +36,9 @@ def main(debug=None):
                 line[9:] = [args["--prefix"] + x for x in line[9:]]
             if args["--suffix"]:
                 line[9:] = [x + args["--suffix"] for x in line[9:]]
-            print '\t'.join(line)
+            print('\t'.join(line))
         else:
-            print(line.strip())
+            print((line.strip()))
 
 if __name__ == '__main__':
     main()

@@ -9,11 +9,11 @@ options:
 
 """
 from docopt import docopt
-import vk
-from utils.reference import resolve_reference_genome
+from . import vk
+from .utils.reference import resolve_reference_genome
 from Bio import SeqIO
-from utils.blastn import blast, blast_variant
-from utils.vcf import *
+from .utils.blastn import blast, blast_variant
+from .utils.vcf import *
 from subprocess import Popen
 import sys
 from collections import defaultdict
@@ -96,7 +96,7 @@ def main(debug=None):
     sequence_file_type = seq_type(args["<seq>"])
 
     # Output header
-    print("\t".join(blast_variant.output_order))
+    print(("\t".join(blast_variant.output_order)))
     for record in SeqIO.parse(handle, sequence_file_type):
         # Resolve sample within fasta line
         sample = resolve_sample_from_line(samples, handle.name)
@@ -160,7 +160,7 @@ def main(debug=None):
                     variant.description = record.description
                 else:
                     variant.description = os.path.split(handle.name)[1]
-                print '\t'.join([str(variant)])
+                print('\t'.join([str(variant)]))
 
 if __name__ == '__main__':
     main()

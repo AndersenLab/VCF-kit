@@ -11,9 +11,9 @@ options:
 """
 from docopt import docopt
 from vcfkit import __version__
-from utils.vcf import *
+from .utils.vcf import *
 from subprocess import Popen, PIPE
-from utils import check_program_exists
+from .utils import check_program_exists
 from clint.textui import colored, indent, puts_err
 import os
 from pkgutil import get_data
@@ -54,11 +54,11 @@ def main(debug=None):
         if len(gt_set) == 0:
             exit(puts_err("No genotypes"))
         gt_set = np.vstack(gt_set)
-        seqs = zip(v.samples, np.transpose(gt_set))
+        seqs = list(zip(v.samples, np.transpose(gt_set)))
         if args["fasta"]:
             for sample, seq in seqs:
-                print(">" + sample)
-                print(''.join(seq))
+                print((">" + sample))
+                print((''.join(seq)))
 
         elif args["tree"]:
             """

@@ -4,7 +4,7 @@ from vcfkit import *
 from subprocess import check_output, Popen, PIPE
 import hashlib
 
-from cStringIO import StringIO
+from io import StringIO
 import sys
 
 class Capturing(list):
