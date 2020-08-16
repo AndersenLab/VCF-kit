@@ -67,7 +67,6 @@ def main(debug=None):
                     exit(message(sample + " not found in VCF", "red"))
 
     v.box_variants = args["--box-variants"] # Needs to be implemented.
-    #v.amplicon_size = args["--size"]
 
     # Check for std. input
     if args["template"]:

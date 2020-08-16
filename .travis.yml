@@ -1,8 +1,6 @@
 language: python
 python:
-- '2.7'
-notifications:
-  slack: elegans:a2SjpI50s67LmdQ0tzsxjFKe
+- '3.7'
 cache:
   pip: true
   directories:
