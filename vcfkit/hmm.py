@@ -16,18 +16,20 @@ options:
 
 
 """
+import sys
+import itertools
+import numpy as np
+
 from docopt import docopt
 # Suppress the rocket ship!
 import matplotlib
 matplotlib.use("Agg")
+
 from .utils.vcf import *
 from .utils.fasta import *
 from collections import defaultdict
-import sys
-from .utils import autoconvert
+from vcfkit.utils import autoconvert
 from yahmm import *
-import itertools
-import numpy as np
 from signal import signal, SIGPIPE, SIG_DFL
 from itertools import groupby
 from operator import itemgetter

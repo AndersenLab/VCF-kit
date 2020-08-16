@@ -8,17 +8,17 @@ options:
     --version                   Show version.
 
 """
+import os
+import sys
 from docopt import docopt
 from . import vk
-from .utils.reference import resolve_reference_genome
 from Bio import SeqIO
-from .utils.blastn import blast, blast_variant
-from .utils.vcf import *
+from vcfkit.utils.reference import resolve_reference_genome
+from vcfkit.utils.blastn import blast, blast_variant
+from vcfkit.utils.vcf import *
 from subprocess import Popen
-import sys
 from collections import defaultdict
 from clint.textui import colored, puts, puts_err, indent
-import os
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
 

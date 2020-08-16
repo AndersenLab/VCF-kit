@@ -16,13 +16,13 @@ options:
 """
 from .vk import __version__
 from docopt import docopt
-from .utils.vcf import *
-from .utils.fasta import *
+from vcfkit.utils.vcf import *
+from vcfkit.utils.fasta import *
 import sys
 import math
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
-np.set_printoptions(threshold=np.nan)
+np.set_printoptions(threshold=sys.maxsize)
 
 
 def phred2p(phred):

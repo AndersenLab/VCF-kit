@@ -4,13 +4,15 @@ usage:
   tb annotate <vcf> 
 
 """
+import re
 from docopt import docopt
 from subprocess import Popen, PIPE
 from signal import signal, SIGPIPE, SIG_DFL
-from .utils import autoconvert
-from .utils.vcf import *
-import re
-from .utils.matrix import *
+
+from vcfkit.utils import autoconvert
+from vcfkit.utils.vcf import *
+from vcfkit.utils.matrix import *
+
 signal(SIGPIPE, SIG_DFL)
 
 debug = None

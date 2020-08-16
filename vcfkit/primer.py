@@ -20,13 +20,13 @@ options:
   --nprimers=<nprimers>       Maximum number of primers to generate [default: 5]
 
 """
-from docopt import docopt
-from .utils import message
-from .utils.primer_vcf import primer_vcf
-from .utils.reference import *
-from .utils.fasta import *
 import sys
-from .utils import check_program_exists
+from docopt import docopt
+from vcfkit.utils import message
+from vcfkit.utils.primer_vcf import primer_vcf
+from vcfkit.utils.reference import *
+from vcfkit.utils.fasta import *
+from vcfkit.utils import check_program_exists
 
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)

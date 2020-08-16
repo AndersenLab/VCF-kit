@@ -12,14 +12,14 @@ options:
 
 
 """
+import os
+import sys
 from docopt import docopt
 from clint.textui import colored, puts, indent
-from .utils.vcf import *
-from .utils.fasta import *
-from .utils import message
+from vcfkit.utils.vcf import *
+from vcfkit.utils.fasta import *
+from vcfkit.utils import message
 from collections import defaultdict
-import sys
-import os
 from glob import glob
 from pprint import pprint as pp
 from signal import signal, SIGPIPE, SIG_DFL

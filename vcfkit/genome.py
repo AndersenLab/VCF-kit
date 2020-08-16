@@ -13,9 +13,9 @@ options:
 
 """
 from docopt import docopt
-from .utils import which
-from .utils.vcf import *
-from .utils.reference import *
+from vcfkit.utils import which
+from vcfkit.utils.vcf import *
+from vcfkit.utils.reference import *
 from clint.textui import colored, puts, puts_err, indent, progress
 import gzip
 from subprocess import call
@@ -54,10 +54,10 @@ def download_genomes(genome_db):
     if (time() - fileTime) > (3 * 30 * 24 * 60 * 60) or is_non_zero_file(genome_db) is False:
         with indent(2):
             puts(colored.blue('\nDownloading list of reference genomes\n'))
-        r = requests.get("http://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/assembly_summary_refseq.txt")
+        r = requests.get("https://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/assembly_summary_refseq.txt", allow_redirects=True)
         genome_file = open(genome_db, "w")
         with genome_file as f:
-            f.write(r.text.encode('utf-8').strip())
+            f.write(r.text.strip())
 
 
 def is_non_zero_file(fpath):

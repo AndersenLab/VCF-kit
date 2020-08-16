@@ -14,10 +14,10 @@ options:
 """
 from vcfkit import __version__
 from docopt import docopt
-from .utils.vcf import *
-from .utils.fasta import *
 from collections import defaultdict
-from .utils import autoconvert
+from vcfkit.utils.vcf import *
+from vcfkit.utils.fasta import *
+from vcfkit.utils import autoconvert
 
 
 class freq_vcf(vcf):

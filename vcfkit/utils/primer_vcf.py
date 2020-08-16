@@ -1,12 +1,13 @@
-from cyvcf2 import VCF as cyvcf2
-from clint.textui import colored, puts, indent
 import re
+import os
+import sys
+from cyvcf2 import VCF as cyvcf2
+from cyvcf2 import VCFReader
+from clint.textui import colored, puts, indent
 from collections import OrderedDict, defaultdict
 from vcfkit.utils import lev, message
 from copy import copy
-import os
 import numpy as np
-from cyvcf2 import VCFReader
 from vcfkit.utils.primer3 import primer3
 from subprocess import Popen, PIPE, check_output
 from .reference import resolve_reference_genome
