@@ -12,20 +12,37 @@ jobs:
     - name: Install curl headers
       run: |
         sudo apt-get install libcurl4-openssl-dev
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.7' 
-
-    - name: Install with python-version
-      run: python setup.py install
     
     - uses: goanpeca/setup-miniconda@v1
       with:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
-      
-    - name: Build with conda
-      run: conda build
+  
+    - name: Install dependencies
+      run: | 
+        conda create -n vcf-kit \
+              python3=${{ matrix.python-version }} \
+              pytest \
+              pytest-cov \
+              numpy \
+              scipy \
+              cython \
+              biopython \
+              bwa \
+              samtools \
+              bcftools \
+              vcftools \
+              blast \
+              primer3=2.5.0
+
+    - name: Install 
+      run: python setup.py install
+
+    - name: Test vcf-kit
+      run: py.test --verbose --cov-report=term --cov=vcfkit tests
+    
+    - name: Coverage
+      run: coveralls
 
     - name: Create Release
       id: create_release
@@ -46,9 +63,9 @@ jobs:
         user: __token__
         password: ${{ secrets.PYPI_PASSWORD }}
 
-    - name: publish-to-conda
-      uses: fcakyon/conda-publish-action@v1.3
-      with:
-        subdir: 'conda'
-        anacondatoken: ${{ secrets.ANACONDA_TOKEN }}
-        platforms: 'win osx linux'
+    # - name: publish-to-conda
+    #   uses: fcakyon/conda-publish-action@v1.3
+    #   with:
+    #     subdir: 'conda'
+    #     anacondatoken: ${{ secrets.ANACONDA_TOKEN }}
+    #     platforms: 'win osx linux'
