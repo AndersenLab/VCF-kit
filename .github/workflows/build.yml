@@ -1,0 +1,19 @@
+# Build dockerfile on change
+name: Test
+
+on:
+  - push
+
+jobs:
+  test_python_install:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install curl headers
+      run: |
+        sudo apt-get install libcurl4-openssl-dev
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+    - run: python setup.py install
