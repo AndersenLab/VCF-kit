@@ -5,7 +5,7 @@ on:
   - push
 
 jobs:
-  test_python_install:
+  test_and_publish:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -14,6 +14,24 @@ jobs:
         sudo apt-get install libcurl4-openssl-dev
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
-        architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+        python-version: '3.7' 
     - run: python setup.py install
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      if: startsWith(github.ref, 'refs/tags')
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+        draft: true
+        prerelease: false
+
+    - name: Publish a Python distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@master
+      if: startsWith(github.ref, 'refs/tags')
+      with:
+        user: danielecook
+        password: ${{ secrets.pypi_password }}
