@@ -25,8 +25,6 @@ before_install:
 - hash -r
 - conda update --yes conda
 - conda config --add channels bioconda
-- sudo rm -rf /dev/shm
-- sudo ln -s /run/shm /dev/shm
 install:
 - conda install --yes python=$TRAVIS_PYTHON_VERSION pytest pytest-cov numpy scipy
   cython biopython bwa samtools bcftools vcftools blast primer3=2.3.7
