@@ -1,25 +1,33 @@
+{% set version = "0.1.6" %}
+{% set sha256 = "e44319bc057ff4f90cc3a777bb6b1794e5dc3dcf56fe2753fee199f782fed6b6" %}
+
 package:
-  name: "vcf-kit"
-  version: "0.1.7"
+  name: vcfkit
+  version: {{ version }}
 
 source:
-  fn: jq-1.5.tar.gz
-  url: https://github.com/stedolan/jq/releases/download/jq-1.5/jq-1.5.tar.gz
+  url: https://pypi.io/packages/source/V/VCF-kit/VCF-kit-{{ version }}.tar.gz
+  sha256: e44319bc057ff4f90cc3a777bb6b1794e5dc3dcf56fe2753fee199f782fed6b6
+  patches:
+    - setup.patch
+    # Fixes https://github.com/AndersenLab/VCF-kit/issues/22
+    - numpy.patch
 
 build:
-  number: 0
+  number: 4
+  noarch: python
   entry_points:
     - vk=vcfkit.vk:main
+  script: {{ PYTHON }} -m pip install . --no-deps --ignore-installed -vv
 
 requirements:
-  build:
-    - python >=3.5
-    - pytest
-    - pytest-cov
+  host:
+    - pip
+    - python <3
+  run:
     - awesome-slugify
     - biopython
     - clint
-    - cython >=0.24.1
     - cyvcf2 >=0.6.5
     - docopt
     - intervaltree ==2.1.0
@@ -27,19 +35,16 @@ requirements:
     - matplotlib
     - networkx ==1.11
     - numpy
-    - python
+    - python <3
     - requests
     - scipy
-    - setuptools
     - tabulate
-    - numpy
-    - biopython
-    - bwa
-    - samtools
-    - bcftools
-    - vcftools
-    - blast
-    - primer3=2.5.0
+    - yahmm >=1.1.2
+    - bwa >=0.7.12
+    - samtools >=1.3
+    - bcftools >=1.3
+    - blast >=2.2.31
+    - muscle >=3.8.31
 
 test:
   imports:
@@ -47,17 +52,9 @@ test:
     - vcfkit.utils
   commands:
     - vk --help
-  requires:
-    - coveralls
-    - pytest
 
 about:
-  home: "https://github.com/AndersenLab/VCF-kit"
+  home: https://github.com/AndersenLab/VCF-kit
   license: MIT
   license_family: MIT
-  summary: "Assorted utilities for the variant call format"
-  doc_url: https://vcf-kit.readthedocs.io/en/latest
-
-extra:
-  recipe-maintainers:
-    - danielecook
+  summary: "VCF-kit is a command-line based collection of utilities for performing analysis on Variant Call Format (VCF) files."
