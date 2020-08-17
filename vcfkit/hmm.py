@@ -18,24 +18,26 @@ options:
 """
 import sys
 import itertools
-import numpy as np
-
-from docopt import docopt
-# Suppress the rocket ship!
-import matplotlib
-matplotlib.use("Agg")
-
-from .utils.vcf import *
-from .utils.fasta import *
 from collections import defaultdict
-from vcfkit.utils import autoconvert
-from yahmm import *
-from signal import signal, SIGPIPE, SIG_DFL
 from itertools import groupby
 from operator import itemgetter
+from signal import SIG_DFL, SIGPIPE, signal
+
+import matplotlib
+import numpy as np
+
+from clint.textui import colored, indent, puts_err
+from docopt import docopt
 from intervaltree import IntervalTree
-from .vk import __version__
-from clint.textui import colored, puts_err, indent
+from vcfkit.utils import autoconvert
+from yahmm import *
+
+from vcfkit.utils.fasta import *
+from vcfkit.utils.vcf import *
+from vcfkit.vk import __version__
+
+matplotlib.use("Agg")
+
 signal(SIGPIPE, SIG_DFL)
 
 

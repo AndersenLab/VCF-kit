@@ -8,11 +8,14 @@ options:
   --version                   Show version.
 
 """
-from vcfkit import __version__
-from docopt import docopt
-from .utils.vcf import *
 import re
-from signal import signal, SIGPIPE, SIG_DFL
+from signal import SIG_DFL, SIGPIPE, signal
+
+from docopt import docopt
+from vcfkit import __version__
+
+from vcfkit.utils.vcf import *
+
 signal(SIGPIPE, SIG_DFL)
 
 

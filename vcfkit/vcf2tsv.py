@@ -8,13 +8,15 @@ options:
   --version                   Show version.
 
 """
-from docopt import docopt
-from .utils.vcf import *
-from subprocess import Popen, PIPE
-import sys
 import os
 import re
-from signal import signal, SIGPIPE, SIG_DFL
+import sys
+from signal import SIG_DFL, SIGPIPE, signal
+from subprocess import PIPE, Popen
+
+from docopt import docopt
+from vcfkit.utils.vcf import *
+
 signal(SIGPIPE, SIG_DFL)
 
 # Info

@@ -25,13 +25,15 @@ output:
 
 
 """
-from vcfkit import __version__
-from docopt import docopt
-from .utils.vcf import *
-from math import isinf
 import os
-from signal import signal, SIGPIPE, SIG_DFL
-from clint.textui import puts_err, colored
+from math import isinf
+from signal import SIG_DFL, SIGPIPE, signal
+
+from clint.textui import colored, puts_err
+from docopt import docopt
+from vcfkit import __version__
+from vcfkit.utils.vcf import *
+
 signal(SIGPIPE, SIG_DFL)
 
 

@@ -10,19 +10,22 @@ options:
 """
 import os
 import sys
-from docopt import docopt
-from . import vk
-from Bio import SeqIO
-from vcfkit.utils.reference import resolve_reference_genome
-from vcfkit.utils.blastn import blast, blast_variant
-from vcfkit.utils.vcf import *
-from subprocess import Popen
 from collections import defaultdict
-from clint.textui import colored, puts, puts_err, indent
-from signal import signal, SIGPIPE, SIG_DFL
+from signal import SIG_DFL, SIGPIPE, signal
+from subprocess import Popen
+
+from Bio import SeqIO
+from Bio.Blast.Applications import NcbiblastxCommandline
+from clint.textui import colored, indent, puts, puts_err
+from docopt import docopt
+from vcfkit.utils.blastn import blast, blast_variant
+from vcfkit.utils.reference import resolve_reference_genome
+from vcfkit.utils.vcf import *
+
+from vcfkit import vk
+
 signal(SIGPIPE, SIG_DFL)
 
-from Bio.Blast.Applications import NcbiblastxCommandline
 
 
 def seq_type(filename):

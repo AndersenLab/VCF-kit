@@ -9,16 +9,20 @@ options:
   --version                   Show version.
 
 """
+import os
+import sys
+from pkgutil import get_data
+from subprocess import PIPE, Popen
+
+import numpy as np
+
+from clint.textui import colored, indent, puts_err
 from docopt import docopt
 from vcfkit import __version__
-from .utils.vcf import *
-from subprocess import Popen, PIPE
-from .utils import check_program_exists
-from clint.textui import colored, indent, puts_err
-import os
-from pkgutil import get_data
-import sys
-import numpy as np
+
+from vcfkit.utils import check_program_exists
+from vcfkit.utils.vcf import *
+
 
 def main(debug=None):
     args = docopt(__doc__,
