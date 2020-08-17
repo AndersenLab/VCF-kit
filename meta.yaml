@@ -1,0 +1,63 @@
+package:
+  name: "vcf-kit"
+  version: "0.1.7"
+
+source:
+  fn: jq-1.5.tar.gz
+  url: https://github.com/stedolan/jq/releases/download/jq-1.5/jq-1.5.tar.gz
+
+build:
+  number: 0
+  entry_points:
+    - vk=vcfkit.vk:main
+
+requirements:
+  build:
+    - python >=3.5
+    - pytest
+    - pytest-cov
+    - awesome-slugify
+    - biopython
+    - clint
+    - cython >=0.24.1
+    - cyvcf2 >=0.6.5
+    - docopt
+    - intervaltree ==2.1.0
+    - jinja2
+    - matplotlib
+    - networkx ==1.11
+    - numpy
+    - python
+    - requests
+    - scipy
+    - setuptools
+    - tabulate
+    - numpy
+    - biopython
+    - bwa
+    - samtools
+    - bcftools
+    - vcftools
+    - blast
+    - primer3=2.5.0
+
+test:
+  imports:
+    - vcfkit
+    - vcfkit.utils
+  commands:
+    - vk --help
+  requires:
+    - coveralls
+    - pytest
+
+about:
+  home: "https://github.com/AndersenLab/VCF-kit"
+  license: MIT
+  license_family: MIT
+  summary: "Assorted utilities for the variant call format"
+  doc_url: https://vcf-kit.readthedocs.io/en/latest
+
+extra:
+  recipe-maintainers:
+    - danielecook

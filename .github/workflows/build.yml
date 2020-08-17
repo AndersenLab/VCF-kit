@@ -6,12 +6,13 @@ on:
 
 jobs:
   test_and_publish:
+    strategy:
+      matrix:
+        python-version: ["3.7"]
+
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Install curl headers
-      run: |
-        sudo apt-get install libcurl4-openssl-dev
     
     - uses: goanpeca/setup-miniconda@v1
       with:
