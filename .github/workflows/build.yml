@@ -24,8 +24,9 @@ jobs:
       with:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
-      run: |
-        conda build
+      
+    - name: Build with conda
+      run: conda build
 
     - name: Create Release
       id: create_release
