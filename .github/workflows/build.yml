@@ -23,7 +23,7 @@ jobs:
     - name: Install dependencies
       run: | 
         conda create -n vcf-kit \
-              python3=${{ matrix.python-version }} \
+              python=${{ matrix.python-version }} \
               pytest \
               pytest-cov \
               numpy \
