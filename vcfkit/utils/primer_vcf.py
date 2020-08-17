@@ -125,16 +125,15 @@ class template:
         """
         sample_flag = ""
         if use_template == "REF":
-            command = "samtools faidx {self.reference_file} {self.region}"
+            command = f"samtools faidx {self.reference_file} {self.region}"
         elif use_template == "ALT" or use_template is None:
-            command = "samtools faidx {self.reference_file} {self.region} | bcftools consensus {self.filename}"
+            command = f"samtools faidx {self.reference_file} {self.region} | bcftools consensus {self.filename}"
         else:
             sample_flag = "--sample=" + use_template  # Get use_template for sample.
-            command = "samtools faidx {self.reference_file} {self.region} | bcftools consensus {sample_flag} {self.filename}"
-        command = command.format(**locals())
+            command = f"samtools faidx {self.reference_file} {self.region} | bcftools consensus {sample_flag} {self.filename}"
         try:
             seq = check_output(command, shell=True)
-            seq = Seq(''.join(seq.splitlines()[1:]), DNA_SET)
+            seq = Seq(''.join(seq.decode('utf-8').splitlines()[1:]), DNA_SET)
         except:
             seq = Seq('')
         return seq

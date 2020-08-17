@@ -196,7 +196,7 @@ class blast:
         # Format variables
         resp = [OrderedDict(list(zip(self.output_format,
                                 list(map(autoconvert, x.split("\t")))))) 
-                for x in resp.splitlines()]
+                for x in resp.decode("utf-8").splitlines()]
         return resp
 
     def check_primer(self, q):

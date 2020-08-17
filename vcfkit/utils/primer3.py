@@ -1,4 +1,7 @@
+import io
 from subprocess import Popen, PIPE
+import sys
+import signal
 from vcfkit import vk
 from vcfkit.utils import *
 from vcfkit.utils.blastn import blast
@@ -6,8 +9,6 @@ from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
 from Bio.Restriction import AllEnzymes, CommOnly, RestrictionBatch
 from clint.textui import colored, puts_err
-import sys
-import signal
 signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
 primer3_config =  os.path.dirname(os.path.abspath(sys.modules['vcfkit'].__file__)) + "/static/primer3_config/"
 
@@ -127,10 +128,10 @@ class primer3:
     def fetch_primers(self, sequence_template, chrom, region_start):
         # Runs primer3 with the generated record.
         self.SEQUENCE_TEMPLATE = sequence_template
+        input_record = self._generate_record().encode('utf-8')
         primer3_run = Popen(["primer3_core"], stdin=PIPE, stdout=PIPE)
-        record = self._generate_record()
-        resp, err = primer3_run.communicate(record)
-        resp = resp.strip().split("\n")
+        resp, err = primer3_run.communicate(input=input_record)
+        resp = resp.decode().strip().split("\n")
         if err:
             exit(message(err))
         p3_results = dict([x.split("=") for x in resp
