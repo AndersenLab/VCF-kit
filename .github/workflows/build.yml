@@ -18,6 +18,7 @@ jobs:
       with:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
+          channels: bioconda,conda-forge
   
     - name: Install dependencies
       run: | 
