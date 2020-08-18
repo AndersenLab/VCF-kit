@@ -51,12 +51,10 @@ jobs:
     - name: Test vcf-kit
       shell: bash -l {0}
       run: |
+        conda activate vcf-kit
         py.test --verbose --cov-report=term --cov=vcfkit tests
-    
-    - name: Coverage
-      shell: bash -l {0}
-      run: coveralls
-
+        coveralls
+  
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
