@@ -13,7 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    
+
+    - name: Install curl headers
+      run: |
+        sudo apt-get install libcurl4-openssl-dev
+
     - uses: goanpeca/setup-miniconda@v1
       with:
           auto-update-conda: true
