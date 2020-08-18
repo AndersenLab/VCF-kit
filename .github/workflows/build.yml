@@ -38,6 +38,7 @@ jobs:
               primer3=2.5.0
 
     - name: Install 
+      shell: bash -l {0}
       run: |
         conda activate vcf-kit
         python setup.py install
