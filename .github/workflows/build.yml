@@ -30,6 +30,7 @@ jobs:
               python=${{ matrix.python-version }} \
               pytest \
               pytest-cov \
+              coveralls \
               numpy \
               scipy \
               cython \
@@ -48,9 +49,12 @@ jobs:
         python setup.py install
 
     - name: Test vcf-kit
-      run: py.test --verbose --cov-report=term --cov=vcfkit tests
+      shell: bash -l {0}
+      run: |
+        py.test --verbose --cov-report=term --cov=vcfkit tests
     
     - name: Coverage
+      shell: bash -l {0}
       run: coveralls
 
     - name: Create Release
