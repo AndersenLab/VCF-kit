@@ -38,7 +38,9 @@ jobs:
               primer3=2.5.0
 
     - name: Install 
-      run: python setup.py install
+      run: |
+        conda activate vcf-kit
+        python setup.py install
 
     - name: Test vcf-kit
       run: py.test --verbose --cov-report=term --cov=vcfkit tests
