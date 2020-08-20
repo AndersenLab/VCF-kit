@@ -11,17 +11,19 @@ options:
 """
 import os
 import sys
+import tempfile
+import webbrowser
 from pkgutil import get_data
 from subprocess import PIPE, Popen
 
 import numpy as np
+from jinja2 import Template
 
 from clint.textui import colored, indent, puts_err
 from docopt import docopt
 from vcfkit import __version__
-
 from vcfkit.utils import check_program_exists
-from vcfkit.utils.vcf import *
+from vcfkit.utils.vcf import vcf
 
 
 def main(debug=None):
@@ -82,15 +84,12 @@ def main(debug=None):
             with indent(4):
                 puts_err(colored.blue("\nGenerating " + tree_type + " Tree\n"))
             comm = ["muscle", "-maketree", "-in", "-", "-cluster", tree_type]
-            tree, err = Popen(comm, stdin=PIPE, stdout=PIPE).communicate(input=fasta)
+            tree, err = Popen(comm, stdin=PIPE, stdout=PIPE).communicate(input=fasta.encode())
             
             # output tree
-            print(tree)
+            print(tree.decode("utf-8"))
             
             if args["--plot"]:
-                from jinja2 import Template
-                import webbrowser
-                import tempfile
                 prefix = os.path.dirname(os.path.abspath(sys.modules['vcfkit'].__file__)) + "/static"
                 template = open(prefix + "/tree.html",'r').read()
                 tree_template = Template(template)

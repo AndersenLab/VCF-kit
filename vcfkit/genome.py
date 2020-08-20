@@ -201,6 +201,7 @@ def main(debug=None):
             with open(ref_filename.replace(".fa.gz", ".fa"), 'w') as outfa:
                 with gzip.open(ref_filename, 'rb') as f:
                     for line in f:
+                        line = line.decode("utf-8")
                         outline = line
                         if line.startswith(">"):
                             acc = line.split(" ")[0].strip(">")
