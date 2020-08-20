@@ -394,7 +394,7 @@ class primer_vcf(cyvcf2):
             message("VCF is not indexed; Indexing.")
             comm = "bcftools index {f}".format(f=self.filename)
             out = check_output(comm, shell=True)
-            message(out)
+            message(out.decode("utf-8"))
 
         # Setup use_template
         if self.use_template not in self.samples + ["REF", "ALT"]:

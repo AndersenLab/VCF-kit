@@ -145,7 +145,7 @@ class blast:
         resp, err = Popen(fetch_ref_cmd,
                stdout=PIPE,
                stderr=PIPE).communicate()
-        return ''.join(resp.splitlines()[1:]).upper()
+        return ''.join(resp.decode('utf-8').splitlines()[1:]).upper()
 
 
     def print_alignment(self, q, start=0, end=None):

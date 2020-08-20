@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 """
 usage:
     vk call <seq> --ref=<reference> (--all-sites|--vcf-sites) <vcf>

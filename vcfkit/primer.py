@@ -1,23 +1,23 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 """
 usage:
-  vk primer template [options] <vcf>
-  vk primer sanger   [options] <vcf>
-  vk primer snip     [options] <vcf>
-  vk primer indel    [options] <vcf>
+    vk primer template [options] <vcf>
+    vk primer sanger   [options] <vcf>
+    vk primer snip     [options] <vcf>
+    vk primer indel    [options] <vcf>
 
 options:
-  -h --help                   Show this screen.
-  --version                   Show version.
-  --ref=<reference>           Reference Genome
-  --region=<region>           Restrict to region.
-  --samples=<samples>         Output genotypes for a sample or set of samples. [default: ALL]
-  --template=<template>       The sample template to output [default: ALT]
-  --size=<int>                Amplicon size [default: 600-800]
-  --box-variants              Add second column for the sequence with the variant boxed.
-  --polymorphic               Only output variants that are polymorphic across specified samples.
-  --enzymes=<enzymes>         snip-SNP only: Specify groups of restriction enzymes or individual enzymes [default: Common]
-  --nprimers=<nprimers>       Maximum number of primers to generate [default: 5]
+    -h --help                   Show this screen.
+    --version                   Show version.
+    --ref=<reference>           Reference Genome
+    --region=<region>           Restrict to region.
+    --samples=<samples>         Output genotypes for a sample or set of samples. [default: ALL]
+    --template=<template>       The sample template to output [default: ALT]
+    --size=<int>                Amplicon size [default: 600-800]
+    --box-variants              Add second column for the sequence with the variant boxed.
+    --polymorphic               Only output variants that are polymorphic across specified samples.
+    --enzymes=<enzymes>         snip-SNP only: Specify groups of restriction enzymes or individual enzymes [default: Common]
+    --nprimers=<nprimers>       Maximum number of primers to generate [default: 5]
 
 """
 import sys
@@ -35,8 +35,9 @@ if len(sys.argv) == 1:
     debug = ['primer', "--ref=WBcel235", "test.vcf.gz"]
 
 def main(debug=None):
-    arguments = docopt(__doc__, options_first=False)
-
+    arguments = docopt(__doc__, 
+                       argv=debug,
+                       options_first=False)
     check_program_exists("primer3_core")
     check_program_exists("blastn")
 
@@ -44,7 +45,10 @@ def main(debug=None):
     if arguments["--ref"] is None:
         exit(message("Must specify a reference with --ref", color="red"))
 
-    v = primer_vcf(arguments["<vcf>"], reference=arguments["--ref"], use_template=arguments['--template'], polymorphic=arguments["--polymorphic"])
+    v = primer_vcf(arguments["<vcf>"],
+                   reference=arguments["--ref"],
+                   use_template=arguments['--template'],
+                   polymorphic=arguments["--polymorphic"])
     v.enzymes = arguments['--enzymes']
     v.nprimers = int(arguments['--nprimers'])
     # Region
