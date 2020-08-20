@@ -23,7 +23,7 @@ build:
 requirements:
   host:
     - pip
-    - python <3
+    - python >=3.6
   run:
     - awesome-slugify
     - biopython
@@ -35,7 +35,6 @@ requirements:
     - matplotlib
     - networkx ==1.11
     - numpy
-    - python <3
     - requests
     - scipy
     - tabulate

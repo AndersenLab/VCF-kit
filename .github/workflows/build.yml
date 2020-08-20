@@ -35,12 +35,18 @@ jobs:
               scipy \
               cython \
               biopython \
-              bwa \
-              samtools>=1.10 \
-              bcftools>=1.10 \
-              vcftools \
-              blast \
-              primer3=2.5.0
+              matplotlib \
+              clint \
+              cyvcf2 >=0.6.5 \
+              intervaltree ==2.1.0 \
+              jinja2 \
+              networkx ==1.11 \
+              yahmm >=1.1.2 \
+              bwa >=0.7.12 \
+              samtools >=1.10 \
+              bcftools >=1.10 \
+              blast >=2.2.31 \
+              muscle >=3.8.31
 
     - name: Install 
       shell: bash -l {0}
