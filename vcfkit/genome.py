@@ -222,7 +222,6 @@ def main(debug=None):
             comm_bgzip = "bgzip -fc {ref_filename} > {ref_out}"
             comm_bgzip = comm_bgzip.format(ref_filename=ref_filename.replace(".fa.gz", ".fa"),
                                            ref_out=ref_filename.replace(".tmp", ""))
-            print(comm_bgzip)
             call(comm_bgzip, shell=True)
             ref_filename = ref_filename.replace(".tmp", "")
         else:
@@ -246,10 +245,10 @@ def main(debug=None):
             with indent(2):
                 puts(colored.blue("\nSkipping samtools index; Samtools not installed\n"))
 
-        if which("makeblastdb"):
+        if which("makeblastdb") and which("gzip"):
             with indent(2):
                 puts(colored.green("\nCreating blast database\n"))
-            comm = "gunzip -c {ref} | makeblastdb -in - -dbtype=nucl -title={ref} -out={ref}".format(ref=ref_filename)
+            comm = "gzip -dc {ref} | makeblastdb -in - -dbtype=nucl -title={ref} -out={ref}".format(ref=ref_filename)
             call(comm, shell=True)
         else:
             with indent(2):
