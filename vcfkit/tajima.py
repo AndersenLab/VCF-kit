@@ -32,7 +32,7 @@ from signal import SIG_DFL, SIGPIPE, signal
 from clint.textui import colored, puts_err
 from docopt import docopt
 from vcfkit import __version__
-from vcfkit.utils.vcf import *
+from vcfkit.utils.vcf import vcf
 
 signal(SIGPIPE, SIG_DFL)
 
