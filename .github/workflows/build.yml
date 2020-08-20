@@ -38,7 +38,7 @@ jobs:
               matplotlib \
               clint \
               "cyvcf2>=0.6.5" \
-              "intervaltree>=3.0.2" \
+              "intervaltree==2.1.0" \
               jinja2 \
               "networkx==1.11" \
               "yahmm>=1.1.2" \
@@ -46,7 +46,8 @@ jobs:
               "samtools>=1.10" \
               "bcftools>=1.10" \
               "blast>=2.2.31" \
-              "muscle>=3.8.31"
+              "muscle>=3.8.31" \
+              "primer3>=2.5.0"
 
     - name: Install 
       shell: bash -l {0}
