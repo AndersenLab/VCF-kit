@@ -66,7 +66,10 @@ def run_command(comm, shell = True):
     """
     sh_out = ' '.join(comm) if type(comm) == list else comm
     command_out(sh_out)
-    return call(comm, shell = shell)
+    out = call(comm, shell = shell)
+    if out != 0:
+        raise Exception(f"Error [{err}] running {sh_out}")
+    return out
 
 
 # Levenshtein edit distnace
