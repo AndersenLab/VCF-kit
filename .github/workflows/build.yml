@@ -63,10 +63,10 @@ jobs:
         py.test --verbose --cov-report=term --cov=vcfkit tests
         coveralls
   
-- uses: actions/upload-artifact@v2
-  with:
-    name: genome
-    path: .genome/
+    - uses: actions/upload-artifact@v2
+      with:
+        name: genome
+        path: .genome/
 
     - name: Create Release
       id: create_release
