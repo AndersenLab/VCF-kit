@@ -22,6 +22,10 @@ VCF-kit is a command-line based collection of utilities for performing analysis 
 
 ## Installation
 
+__VCF-Kit has been upgraded to Python 3__
+
+VCF-kit has been tested with Python 3.7. The easiest way to install VCF-kit is by using Conda.
+
 #### Conda
 
 ```
@@ -53,16 +57,22 @@ pip install VCF-kit
 
 __Installing Dependencies:__
 
-In addition to python, VCF-kit requires that a number of additional programs be installed. We recommend using [homebrew](http://brew.sh/) to manage dependencies. `vk setup` can be used to install these dependencies. Alternatively, you may use:
+In addition to python, VCF-kit requires that a number of additional programs be installed. We recommend using conda to install dependencies:
 
-```
-brew install bwa samtools bcftools blast muscle
+```bash
+conda install -y "bwa>=0.7.12" \
+                 "samtools>=1.10" \
+                 "bcftools>=1.10" \
+                 "blast>=2.2.31" \
+                 "muscle>=3.8.31" \
+                 "primer3>=2.5.0"
 ```
 
-`vk setup` requires [homebrew](http://brew.sh/) (or if on linux, [linux-brew](http://linuxbrew.sh/)) to install programs  used by VCF-kit. The programs are listed below followed by the versions they have been tested with.
+__External Dependencies__
 
 * bwa (v 0.7.12)
 * samtools (v 1.3)
 * bcftools (v 1.3)
 * blast (v 2.2.31+)
 * muscle (v 3.8.31)
+* primer3 (v 2.5.0)

@@ -21,13 +21,13 @@ commands:
 
 """
 from vcfkit import __version__
-from utils import lev, message
+from .utils import lev, message
 from docopt import docopt
 from subprocess import call, check_output, CalledProcessError
-from utils.vcf import *
+from .utils.vcf import *
 from clint.textui import colored, puts, indent
 import sys
-import vk
+from . import vk
 import os
 import signal
 signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
@@ -59,9 +59,8 @@ def main():
         """
             Use Homebrew to install programs!
         """
-        program_installed = program_list.keys()
-        for install_name, program in program_list.items():
-            check_output(["brew", "tap", "homebrew/science"])
+        program_installed = list(program_list.keys())
+        for install_name, program in list(program_list.items()):
             try:
                 with indent(4):
                     puts(colored.blue("Installing " + install_name))
@@ -84,7 +83,7 @@ def main():
                 puts(colored.red("Error: Not all programs successfully installed: " + ", ".join(program_installed)))
     elif args["<command>"] == "":
         print(__doc__)
-        for prog in program_list.values():
+        for prog in list(program_list.values()):
             try:
                 check_output(["which", prog])
             except CalledProcessError:

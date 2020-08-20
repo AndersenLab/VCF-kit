@@ -7,7 +7,7 @@ from clint.textui import puts_err
 from Bio.Blast import NCBIXML
 from Bio.SeqRecord import SeqRecord
 from copy import copy
-from cStringIO import StringIO
+from io import StringIO
 from vcfkit.utils import *
 import sys
 import signal
@@ -145,7 +145,7 @@ class blast:
         resp, err = Popen(fetch_ref_cmd,
                stdout=PIPE,
                stderr=PIPE).communicate()
-        return ''.join(resp.splitlines()[1:]).upper()
+        return ''.join(resp.decode('utf-8').splitlines()[1:]).upper()
 
 
     def print_alignment(self, q, start=0, end=None):
@@ -158,15 +158,15 @@ class blast:
         sseq = blast_result["sseq"]
         qseq = blast_result["qseq"]
         spacer = []
-        for i in xrange(len(sseq)):
+        for i in range(len(sseq)):
             if qseq[i] == sseq[i]:
                 spacer.append("|")
             else:
                 spacer.append(" ")
         spacer = ''.join(spacer)
-        print(blast_result["sseq"][start:end])
-        print(spacer[start:end])
-        print(blast_result["qseq"][start:end])
+        print((blast_result["sseq"][start:end]))
+        print((spacer[start:end]))
+        print((blast_result["qseq"][start:end]))
 
     def blast_search(self, q):
         """
@@ -175,7 +175,7 @@ class blast:
         if type(q) == SeqRecord:
             self.query = q.seq
             if hasattr(q, "letter_annotations"):
-                if 'phred_quality' in q.letter_annotations.keys():
+                if 'phred_quality' in list(q.letter_annotations.keys()):
                     self.query_qual = q.letter_annotations["phred_quality"]
                 else:
                     self.query_qual = None
@@ -194,9 +194,9 @@ class blast:
            raise Exception(err)
 
         # Format variables
-        resp = [OrderedDict(zip(self.output_format,
-                                map(autoconvert, x.split("\t")))) 
-                for x in resp.splitlines()]
+        resp = [OrderedDict(list(zip(self.output_format,
+                                list(map(autoconvert, x.split("\t")))))) 
+                for x in resp.decode("utf-8").splitlines()]
         return resp
 
     def check_primer(self, q):

@@ -12,14 +12,14 @@ options:
 
 
 """
+import os
+import sys
 from docopt import docopt
 from clint.textui import colored, puts, indent
-from utils.vcf import *
-from utils.fasta import *
-from utils import message
+from vcfkit.utils.vcf import *
+from vcfkit.utils.fasta import *
+from vcfkit.utils import message
 from collections import defaultdict
-import sys
-import os
 from glob import glob
 from pprint import pprint as pp
 from signal import signal, SIGPIPE, SIG_DFL
@@ -36,7 +36,7 @@ def main(debug = None):
     v = vcf(args["<vcf>"])
     n_samples = len(v.samples) * 1.0
     f = {}
-    filter_s = [x for x in args.values() if x in ["REF","HET","ALT","MISSING"]][0]
+    filter_s = [x for x in list(args.values()) if x in ["REF","HET","ALT","MISSING"]][0]
     # Filter by rate or by number?
     if args["--min"]:
         direction = "<"

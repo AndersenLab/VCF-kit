@@ -1,16 +1,17 @@
-from cyvcf2 import VCF as cyvcf2
-from clint.textui import colored, puts, indent
 import re
+import os
+import sys
+from cyvcf2 import VCF as cyvcf2
+from cyvcf2 import VCFReader
+from clint.textui import colored, puts, indent
 from collections import OrderedDict, defaultdict
 from vcfkit.utils import lev, message
 from copy import copy
-import os
 import numpy as np
-from cyvcf2 import VCFReader
 from vcfkit.utils.primer3 import primer3
 from subprocess import Popen, PIPE, check_output
-from reference import resolve_reference_genome
-np.set_printoptions(threshold=np.nan)
+from .reference import resolve_reference_genome
+np.set_printoptions(threshold=sys.maxsize)
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
 
@@ -64,7 +65,7 @@ class cvariant:
         Mutable variant object
     """
     def __init__(self, variant):
-        for i in filter(lambda x: x.startswith("_") is False, dir(variant)):
+        for i in [x for x in dir(variant) if x.startswith("_") is False]:
             setattr(self, i, getattr(variant, i))
 
 
@@ -72,7 +73,7 @@ class template:
 
     def __init__(self, variant, reference_file, vcf, use_template, nprimers):
         # Copy variant attributes over
-        for i in filter(lambda x: x.startswith("_") is False, dir(variant)):
+        for i in [x for x in dir(variant) if x.startswith("_") is False]:
             setattr(self, i, getattr(variant, i))
         self.output_samples = vcf.output_samples
         self.reference_file = reference_file
@@ -124,16 +125,15 @@ class template:
         """
         sample_flag = ""
         if use_template == "REF":
-            command = "samtools faidx {self.reference_file} {self.region}"
+            command = f"samtools faidx {self.reference_file} {self.region}"
         elif use_template == "ALT" or use_template is None:
-            command = "samtools faidx {self.reference_file} {self.region} | bcftools consensus {self.filename}"
+            command = f"samtools faidx {self.reference_file} {self.region} | bcftools consensus {self.filename}"
         else:
             sample_flag = "--sample=" + use_template  # Get use_template for sample.
-            command = "samtools faidx {self.reference_file} {self.region} | bcftools consensus {sample_flag} {self.filename}"
-        command = command.format(**locals())
+            command = f"samtools faidx {self.reference_file} {self.region} | bcftools consensus {sample_flag} {self.filename}"
         try:
             seq = check_output(command, shell=True)
-            seq = Seq(''.join(seq.splitlines()[1:]), DNA_SET)
+            seq = Seq(''.join(seq.decode('utf-8').splitlines()[1:]), DNA_SET)
         except:
             seq = Seq('')
         return seq
@@ -157,9 +157,9 @@ class template:
         enzyme_group = RestrictionBatch([x for x in enzyme_group if x.is_ambiguous() is False])
 
         # Calculate rflps for ALT sites only
-        self.ref_sites = dict(enzyme_group.search(self.ref_seq).items())
-        self.primary_variant_sites = dict(enzyme_group.search(self.primary_variant_seq).items())
-        self.rflps = {k: (self.ref_sites[k], self.primary_variant_sites[k]) for k, v in self.ref_sites.items() 
+        self.ref_sites = dict(list(enzyme_group.search(self.ref_seq).items()))
+        self.primary_variant_sites = dict(list(enzyme_group.search(self.primary_variant_seq).items()))
+        self.rflps = {k: (self.ref_sites[k], self.primary_variant_sites[k]) for k, v in list(self.ref_sites.items()) 
                         if len(v) > 0 and len(v) <= 3
                         and self.ref_sites[k] != self.primary_variant_sites[k]}
 
@@ -200,7 +200,7 @@ class template:
     def print_header(self, hout):
         global header_printed
         if header_printed is False:
-            print('\t'.join(map(str, hout)))
+            print(('\t'.join(map(str, hout))))
             header_printed = True
 
     def out(self):
@@ -245,7 +245,7 @@ class template:
                 amplicon_length = len(primer_group.amplicon)
                 primer_group.amplicon_region = "{self.CHROM}:{amp_start}-{amp_end}".format(**locals())
                 if primer_group is not None:
-                    for rflp, cut_sites in self.rflps.items():
+                    for rflp, cut_sites in list(self.rflps.items()):
                         # Shift cut sites
                         ref_cut_sites = [x - primer_group.primer_left.START for x in cut_sites[0]]
                         alt_cut_sites = [x - primer_group.primer_left.START for x in cut_sites[1]]
@@ -286,7 +286,7 @@ class template:
                                              homozygous_ref,
                                              homozygous_alt,
                                              self.is_polymorphic]
-                        print('\t'.join(map(str, out_primers)))
+                        print(('\t'.join(map(str, out_primers))))
         elif self.mode == 'indel':
             hout += ["variant_count",
                      "indel_size",
@@ -319,7 +319,7 @@ class template:
                                    homozygous_ref,
                                    homozygous_alt,
                                    self.is_polymorphic]
-                print('\t'.join(map(str, out_indel)))
+                print(('\t'.join(map(str, out_indel))))
 
         elif self.mode == 'sanger':
             hout += ["variant_count",
@@ -349,20 +349,20 @@ class template:
                                    homozygous_ref,
                                    homozygous_alt,
                                    self.is_polymorphic]
-                print('\t'.join(map(str, out_indel)))
+                print(('\t'.join(map(str, out_indel))))
 
         else:
             # Output template
             hout += ["template"]
             out += [self.alt_seq]
             self.print_header(hout)
-            print('\t'.join(map(str, out)))
+            print(('\t'.join(map(str, out))))
 
 
 class primer_vcf(cyvcf2):
     def __init__(self, filename, reference=None, use_template="ALT", polymorphic=True):
-        if not os.path.isfile(filename) and filename != "-":
-            exit(message("Error: " + filename + " does not exist"))
+        if not filename.startswith("http") and not os.path.isfile(filename) and filename != "-":
+            exit(message(f"Error: {filename} does not exist", color='red'))
         self.filename = filename
         self.use_template = use_template
         self.use_polymorphic = polymorphic
@@ -379,10 +379,10 @@ class primer_vcf(cyvcf2):
         self.metadata = OrderedDict(comp.findall(self.raw_header))
 
         # Contigs
-        self.contigs = OrderedDict(zip(
+        self.contigs = OrderedDict(list(zip(
             re.compile("##contig=<ID=(.*?),").findall(self.raw_header),
-            map(int, re.compile("##contig.*length=(.*?)>").findall(self.raw_header))
-        ))
+            list(map(int, re.compile("##contig.*length=(.*?)>").findall(self.raw_header)))
+        )))
 
         self.info_set = [x for x in self.header_iter() if x.type == "INFO"]
         self.filter_set = [x for x in self.header_iter() if x.type == "FILTER"]
@@ -390,11 +390,11 @@ class primer_vcf(cyvcf2):
         self.header = copy(self.raw_header)
 
         # Make sure index exists for this VCF.
-        if not os.path.isfile(self.filename + ".csi"):
+        if not self.filename.startswith("http") and not os.path.isfile(self.filename + ".csi"):
             message("VCF is not indexed; Indexing.")
             comm = "bcftools index {f}".format(f=self.filename)
             out = check_output(comm, shell=True)
-            message(out)
+            message(out.decode("utf-8"))
 
         # Setup use_template
         if self.use_template not in self.samples + ["REF", "ALT"]:
@@ -459,7 +459,7 @@ class primer_vcf(cyvcf2):
                 nz.heterozygous = nz.gt_collection[1]
                 nz.homozygous_alt = nz.gt_collection[3]
                 nz.missing = nz.gt_collection[2]
-            is_polymorphic = all(map(lambda x: len(x) > 0,[gt_collection[0], gt_collection[3]]))
+            is_polymorphic = all([len(x) > 0 for x in [gt_collection[0], gt_collection[3]]])
 
             nz.is_polymorphic = is_polymorphic
             if self.use_polymorphic and not is_polymorphic:

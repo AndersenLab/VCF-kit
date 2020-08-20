@@ -1,6 +1,9 @@
 from setuptools import setup
 import glob
 import os
+from setuptools import dist
+dist.Distribution().fetch_build_eggs(['Cython>=0.24.1', 'numpy>=1.10'])
+
 with open('requirements.txt') as f:
     required = f.read().splitlines()
 
@@ -11,7 +14,7 @@ def gen_data_files(*dirs):
 
     for src_dir in dirs:
         for root,dirs,files in os.walk(src_dir):
-            results.append((root, map(lambda f:root + "/" + f, files)))
+            results.append((root, [root + "/" + f for f in files]))
     return results
 
 

@@ -4,13 +4,15 @@ usage:
   tb annotate <vcf> 
 
 """
+import re
 from docopt import docopt
 from subprocess import Popen, PIPE
 from signal import signal, SIGPIPE, SIG_DFL
-from utils import autoconvert
-from utils.vcf import *
-import re
-from utils.matrix import *
+
+from vcfkit.utils import autoconvert
+from vcfkit.utils.vcf import *
+from vcfkit.utils.matrix import *
+
 signal(SIGPIPE, SIG_DFL)
 
 debug = None
@@ -64,7 +66,7 @@ if __name__ == '__main__':
     for line in v:
         if "ANN" in dict(line.INFO):
             ANN = dict(line.INFO)["ANN"]
-            ANN = [dict(zip(ann_fields, x.split("|"))) for x in ANN.split(",")]
+            ANN = [dict(list(zip(ann_fields, x.split("|")))) for x in ANN.split(",")]
             aa_set = [parse_aa(x["hgvs_p"]) for x in ANN]
             line.INFO["grantham"] = calc_grantham(aa_set)
             print(line)

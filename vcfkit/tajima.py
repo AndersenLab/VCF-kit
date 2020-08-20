@@ -25,13 +25,15 @@ output:
 
 
 """
-from vcfkit import __version__
-from docopt import docopt
-from utils.vcf import *
-from math import isinf
 import os
-from signal import signal, SIGPIPE, SIG_DFL
-from clint.textui import puts_err, colored
+from math import isinf
+from signal import SIG_DFL, SIGPIPE, signal
+
+from clint.textui import colored, puts_err
+from docopt import docopt
+from vcfkit import __version__
+from vcfkit.utils.vcf import vcf
+
 signal(SIGPIPE, SIG_DFL)
 
 
@@ -51,8 +53,8 @@ class tajima(vcf):
     def calc_tajima(self, window_size, step_size, sliding, extra=False):
         # Tajima D Constants
         n = self.n * 2
-        a1 = sum([1.0 / i for i in xrange(1, n)])
-        a2 = sum([1.0 / i**2.0 for i in xrange(1, n)])
+        a1 = sum([1.0 / i for i in range(1, n)])
+        a2 = sum([1.0 / i**2.0 for i in range(1, n)])
         b1 = (n + 1.0) / (3.0 * (n - 1.0))
         b2 = (2.0 * (n**2 + n + 3.0)) / \
             (9.0 * n * (n - 1.0))
@@ -138,7 +140,7 @@ def main(debug=None):
             header_line += ["filename",
                             "window_size",
                             "step_size"]
-        print "\t".join(header_line)
+        print("\t".join(header_line))
     for i in tajima(args["<vcf>"]).calc_tajima(wz, sz, args["--sliding"], extra=args["--extra"]):
         print(i)
 

@@ -22,7 +22,7 @@ options:
 
 """
 from docopt import docopt
-from utils.vcf import * 
+from .utils.vcf import * 
 import sys
 import os
 import re
@@ -34,7 +34,7 @@ import copy
 import tempfile
 import csv
 import json
-import zlib, cPickle, base64
+import zlib, pickle, base64
 from playhouse.csv_loader import load_csv
 signal(SIGPIPE, SIG_DFL)
 
@@ -163,9 +163,9 @@ if __name__ == '__main__':
     tsv_out = v.filename.replace("vcf", "tsv").replace(
         "bcf", "tsv").replace(".gz", "") + ".gz"
 
-    info_cols = [map(autoconvert, list(x)) + ["INFO"]
+    info_cols = [list(map(autoconvert, list(x))) + ["INFO"]
                  for x in r_info.findall(v.raw_header)]
-    format_cols = [map(autoconvert, list(x)) + ["FORMAT"]
+    format_cols = [list(map(autoconvert, list(x))) + ["FORMAT"]
                    for x in r_format.findall(v.raw_header)]
 
     if args["--simple"]:
@@ -298,7 +298,7 @@ if __name__ == '__main__':
         # Process genotype calls
         # gt calls
         gt_set = [dict(remove_missing_fields(
-            zip(format_str, map(filter_format_null, x.split(":"))))) for x in loc_s[9:]]
+            list(zip(format_str, list(map(filter_format_null, x.split(":"))))))) for x in loc_s[9:]]
 
         # add sample names
         [x.update({"SAMPLE": sample, "TGT": format_tgt(x, gt_dict)})
@@ -326,7 +326,7 @@ if __name__ == '__main__':
             rec["QUAL"] = loc.QUAL
             rec["FILTER"] = loc.FILTER
             if args["--compress"]:
-                rec["GT"] = base64.b64encode(zlib.compress(cPickle.dumps(gt_set).encode("utf-8")))
+                rec["GT"] = base64.b64encode(zlib.compress(pickle.dumps(gt_set).encode("utf-8")))
             else:
                 rec["GT"] = json.dumps(gt_set)
 
@@ -344,7 +344,7 @@ if __name__ == '__main__':
         if c % 15000 == 0 and not args["--print"]:
             with db.atomic():
                 vcf_table.insert_many(insert_set).execute()
-            print("Inserted {c} records".format(c=c))
+            print(("Inserted {c} records".format(c=c)))
             insert_set = []
     if not args["--print"]:
         with db.atomic():

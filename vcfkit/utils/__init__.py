@@ -1,13 +1,21 @@
-from clint.textui import colored, puts, puts_err, indent, progress
-import os
 import re
+import os
+from subprocess import call
+from clint.textui import colored, puts, puts_err, indent, progress
+
+def command_out(message):
+    """
+        Used to print shell commands to stderr
+    """
+    puts_err(colored.green(message))
+    
 
 def message(message, n_indent = 4, color = "blue"):
     with indent(n_indent):
         if color == "blue":
             puts_err(colored.blue('\n' + message + '\n'))
         elif color == "red":
-            puts_err(colored.blue('\n' + message + '\n'))
+            puts_err(colored.red('\n' + message + '\n'))
 
 
 def boolify(s):
@@ -52,6 +60,18 @@ def check_program_exists(program):
         exit(puts_err(colored.red("\n\t" + program + " not installed or on PATH.\n")))
 
 
+def run_command(comm, shell = True):
+    """
+        Runs a shell command
+    """
+    sh_out = ' '.join(comm) if type(comm) == list else comm
+    command_out(sh_out)
+    out = call(comm, shell = shell)
+    if out != 0:
+        raise Exception(f"Error [{out}] running {sh_out}")
+    return out
+
+
 # Levenshtein edit distnace
 # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
 def lev(s1, s2):
@@ -62,7 +82,7 @@ def lev(s1, s2):
     if len(s2) == 0:
         return len(s1)
 
-    previous_row = range(len(s2) + 1)
+    previous_row = list(range(len(s2) + 1))
     for i, c1 in enumerate(s1):
         current_row = [i + 1]
         for j, c2 in enumerate(s2):

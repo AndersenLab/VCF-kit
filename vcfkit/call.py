@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 """
 usage:
     vk call <seq> --ref=<reference> (--all-sites|--vcf-sites) <vcf>
@@ -8,21 +8,23 @@ options:
     --version                   Show version.
 
 """
-from docopt import docopt
-import vk
-from utils.reference import resolve_reference_genome
-from Bio import SeqIO
-from utils.blastn import blast, blast_variant
-from utils.vcf import *
-from subprocess import Popen
+import os
 import sys
 from collections import defaultdict
-from clint.textui import colored, puts, puts_err, indent
-import os
-from signal import signal, SIGPIPE, SIG_DFL
+from signal import SIG_DFL, SIGPIPE, signal
+
+from Bio import SeqIO
+from Bio.Blast.Applications import NcbiblastxCommandline
+from clint.textui import colored, indent, puts, puts_err
+from docopt import docopt
+from vcfkit.utils.blastn import blast, blast_variant
+from vcfkit.utils.reference import resolve_reference_genome
+from vcfkit.utils.vcf import *
+
+from vcfkit import vk
+
 signal(SIGPIPE, SIG_DFL)
 
-from Bio.Blast.Applications import NcbiblastxCommandline
 
 
 def seq_type(filename):
@@ -96,7 +98,7 @@ def main(debug=None):
     sequence_file_type = seq_type(args["<seq>"])
 
     # Output header
-    print("\t".join(blast_variant.output_order))
+    print(("\t".join(blast_variant.output_order)))
     for record in SeqIO.parse(handle, sequence_file_type):
         # Resolve sample within fasta line
         sample = resolve_sample_from_line(samples, handle.name)
@@ -160,7 +162,7 @@ def main(debug=None):
                     variant.description = record.description
                 else:
                     variant.description = os.path.split(handle.name)[1]
-                print '\t'.join([str(variant)])
+                print('\t'.join([str(variant)]))
 
 if __name__ == '__main__':
     main()

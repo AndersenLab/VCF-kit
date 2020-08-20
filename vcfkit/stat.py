@@ -7,7 +7,7 @@ usage:
 from docopt import docopt
 from subprocess import Popen, PIPE
 from signal import signal, SIGPIPE, SIG_DFL
-from utils import autoconvert
+from .utils import autoconvert
 import re
 signal(SIGPIPE, SIG_DFL)
 

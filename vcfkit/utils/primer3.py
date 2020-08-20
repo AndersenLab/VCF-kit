@@ -1,4 +1,7 @@
+import io
 from subprocess import Popen, PIPE
+import sys
+import signal
 from vcfkit import vk
 from vcfkit.utils import *
 from vcfkit.utils.blastn import blast
@@ -6,8 +9,6 @@ from Bio.Seq import Seq
 from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
 from Bio.Restriction import AllEnzymes, CommOnly, RestrictionBatch
 from clint.textui import colored, puts_err
-import sys
-import signal
 signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
 primer3_config =  os.path.dirname(os.path.abspath(sys.modules['vcfkit'].__file__)) + "/static/primer3_config/"
 
@@ -16,7 +17,7 @@ class seqprimer:
         An individual primer.
     """
     def __init__(self, primer_values, template, reference, left_primer = True):
-        for k,v in primer_values.items():
+        for k,v in list(primer_values.items()):
             setattr(self, k, v)
         self.left = left_primer
         template = str(template)
@@ -52,8 +53,8 @@ class primer_group:
     def __init__(self, primer_values, template, reference, chrom, region_start):
         self.reference = reference
         self.region_start = region_start
-        pleft = {k.replace("PRIMER_LEFT_", ""):v for k,v in primer_values.items() if k.startswith("PRIMER_LEFT")}
-        pright = {k.replace("PRIMER_RIGHT_", ""):v for k,v in primer_values.items() if k.startswith("PRIMER_RIGHT")}
+        pleft = {k.replace("PRIMER_LEFT_", ""):v for k,v in list(primer_values.items()) if k.startswith("PRIMER_LEFT")}
+        pright = {k.replace("PRIMER_RIGHT_", ""):v for k,v in list(primer_values.items()) if k.startswith("PRIMER_RIGHT")}
         self.primer_left = seqprimer(pleft, template, reference)
         self.primer_right = seqprimer(pright, template, reference, False)
         self.primer_tm = "{self.primer_left.TM},{self.primer_right.TM}".format(**locals())
@@ -62,7 +63,7 @@ class primer_group:
         self.amp_end = self.region_start + self.primer_right.END
         self.amplicon_length = len(self.amplicon)
         self.amplicon_region = "{chrom}:{self.amp_start}-{self.amp_end}".format(**locals())
-        for k,v in primer_values.items():
+        for k,v in list(primer_values.items()):
             if not k.startswith("PRIMER_LEFT") and not k.startswith("PRIMER_RIGHT"):
                 setattr(self, k, v)
 
@@ -103,7 +104,7 @@ class primer3:
                         "/.linuxbrew/share/primer3_config/",
                         "/.linuxbrew/share/primer3/primer3_config/",
                         primer3_config]
-        paths = filter(lambda x: os.path.exists(os.path.expanduser(x)), thermo_paths)
+        paths = [x for x in thermo_paths if os.path.exists(os.path.expanduser(x))]
         if len(paths) == 0:
             with indent(4):
                 exit(puts_err(colored.red("\nCannot find thermo path '/primer3_config/\n")))
@@ -121,29 +122,29 @@ class primer3:
         # into primer3
         attributes = [x for x in dir(self) if x.upper() == x and not x.startswith("_")]
         values = [str(getattr(self, x)) for x in attributes]
-        att_val = zip(attributes, values)
+        att_val = list(zip(attributes, values))
         return '\n'.join(["=".join(x) for x in att_val]) + "\n=\n"
 
     def fetch_primers(self, sequence_template, chrom, region_start):
         # Runs primer3 with the generated record.
         self.SEQUENCE_TEMPLATE = sequence_template
+        input_record = self._generate_record().encode('utf-8')
         primer3_run = Popen(["primer3_core"], stdin=PIPE, stdout=PIPE)
-        record = self._generate_record()
-        resp, err = primer3_run.communicate(record)
-        resp = resp.strip().split("\n")
+        resp, err = primer3_run.communicate(input=input_record)
+        resp = resp.decode().strip().split("\n")
         if err:
             exit(message(err))
         p3_results = dict([x.split("=") for x in resp
                                if x.split("=")[0] != ""])
-        p3_results = {k: autoconvert(v) for k,v in p3_results.items()}
+        p3_results = {k: autoconvert(v) for k,v in list(p3_results.items())}
 
 
         if "PRIMER_LEFT_NUM_RETURNED" in p3_results:
             n_primers = p3_results["PRIMER_LEFT_NUM_RETURNED"]
             primer_return = []
-            for primer_num in xrange(0, n_primers):
+            for primer_num in range(0, n_primers):
                 pn = "_{n}_".format(n=primer_num)
-                primer_dataset = {k.replace(pn,"_"):v for k,v in p3_results.items() if pn in k}
+                primer_dataset = {k.replace(pn,"_"):v for k,v in list(p3_results.items()) if pn in k}
                 primer_return.append(primer_group(primer_dataset,
                                                   self.SEQUENCE_TEMPLATE,
                                                   self.reference,

@@ -13,9 +13,9 @@ options:
 
 """
 from docopt import docopt
-from utils import which
-from utils.vcf import *
-from utils.reference import *
+from vcfkit.utils import which, run_command
+from vcfkit.utils.vcf import *
+from vcfkit.utils.reference import *
 from clint.textui import colored, puts, puts_err, indent, progress
 import gzip
 from subprocess import call
@@ -23,9 +23,10 @@ from time import time
 from tabulate import tabulate as tab
 import requests
 import os
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from sys import exit  # Used by exit(); don't remove.
 from Bio import Entrez
+
 
 
 def fetch_chrom_name(id):
@@ -35,7 +36,7 @@ def fetch_chrom_name(id):
         Entrez.email = "vcf-kit@vcf-kit.com"
         chrom = Entrez.read(Entrez.efetch(db="nuccore", id=id, rettype="gb", retmode="xml"))
         gb_feature_quals = chrom[0]["GBSeq_feature-table"][0]["GBFeature_quals"]
-        features = dict([x.values() for x in gb_feature_quals])
+        features = dict([list(x.values()) for x in gb_feature_quals])
         if "organelle" in features:
             if features["organelle"] == "mitochondrion":
                 return "MtDNA"
@@ -54,10 +55,10 @@ def download_genomes(genome_db):
     if (time() - fileTime) > (3 * 30 * 24 * 60 * 60) or is_non_zero_file(genome_db) is False:
         with indent(2):
             puts(colored.blue('\nDownloading list of reference genomes\n'))
-        r = requests.get("http://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/assembly_summary_refseq.txt")
+        r = requests.get("https://ftp.ncbi.nlm.nih.gov/genomes/ASSEMBLY_REPORTS/assembly_summary_refseq.txt", allow_redirects=True)
         genome_file = open(genome_db, "w")
         with genome_file as f:
-            f.write(r.text.encode('utf-8').strip())
+            f.write(r.text.strip())
 
 
 def is_non_zero_file(fpath):
@@ -156,13 +157,14 @@ def main(debug=None):
         ref_filename = reference_directory + reference_name + ".tmp.fa.gz"
 
         if args["wormbase"]:
-            asm_url = "ftp://ftp.wormbase.org/pub/wormbase/releases/{asm_name}/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.{asm_name}.genomic.fa.gz"
-            reference_download = asm_url.format(asm_name=args["--ref"])
-            comm = "curl {reference_download} > {ref_filename}".format(**locals())
-            print(comm)
-            call(comm, shell = True)
+            asm_name = args["--ref"]
+            asm_url = f"ftp://ftp.wormbase.org/pub/wormbase/releases/{asm_name}/species/c_elegans/PRJNA13758/c_elegans.PRJNA13758.{asm_name}.genomic.fa.gz"
+            comm = f"curl {asm_url} > {ref_filename}"
+            err = run_command(comm)
+            if err != 0:
+                raise Exception(colored.red(f"Wormbase genome {args['--ref']} not found."))
             # Unzip wormbase genome
-            call(["gunzip", "-f", ref_filename])
+            run_command(["gunzip", "-f", ref_filename])
         else:
             # NCBI
             with open(genome_db, "r") as f:
@@ -200,6 +202,7 @@ def main(debug=None):
             with open(ref_filename.replace(".fa.gz", ".fa"), 'w') as outfa:
                 with gzip.open(ref_filename, 'rb') as f:
                     for line in f:
+                        line = line.decode("utf-8")
                         outline = line
                         if line.startswith(">"):
                             acc = line.split(" ")[0].strip(">")
@@ -220,8 +223,7 @@ def main(debug=None):
             comm_bgzip = "bgzip -fc {ref_filename} > {ref_out}"
             comm_bgzip = comm_bgzip.format(ref_filename=ref_filename.replace(".fa.gz", ".fa"),
                                            ref_out=ref_filename.replace(".tmp", ""))
-            print(comm_bgzip)
-            call(comm_bgzip, shell=True)
+            run_command(comm_bgzip, shell=True)
             ref_filename = ref_filename.replace(".tmp", "")
         else:
             with indent(2):
@@ -231,7 +233,8 @@ def main(debug=None):
         if which("bwa"):
             with indent(2):
                 puts(colored.green("\nCreating bwa index\n"))
-            call(["bwa", "index", ref_filename])
+            comm = f"bwa index {ref_filename}"
+            run_command(comm, shell = True)
         else:
             with indent(2):
                 puts(colored.blue("\nSkipping bwa index; bwa not installed\n"))
@@ -239,16 +242,17 @@ def main(debug=None):
         if which("samtools"):
             with indent(2):
                 puts(colored.green("\nCreating samtools index\n"))
-            call(["samtools", "faidx", ref_filename])
+            comm = f"samtools faidx {ref_filename}"
+            run_command(comm, shell=True)
         else:
             with indent(2):
                 puts(colored.blue("\nSkipping samtools index; Samtools not installed\n"))
 
-        if which("makeblastdb"):
+        if which("makeblastdb") and which("gzip"):
             with indent(2):
                 puts(colored.green("\nCreating blast database\n"))
-            comm = "gunzip -c {ref} | makeblastdb -in - -dbtype=nucl -title={ref} -out={ref}".format(ref=ref_filename)
-            call(comm, shell=True)
+            comm = "gzip -dc {ref} | makeblastdb -in - -dbtype=nucl -title={ref} -out={ref}".format(ref=ref_filename)
+            run_command(comm, shell=True)
         else:
             with indent(2):
                 puts(colored.blue("\nSkipping creation of blast database; blast is not installed\n"))
