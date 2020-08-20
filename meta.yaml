@@ -41,8 +41,8 @@ requirements:
     - tabulate
     - yahmm >=1.1.2
     - bwa >=0.7.12
-    - samtools >=1.3
-    - bcftools >=1.3
+    - samtools >=1.10
+    - bcftools >=1.10
     - blast >=2.2.31
     - muscle >=3.8.31
 

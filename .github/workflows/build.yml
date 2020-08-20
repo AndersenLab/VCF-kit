@@ -36,8 +36,8 @@ jobs:
               cython \
               biopython \
               bwa \
-              samtools \
-              bcftools \
+              samtools>=1.10 \
+              bcftools>=1.10 \
               vcftools \
               blast \
               primer3=2.5.0
