@@ -64,7 +64,8 @@ def run_command(comm, shell = True):
     """
         Runs a shell command
     """
-    command_out(comm)
+    sh_out = ' '.join(comm) if type(comm) == list else comm
+    command_out(sh_out)
     return call(comm, shell = shell)
 
 

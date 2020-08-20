@@ -28,6 +28,7 @@ from sys import exit  # Used by exit(); don't remove.
 from Bio import Entrez
 
 
+
 def fetch_chrom_name(id):
     try:
         if not id.startswith("NC_"):
@@ -222,7 +223,7 @@ def main(debug=None):
             comm_bgzip = "bgzip -fc {ref_filename} > {ref_out}"
             comm_bgzip = comm_bgzip.format(ref_filename=ref_filename.replace(".fa.gz", ".fa"),
                                            ref_out=ref_filename.replace(".tmp", ""))
-            call(comm_bgzip, shell=True)
+            run_command(comm_bgzip, shell=True)
             ref_filename = ref_filename.replace(".tmp", "")
         else:
             with indent(2):
@@ -232,7 +233,7 @@ def main(debug=None):
         if which("bwa"):
             with indent(2):
                 puts(colored.green("\nCreating bwa index\n"))
-            call(["bwa", "index", ref_filename])
+            run_command(["bwa", "index", ref_filename])
         else:
             with indent(2):
                 puts(colored.blue("\nSkipping bwa index; bwa not installed\n"))
@@ -240,7 +241,7 @@ def main(debug=None):
         if which("samtools"):
             with indent(2):
                 puts(colored.green("\nCreating samtools index\n"))
-            call(["samtools", "faidx", ref_filename])
+            run_command(["samtools", "faidx", ref_filename])
         else:
             with indent(2):
                 puts(colored.blue("\nSkipping samtools index; Samtools not installed\n"))
@@ -249,7 +250,7 @@ def main(debug=None):
             with indent(2):
                 puts(colored.green("\nCreating blast database\n"))
             comm = "gzip -dc {ref} | makeblastdb -in - -dbtype=nucl -title={ref} -out={ref}".format(ref=ref_filename)
-            call(comm, shell=True)
+            run_command(comm, shell=True)
         else:
             with indent(2):
                 puts(colored.blue("\nSkipping creation of blast database; blast is not installed\n"))

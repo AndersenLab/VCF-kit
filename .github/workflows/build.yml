@@ -47,7 +47,8 @@ jobs:
               "bcftools>=1.10" \
               "blast>=2.2.31" \
               "muscle>=3.8.31" \
-              "primer3>=2.5.0"
+              "primer3>=2.5.0" \
+              "vcftools>=0.1.16"
 
     - name: Install 
       shell: bash -l {0}
