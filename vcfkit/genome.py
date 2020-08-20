@@ -233,7 +233,8 @@ def main(debug=None):
         if which("bwa"):
             with indent(2):
                 puts(colored.green("\nCreating bwa index\n"))
-            run_command(["bwa", "index", ref_filename])
+            comm = f"bwa index {ref_filename}"
+            run_command(comm, shell = True)
         else:
             with indent(2):
                 puts(colored.blue("\nSkipping bwa index; bwa not installed\n"))
