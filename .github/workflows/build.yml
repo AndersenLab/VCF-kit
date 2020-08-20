@@ -38,7 +38,7 @@ jobs:
               matplotlib \
               clint \
               cyvcf2 >=0.6.5 \
-              intervaltree ==2.1.0 \
+              intervaltree >=3.0.2 \
               jinja2 \
               networkx ==1.11 \
               yahmm >=1.1.2 \

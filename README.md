@@ -22,6 +22,10 @@ VCF-kit is a command-line based collection of utilities for performing analysis 
 
 ## Installation
 
+__VCF-Kit has been upgraded to Python 3__
+
+You must use Python 3.5 or greater. Easy installation options exist for conda and docker.
+
 #### Conda
 
 ```
