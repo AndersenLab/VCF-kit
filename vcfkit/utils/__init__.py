@@ -68,7 +68,7 @@ def run_command(comm, shell = True):
     command_out(sh_out)
     out = call(comm, shell = shell)
     if out != 0:
-        raise Exception(f"Error [{err}] running {sh_out}")
+        raise Exception(f"Error [{out}] running {sh_out}")
     return out
 
 
