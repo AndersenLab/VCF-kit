@@ -242,7 +242,8 @@ def main(debug=None):
         if which("samtools"):
             with indent(2):
                 puts(colored.green("\nCreating samtools index\n"))
-            run_command(["samtools", "faidx", ref_filename])
+            comm = f"samtools faidx {ref_filename}"
+            run_command(comm, shell=True)
         else:
             with indent(2):
                 puts(colored.blue("\nSkipping samtools index; Samtools not installed\n"))
