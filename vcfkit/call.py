@@ -12,7 +12,6 @@ import os
 import sys
 from collections import defaultdict
 from signal import SIG_DFL, SIGPIPE, signal
-from subprocess import Popen
 
 from Bio import SeqIO
 from Bio.Blast.Applications import NcbiblastxCommandline
