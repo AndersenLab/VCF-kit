@@ -86,6 +86,8 @@ jobs:
       with:
         user: __token__
         password: ${{ secrets.PYPI_PASSWORD }}
+        build: true
+        skip_existing: false
 
     # - name: publish-to-conda
     #   uses: fcakyon/conda-publish-action@v1.3
