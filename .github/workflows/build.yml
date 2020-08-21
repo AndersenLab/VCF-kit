@@ -16,6 +16,7 @@ jobs:
 
     - name: Install curl headers
       run: |
+        sudo apt-get update
         sudo apt-get install libcurl4-openssl-dev
 
     - uses: goanpeca/setup-miniconda@v1
