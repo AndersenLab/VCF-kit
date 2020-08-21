@@ -20,3 +20,5 @@ proj.*
 site
 
 work/
+
+.vscode/

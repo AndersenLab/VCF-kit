@@ -21,8 +21,6 @@ def gen_data_files(*dirs):
 setup(name='VCF-kit',
       version=__version__,
       packages=['vcfkit','vcfkit.utils'],
-      description='Assorted utilities for the variant call format',
-      url='https://github.com/AndersenLab/VCF-kit',
       author='Daniel E. Cook',
       author_email='danielecook@gmail.com',
       license='MIT',
