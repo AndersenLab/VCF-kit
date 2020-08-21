@@ -55,6 +55,7 @@ jobs:
       run: |
         conda activate vcf-kit
         python setup.py install
+        python setup.py sdist bdist_wheel --universal
 
     - name: Test vcf-kit
       shell: bash -l {0}
@@ -81,13 +82,11 @@ jobs:
         prerelease: false
 
     - name: Publish a Python distribution to PyPI
-      uses: casperdcl/deploy-pypi@v1
+      uses: pypa/gh-action-pypi-publish@master
       if: startsWith(github.ref, 'refs/tags')
       with:
         user: __token__
         password: ${{ secrets.PYPI_PASSWORD }}
-        build: true
-        skip_existing: false
 
     # - name: publish-to-conda
     #   uses: fcakyon/conda-publish-action@v1.3
