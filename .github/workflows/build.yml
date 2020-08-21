@@ -62,7 +62,7 @@ jobs:
         conda activate vcf-kit
         py.test --verbose --cov-report=term --cov=vcfkit tests
         coveralls
-  
+
     - uses: actions/upload-artifact@v2
       with:
         name: genome
@@ -81,7 +81,7 @@ jobs:
         prerelease: false
 
     - name: Publish a Python distribution to PyPI
-      uses: pypa/gh-action-pypi-publish@master
+      uses: casperdcl/deploy-pypi@v1
       if: startsWith(github.ref, 'refs/tags')
       with:
         user: __token__
