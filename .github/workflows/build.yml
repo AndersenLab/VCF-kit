@@ -39,9 +39,9 @@ jobs:
               matplotlib \
               clint \
               "cyvcf2>=0.6.5" \
-              "intervaltree==2.1.0" \
+              "intervaltree" \
               jinja2 \
-              "networkx==1.11" \
+              "pomegranate" \
               "yahmm>=1.1.2" \
               "bwa>=0.7.12" \
               "samtools>=1.10" \
