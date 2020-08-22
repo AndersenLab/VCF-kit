@@ -1,0 +1,80 @@
+{% set name = "vcf-kit" %}
+{% set version = "0.2.6" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/VCF-kit-0.2.6.tar.gz"
+  sha256: d3fe3731d60e2024568c07a34d7daf88f6e737f5bb477ff4a0d6cf2b54788dc5
+
+build:
+  number: 0
+  entry_points:
+    - vk=vcfkit.vk:main
+  script: "{{ PYTHON }} -m pip install . -vv"
+
+requirements:
+  host:
+    - awesome-slugify
+    - biopython
+    - clint
+    - cython
+    - cyvcf2
+    - docopt
+    - intervaltree
+    - jinja2
+    - matplotlib
+    - networkx
+    - numpy
+    - pip
+    - pomegranate
+    - python
+    - requests
+    - scipy
+    - setuptools
+    - tabulate
+    - pytest
+    - pytest-runner
+  run:
+    - awesome-slugify
+    - biopython
+    - clint
+    - cython
+    - cyvcf2
+    - docopt
+    - intervaltree
+    - jinja2
+    - matplotlib
+    - networkx
+    - numpy
+    - pomegranate
+    - python
+    - requests
+    - scipy
+    - setuptools
+    - tabulate
+
+test:
+  imports:
+    - vcfkit
+    - vcfkit.utils
+  commands:
+    - vk --help
+  requires:
+    - coveralls
+    - pytest
+
+about:
+  home: The package home page
+  license: MIT
+  license_family: MIT
+  license_file: 
+  summary: "Assorted utilities for the variant call format"
+  doc_url: 
+  dev_url: 
+
+extra:
+  recipe-maintainers:
+    - danielecook

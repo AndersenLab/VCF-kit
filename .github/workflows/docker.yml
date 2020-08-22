@@ -1,0 +1,37 @@
+# Build dockerfile on change
+name: Build Docker Container
+
+on:
+  push:
+    branches:
+    - development
+    - master
+    paths:
+    - 'Dockerfile'
+    - '.github/workflows/docker.yml'
+  pull_request:
+    branches:
+    - development
+    - master
+    paths:
+    - 'env/renv.Dockerfile'
+    - '.github/workflows/build_renv.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build and Publish
+      uses: elgohr/Publish-Docker-Github-Action@master
+      with:
+        name: andersenlab/vcf-kit
+        username: ${{ secrets.DOCKER_HUB_USER }}
+        password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        snapshot: true
+        dockerfile: Dockerfile
+        workdir: "env"
+        tags: "latest"
+        cache: true
+
