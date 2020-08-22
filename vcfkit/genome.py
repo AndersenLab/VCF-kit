@@ -164,7 +164,7 @@ def main(debug=None):
             if err != 0:
                 raise Exception(colored.red(f"Wormbase genome {args['--ref']} not found."))
             # Unzip wormbase genome
-            run_command(["gunzip", "-f", ref_filename])
+            run_command(f"gzip -df {ref_filename}", shell=True)
         else:
             # NCBI
             with open(genome_db, "r") as f:
@@ -219,7 +219,7 @@ def main(debug=None):
                 puts(colored.green('\nSwitching from gzip to bgzip\n'))
             # Convert to bgzip
             if args["--accession-chrom-names"]:
-                call(["gunzip", "-f", ref_filename])
+                run_command(f"gzip -df {ref_filename}", shell=True)
             comm_bgzip = "bgzip -fc {ref_filename} > {ref_out}"
             comm_bgzip = comm_bgzip.format(ref_filename=ref_filename.replace(".fa.gz", ".fa"),
                                            ref_out=ref_filename.replace(".tmp", ""))
