@@ -31,7 +31,6 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_PASSWORD }}
         snapshot: true
         dockerfile: Dockerfile
-        workdir: "env"
         tags: "latest"
         cache: true
 
