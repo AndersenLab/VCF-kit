@@ -15,4 +15,4 @@ intervaltree
 tabulate
 jinja2
 pytest
-pytest-tools
+pytest-runner
