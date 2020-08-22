@@ -54,48 +54,8 @@ conda activate vcf-kit
 
 #### Docker
 
-Alternatively, you can use a docker image which has all required dependencies installed.
-
-#### Manually
-
-You may need to install matplotlib. On linux this can be done with:
-
-```
-sudo apt-get build-dep python-matplotlib
-```
-
-On OSX it can be installed using:
-
-```
-pip install matplotlib  
-```
-
-You may need to install a few additional dependencies:
- 
-```
-pip install yahmm
-pip install numpy
-pip install VCF-kit
-```
-
-__Installing Dependencies:__
-
-In addition to python, VCF-kit requires that a number of additional programs be installed. We recommend using conda to install dependencies:
+You can also run VCF-kit with all installed dependencies using docker: 
 
 ```bash
-conda install -y "bwa>=0.7.12" \
-                 "samtools>=1.10" \
-                 "bcftools>=1.10" \
-                 "blast>=2.2.31" \
-                 "muscle>=3.8.31" \
-                 "primer3>=2.5.0"
+docker run -it andersenlab/vcf-kit vk
 ```
-
-__External Dependencies__
-
-* bwa (v 0.7.12)
-* samtools (v 1.3)
-* bcftools (v 1.3)
-* blast (v 2.2.31+)
-* muscle (v 3.8.31)
-* primer3 (v 2.5.0)
