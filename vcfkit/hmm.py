@@ -23,6 +23,7 @@ from itertools import groupby
 from operator import itemgetter
 from signal import SIG_DFL, SIGPIPE, signal
 
+import pomegranate
 import matplotlib
 import numpy as np
 
@@ -30,7 +31,6 @@ from clint.textui import colored, indent, puts_err
 from docopt import docopt
 from intervaltree import IntervalTree
 from vcfkit.utils import autoconvert
-from yahmm import *
 
 from vcfkit.utils.fasta import *
 from vcfkit.utils.vcf import *
@@ -43,14 +43,13 @@ signal(SIGPIPE, SIG_DFL)
 
 def generate_model(state, transition):
     # Setup hmm
-    model = Model(name="HMM")
+    model = pomegranate.HiddenMarkovModel()
 
-    A = State(DiscreteDistribution({'A': state, 'B': 1-state}), name='A')
-    B = State(DiscreteDistribution({'A': 1-state, 'B': state}), name='B')
+    A = pomegranate.State(pomegranate.DiscreteDistribution({'A': state, 'B': 1-state}), name='A')
+    B = pomegranate.State(pomegranate.DiscreteDistribution({'A': 1-state, 'B': state}), name='B')
 
     model.add_transition(model.start, A, 0.5)
     model.add_transition(model.start, B, 0.5)
-
 
     model.add_transition(A, A, 1-transition)
     model.add_transition(A, B, transition)
