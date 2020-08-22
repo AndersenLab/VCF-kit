@@ -31,6 +31,6 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_PASSWORD }}
         snapshot: true
         dockerfile: Dockerfile
-        tags: "latest"
+        tags: "latest,{{ github.ref }}"
         cache: true
 

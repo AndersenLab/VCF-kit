@@ -42,7 +42,6 @@ jobs:
               "intervaltree" \
               jinja2 \
               "pomegranate" \
-              "yahmm>=1.1.2" \
               "bwa>=0.7.12" \
               "samtools>=1.10" \
               "bcftools>=1.10" \
