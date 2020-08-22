@@ -8,25 +8,43 @@ The `Variant Call Format Kit` is a collection of tools useful for performing a v
 
 VCF-kit is open source and is licensed under [the MIT License](https://raw.githubusercontent.com/AndersenLab/VCF-kit/master/LICENSE). We welcome community contributions.
 
+
 ## Installation
 
-VCF-kit can be installed using `pip`:
+__VCF-Kit has been upgraded to Python 3__
 
+VCF-kit has been tested with Python 3.6. VCF-kit makes use of additional software for a variety of tasks:
+
+* bwa (v 0.7.12)
+* samtools (v 1.3)
+* bcftools (v 1.3)
+* blast (v 2.2.31+)
+* muscle (v 3.8.31)
+* primer3 (v 2.5.0)
+
+You can install these dependencies and VCF-kit using conda, or you can use a Docker image.
+
+#### Conda
+
+```bash
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda create -n vcf-kit \
+  danielecook::vcf-kit=0.2.6 \
+  "bwa>=0.7.17" \
+  "samtools>=1.10" \
+  "bcftools>=1.10" \
+  "blast>=2.2.31" \
+  "muscle>=3.8.31" \
+  "primer3>=2.5.0"
+
+conda activate vcf-kit
 ```
-pip install numpy # You may need to install numpy independently.
-pip install VCF-kit
+
+#### Docker
+
+You can also run VCF-kit with all installed dependencies using docker: 
+
+```bash
+docker run -it andersenlab/vcf-kit vk
 ```
-
-__Installing Dependencies:__
-
-```
-vk setup
-```
-
-`vk setup` uses [homebrew](http://brew.sh/) (or if on linux, [linux-brew](http://linuxbrew.sh/)) to install programs used by VCF-kit:
-
-* bwa
-* samtools
-* bcftools
-* blast
-* muscle
