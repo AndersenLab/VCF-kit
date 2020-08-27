@@ -22,6 +22,7 @@ options:
 """
 import sys
 from docopt import docopt
+from logzero import logger
 from vcfkit.utils import message
 from vcfkit.utils.primer_vcf import primer_vcf
 from vcfkit.utils.reference import *
@@ -51,6 +52,7 @@ def main(debug=None):
                    polymorphic=arguments["--polymorphic"])
     v.enzymes = arguments['--enzymes']
     v.nprimers = int(arguments['--nprimers'])
+    
     # Region
     if arguments["--region"]:
         v.region = arguments["--region"]

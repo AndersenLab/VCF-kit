@@ -86,9 +86,9 @@ class primer3:
         self.PRIMER_GC_CLAMP = 1
         self.PRIMER_OPT_SIZE = 20
         self.PRIMER_MIN_SIZE = 18  # Must be set
-        self.PRIMER_MAX_SIZE = 20  # Must be set
+        self.PRIMER_MAX_SIZE = 22  # Must be set
         self.PRIMER_NUM_RETURN = 5
-        self.PRIMER_PRODUCT_SIZE_RANGE = "600-800"
+        self.PRIMER_PRODUCT_SIZE_RANGE = "200-1500"
         
         if method == "pcr":
             seq_template_length = self.PRIMER_PRODUCT_SIZE_RANGE.split("-")[1]
