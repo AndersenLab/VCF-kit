@@ -86,7 +86,7 @@ if __name__ == '__main__':
     if args["--ANN"]:
         ANN_loc = info.index("ANN") + 7
     for n, line in enumerate(comm.stdout):
-        line = line.replace("u'","") # No idea why u' is prefixed...
+        line = line.decode("UTF-8")
         if n == 0 and args["--print-header"] and args["wide"]:
             # Split out snpeff annotations
             if "ANN" in info and args["--ANN"]:
