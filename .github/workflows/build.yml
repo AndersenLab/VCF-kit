@@ -19,7 +19,7 @@ jobs:
         sudo apt-get update 
         sudo apt-get install --fix-missing libcurl4-openssl-dev
 
-    - uses: goanpeca/setup-miniconda@v1
+    - uses: conda-incubator/setup-miniconda
       with:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
