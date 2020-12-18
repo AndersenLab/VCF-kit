@@ -26,7 +26,6 @@ from vcfkit import vk
 signal(SIGPIPE, SIG_DFL)
 
 
-
 def seq_type(filename):
     """
         Resolves sequence filetype using extension.
@@ -51,7 +50,7 @@ def resolve_sample_from_line(samples, line):
         Resolves sample names by splitting fasta line
         on non-word characters.
     """
-    line = re.split("\W", line)
+    line = re.split("[ \t]", line)
     matched_sample = [x for x in samples if x in line]
     if len(matched_sample) == 1:
         return matched_sample[0]
@@ -60,7 +59,7 @@ def resolve_sample_from_line(samples, line):
 
 def format_gt(gt):
     # Return homozygous calls as single bases.
-    gt = list(set(re.split("[\|\/]", gt)))
+    gt = list(set(re.split("[|/]", gt)))
     if len(gt) == 1:
         return gt[0]
     else:

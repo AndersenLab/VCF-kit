@@ -1,13 +1,12 @@
 {% set name = "vcf-kit" %}
-{% set version = "0.2.6" %}
-
+{% set version = "0.2.7" %}
 package:
   name: "{{ name|lower }}"
   version: "{{ version }}"
 
 source:
-  url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/VCF-kit-0.2.6.tar.gz"
-  sha256: d3fe3731d60e2024568c07a34d7daf88f6e737f5bb477ff4a0d6cf2b54788dc5
+  url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/VCF-kit-0.2.7.tar.gz"
+  sha256: fea49139e780b5e04f5dcdc02af630dcdfeb624706b0c8af01ba33616a159ae1
 
 build:
   number: 0
@@ -17,6 +16,8 @@ build:
 
 requirements:
   host:
+    - python==3.6
+    - pip
     - awesome-slugify
     - biopython
     - clint
@@ -38,6 +39,7 @@ requirements:
     - pytest-runner
   run:
     - python>=3.6
+    - pip
     - awesome-slugify
     - biopython
     - clint
@@ -55,11 +57,8 @@ requirements:
     - scipy
     - setuptools
     - tabulate
-    - "samtools>=1.10"
-    - "bcftools>=1.10"
-    - "blast>=2.2.31"
-    - "muscle>=3.8.31"
-    - "primer3>=2.5.0"
+    - pytest
+    - pytest-runner
 
 test:
   imports:
@@ -70,6 +69,7 @@ test:
   requires:
     - coveralls
     - pytest
+    - pytest-runner
 
 about:
   home: The package home page

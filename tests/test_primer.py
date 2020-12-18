@@ -22,7 +22,7 @@ def test_snip():
     with Capturing() as out:
         primer.main(["primer", "snip", "--size=500", "--ref=WBcel235","--region=I:542216-543215", "test_data/test.vcf.gz"])
     t = eval(str(out))[1].split("\t")[7:9]
-    assert t == ['496:496,184', '429,496:429,67,184']
+    assert t == ['496:496,408', '429,496:429,67,408']
 
 
 def test_sanger():
