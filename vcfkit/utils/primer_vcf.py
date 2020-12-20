@@ -16,7 +16,6 @@ from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
 
 from Bio.Seq import Seq
-from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
 from Bio.Restriction import AllEnzymes, CommOnly, RestrictionBatch
 
 # Global flag for header output
@@ -133,7 +132,7 @@ class template:
             command = f"samtools faidx {self.reference_file} {self.region} | bcftools consensus {sample_flag} {self.filename}"
         try:
             seq = check_output(command, shell=True)
-            seq = Seq(''.join(seq.decode('utf-8').splitlines()[1:]), DNA_SET)
+            seq = Seq(''.join(seq.decode('utf-8').splitlines()[1:]))
         except:
             seq = Seq('')
         return seq

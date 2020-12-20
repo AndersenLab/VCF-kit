@@ -6,7 +6,6 @@ from vcfkit import vk
 from vcfkit.utils import *
 from vcfkit.utils.blastn import blast
 from Bio.Seq import Seq
-from Bio.Alphabet.IUPAC import IUPACAmbiguousDNA as DNA_SET
 from Bio.Restriction import AllEnzymes, CommOnly, RestrictionBatch
 from clint.textui import colored, puts_err
 signal.signal(signal.SIGINT, lambda x,y: sys.exit(0))
