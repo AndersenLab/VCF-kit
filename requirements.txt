@@ -6,7 +6,7 @@ numpy
 cython
 cyvcf2
 docopt
-biopython
+biopython==1.77
 logzero
 pomegranate
 clint
