@@ -1,5 +1,5 @@
 {% set name = "vcf-kit" %}
-{% set version = "0.2.9" %}
+{% set version = "0.2.91" %}
 package:
   name: "{{ name|lower }}"
   version: "{{ version }}"
