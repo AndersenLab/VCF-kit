@@ -27,8 +27,8 @@ jobs:
       uses: elgohr/Publish-Docker-Github-Action@master
       with:
         name: andersenlab/vcf-kit
-        username: ${{ secrets.DOCKER_HUB_USER }}
-        password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        username: ${{ secrets.KSE_DOCKER_USER }}
+        password: ${{ secrets.KSE_DOCKER_PASS }}
         snapshot: true
         dockerfile: Dockerfile
         tags: "latest"
