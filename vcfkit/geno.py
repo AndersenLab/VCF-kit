@@ -14,7 +14,7 @@ options:
 
 
 """
-from .vk import __version__
+from vcfkit import __version__
 from docopt import docopt
 from vcfkit.utils.vcf import *
 from vcfkit.utils.fasta import *
