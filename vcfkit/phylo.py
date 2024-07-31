@@ -71,6 +71,10 @@ def main(debug=None):
             Generate a phylogenetic tree using an aligned fasta with muscle.
             """
 
+            ########
+            # Consider biotite to replace deprecated --maketree function in muscle 
+            ########
+
             # Check for muscle dependency
             check_program_exists("muscle")
             fasta = ""
