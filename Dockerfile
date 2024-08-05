@@ -33,7 +33,7 @@ RUN micromamba install -n vcf-kit -y -c bioconda -c conda-forge -c anaconda \
     pytest \
     pytest-runner
 
-RUN micromamba install -n vcf-kit -y -c bioconda -c conda-forge -c anaconda pip
+RUN micromamba install -n vcf-kit -y -c bioconda -c conda-forge -c anaconda pomegranate
                     
 RUN micromamba clean -a
 
