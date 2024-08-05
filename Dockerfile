@@ -23,7 +23,7 @@ RUN micromamba install -n vcf-kit -y -c bioconda -c conda-forge -c anaconda \
 
 RUN micromamba install -n vcf-kit -y -c bioconda -c conda-forge -c anaconda \
     logzero \
-    pomegranate \
+    "pomegranate<1.0" \
     clint \
     requests \
     networkx \
