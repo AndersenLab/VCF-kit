@@ -93,10 +93,10 @@ if __name__ == '__main__':
                 line = line.split("\t")
                 line = line[:ANN_loc - 1] + ANN_header + line[ANN_loc + 1:]
                 line = '\t'.join(line)
-            print(re.sub("\[[0-9]+\]", "", line).strip("#\n ").replace(":", "_"))
+            print(re.sub(r"\[[0-9]+\]", "", line).strip("#\n ").replace(":", "_"))
         elif n == 0 and args["long"] and args["--print-header"]:
             # Fix header for long format.
-            line = re.sub("\[[0-9]+\]", "", line).strip("#\n ").split("\t")
+            line = re.sub(r"\[[0-9]+\]", "", line).strip("#\n ").split("\t")
             header = []
             for var in line:
                 if ":" in var:
