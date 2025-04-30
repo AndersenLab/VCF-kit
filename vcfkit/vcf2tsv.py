@@ -68,6 +68,8 @@ if __name__ == '__main__':
     else:
         info = [m.groupdict()["id"] for m in r_info.finditer(v.raw_header)]
         format = [m.groupdict()["id"] for m in r_format.finditer(v.raw_header)]
+        if "AD" not in format:
+            format.append("AD")
 
     # Construct Query String
     print_header = ""
