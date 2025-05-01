@@ -30,7 +30,7 @@ r_info = re.compile(r'''\#\#INFO=<
 # Format
 r_format = re.compile(r'''\#\#FORMAT=<
   ID=(?P<id>.+),
-  Number=(?P<number>-?\d+|\.|[AG]),
+  Number=(?P<number>-?\d+|\.|[AGR]),
   Type=(?P<type>.+),
   Description="(?P<desc>.*)".*
   >''', re.VERBOSE)
