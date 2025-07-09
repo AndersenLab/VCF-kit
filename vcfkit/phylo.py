@@ -18,7 +18,7 @@ from subprocess import PIPE, Popen
 
 import numpy as np
 from jinja2 import Template
-import biotite.sequence.align as align, phylo
+import biotite.sequence.align as align
 import biotite.sequence.phylo as phylo
 from biotite.sequence import NucleotideSequence
 import networkx as nx
