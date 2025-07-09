@@ -8,6 +8,7 @@ cyvcf2
 docopt
 biopython==1.77
 logzero
+biotite
 pomegranate
 clint
 requests

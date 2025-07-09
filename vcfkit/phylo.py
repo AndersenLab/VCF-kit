@@ -18,6 +18,11 @@ from subprocess import PIPE, Popen
 
 import numpy as np
 from jinja2 import Template
+import biotite.sequence.align as align, phylo
+import biotite.sequence.phylo as phylo
+from biotite.sequence import NucleotideSequence
+import networkx as nx
+import matplotlib.pyplot as plt
 
 from clint.textui import colored, indent, puts_err
 from docopt import docopt
@@ -52,7 +57,6 @@ def main(debug=None):
         """
             Generate an aligned fasta from a VCF file.
         """
-        gt_set = np.chararray((0,len(v.samples)))
         gt_set = []
         for line in variant_set:
             if line.is_snp:
@@ -60,48 +64,64 @@ def main(debug=None):
         if len(gt_set) == 0:
             exit(puts_err("No genotypes"))
         gt_set = np.vstack(gt_set)
-        seqs = list(zip(v.samples, np.transpose(gt_set)))
+        seqs = [''.join(gt_set[:, i]) for i in range(gt_set.shape[1])]
+
         if args["fasta"]:
-            for sample, seq in seqs:
-                print((">" + sample))
-                print((''.join(seq)))
+            for sample, seq in list(zip(v.samples, seqs)):
+                print(">" + sample)
+                print(seq)
 
         elif args["tree"]:
             """
             Generate a phylogenetic tree using an aligned fasta with muscle.
             """
 
-            ########
-            # Consider biotite to replace deprecated --maketree function in muscle 
-            ########
-
-            # Check for muscle dependency
-            check_program_exists("muscle")
-            fasta = ""
             with indent(4):
                 puts_err(colored.blue("\nGenerating Fasta\n"))
-            for sample, seq in seqs:
-                fasta += ">" + sample + "\n" + ''.join(seq) + "\n"
-            tree_type = "upgma"  # default is upgma
+            trace = align.Alignment.trace_from_strings(seqs)
+            aligned_seqs = align.Alignment([NucleotideSequence(seq) for seq in seqs], trace)
+            distances = 1 - align.get_pairwise_sequence_identity(aligned_seqs, mode="all")
+
             if args["nj"]:
-                tree_type = "neighborjoining"
-            with indent(4):
-                puts_err(colored.blue("\nGenerating " + tree_type + " Tree\n"))
-            comm = ["muscle", "-maketree", "-in", "-", "-cluster", tree_type]
-            tree, err = Popen(comm, stdin=PIPE, stdout=PIPE).communicate(input=fasta.encode())
-            
+                tree = phylo.neighbor_joining(distances)
+            else:
+                tree = phylo.upgma(distances)
+
             # output tree
-            print(tree.decode("utf-8"))
+            print(tree.to_newick(labels=v.samples))
             
             if args["--plot"]:
+                # graph = tree.as_graph().to_undirected()
+                # fig = plt.figure(figsize=(8.0, 8.0))
+                # ax = fig.gca()
+                # ax.axis("off")
+                # # Calculate position of nodes in the plot
+                # pos = nx.kamada_kawai_layout(graph)
+                # # Assign the gene names to the nodes that represent a reference index
+                # node_labels = {i: name for i, name in enumerate(v.samples)}
+                # nx.draw_networkx_edges(graph, pos, ax=ax)
+                # nx.draw_networkx_labels(
+                #     graph,
+                #     pos,
+                #     ax=ax,
+                #     labels=node_labels,
+                #     font_size=7,
+                #     # Draw a white background behind the labeled nodes
+                #     # for better readability
+                #     bbox=dict(pad=0, color="white"),
+                # )
+                # fig.tight_layout()
+
+                # plt.show()
+
                 prefix = os.path.dirname(os.path.abspath(sys.modules['vcfkit'].__file__)) + "/static"
                 template = open(prefix + "/tree.html",'r').read()
                 tree_template = Template(template)
                 html_out = tempfile.NamedTemporaryFile(suffix=".html", delete=False)
                 with html_out as f:
-                    tree = tree.replace("\n", "")
+                    tree = tree.to_newick(labels=v.samples)
                     sample_len = len(v.samples)
-                    f.write(tree_template.render(**locals()))
+                    f.write(tree_template.render(tree=tree, prefix=prefix, sample_len=sample_len).encode())
                     webbrowser.open("file://" + html_out.name)
 
 if __name__ == '__main__':

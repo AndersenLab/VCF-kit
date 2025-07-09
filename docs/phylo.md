@@ -5,7 +5,7 @@ vk phylo fasta <vcf> [<region>]
 vk phylo tree (nj|upgma) [--plot] <vcf> [<region>]
 ```
 
-The `phylo` command can be used to generate dendrograms, tree files, or a fasta file of variants concatenated together (equivelent to a multiple sequence alignment) from a VCF. Tree files are generated in [Newick format](http://evolution.genetics.washington.edu/phylip/newicktree.html)) with [MUSCLE](http://drive5.com/muscle/) using [UPGMA](https://en.wikipedia.org/wiki/UPGMA) or [neighbor-joining](https://en.wikipedia.org/wiki/Neighbor_joining). VCF-kit can use the output tree file to  generate a plot of the tree/phylogeny.
+The `phylo` command can be used to generate dendrograms, tree files, or a fasta file of variants concatenated together (equivelent to a multiple sequence alignment) from a VCF. Tree files are generated in [Newick format](http://evolution.genetics.washington.edu/phylip/newicktree.html)) with [biotite](https://www.biotite-python.org/latest/index.html) using [UPGMA](https://en.wikipedia.org/wiki/UPGMA) or [neighbor-joining](https://en.wikipedia.org/wiki/Neighbor_joining). VCF-kit can use the output tree file to  generate a plot of the tree/phylogeny.
 
 `phylo` can read a VCF directly or from stdin by using `-`.
 
@@ -38,7 +38,7 @@ bcftools filter --set-GTs . --exclude 'FMT/DP < 20'  data/test.vcf.gz | vk phylo
 
 ## Generating a tree/phylogeny
 
-`vk phylo tree` can be used to generate a tree/phylogeny from a vcf file. This command uses a fasta file (identical to what is produced using `vk phylo fasta`), and uses [MUSCLE](https://en.wikipedia.org/wiki/MUSCLE_(alignment_software) to produce a tree file. 
+`vk phylo tree` can be used to generate a tree/phylogeny from a vcf file. This command uses a fasta file (identical to what is produced using `vk phylo fasta`), and uses [biotite](https://www.biotite-python.org/latest/index.html) to produce a tree file. 
 
 ### Generate a UPGMA tree
 
