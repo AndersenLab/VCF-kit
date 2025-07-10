@@ -9,7 +9,6 @@ docopt
 biopython==1.77
 logzero
 biotite
-# pomegranate
 hmmlearn
 clint
 requests

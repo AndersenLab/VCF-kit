@@ -38,11 +38,11 @@ jobs:
               biopython \
               matplotlib \
               biotite \
+              hmmlearn \
               clint \
               "cyvcf2>=0.6.5" \
               "intervaltree" \
               jinja2 \
-              "pomegranate" \
               "bwa>=0.7.12" \
               "samtools>=1.10" \
               "bcftools>=1.10" \
