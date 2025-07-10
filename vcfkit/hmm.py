@@ -23,7 +23,7 @@ from itertools import groupby
 from operator import itemgetter
 from signal import SIG_DFL, SIGPIPE, signal
 
-import pomegranate
+from hmmlearn import hmm
 import matplotlib
 import numpy as np
 
@@ -34,7 +34,7 @@ from vcfkit.utils import autoconvert
 
 from vcfkit.utils.fasta import *
 from vcfkit.utils.vcf import *
-from vcfkit.vk import __version__
+from vcfkit import __version__
 
 matplotlib.use("Agg")
 
@@ -43,23 +43,10 @@ signal(SIGPIPE, SIG_DFL)
 
 def generate_model(state, transition):
     # Setup hmm
-    model = pomegranate.HiddenMarkovModel()
-
-    A = pomegranate.State(pomegranate.DiscreteDistribution({'A': state, 'B': 1-state}), name='A')
-    B = pomegranate.State(pomegranate.DiscreteDistribution({'A': 1-state, 'B': state}), name='B')
-
-    model.add_transition(model.start, A, 0.5)
-    model.add_transition(model.start, B, 0.5)
-
-    model.add_transition(A, A, 1-transition)
-    model.add_transition(A, B, transition)
-    model.add_transition(B, A, transition)
-    model.add_transition(B, B, 1-transition)
-
-    model.add_transition(A, model.end, 0.5)
-    model.add_transition(B, model.end, 0.5)
-
-    model.bake(verbose=False)
+    model = hmm.CategoricalHMM(n_components=2, init_params={
+        "s": np.array([0.5, 0.5]),
+        "t": np.array([[1 - transition, transition], [transition, 1 - transition]]),
+        "e": np.array([[state, 1 - state], [1 - state, state]])})
     return model
 
 to_model = {0: 'A', 1: 'B'}
@@ -150,17 +137,27 @@ if __name__ == '__main__':
     for sample, column in zip(v.samples, gt_set):
         sample_gt = list(zip(chromosome, positions, column == p2_gt_set, column))
         sample_gt = [x[:3] for x in sample_gt if x[3] in [0, 1]]
-        sequence = [to_model[x[2]] for x in sample_gt]
+        sequence = np.array([x[2] for x in sample_gt], np.int32).reshape(-1, 1)
+        # sequence = [to_model[x[2]] for x in sample_gt]
+        sequence_lengths = []
+        prev_chr = ''
+        for gt in sample_gt:
+            if prev_chr != gt[0]:
+                prev_chr = gt[0]
+                sequence_lengths.append(0)
+            sequence_lengths[-1] += 1
 
         model = generate_model(float(args['--state']), float(args['--transition']))
-        if sequence:
-            results = model.forward_backward(sequence)[1]
-            if model.states[0].name == 'A':
-                result_gt = [from_model[x]
-                             for x in np.greater(results[:, 1], results[:, 0])]
-            else:
-                result_gt = [from_model[x]
-                             for x in np.greater(results[:, 0], results[:, 1])]
+        if sequence.shape[0] > 0:
+            print(sequence.shape, len(sequence_lengths))
+            model.fit(sequence, sequence_lengths)
+            result_gt = model.predict(sequence)
+            # if model.states[0].name == 'A':
+            #     result_gt = [from_model[x]
+            #                  for x in np.greater(results[:, 1], results[:, 0])]
+            # else:
+            #     result_gt = [from_model[x]
+            #                  for x in np.greater(results[:, 0], results[:, 1])]
             dp_s = dp_set[0][s]
             dp_s = dp_s[dp_s > 0]
             results = ((a, b, c, d, e)
