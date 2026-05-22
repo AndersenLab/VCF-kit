@@ -57,3 +57,9 @@ You can also run VCF-kit with all installed dependencies using docker:
 ```bash
 docker run -it andersenlab/vcf-kit vk
 ```
+
+## Citing VCF-kit
+
+If you use VCF-kit, please cite it:
+
+Cook DE, Andersen EC. VCF-kit: assorted utilities for the variant call format. Bioinformatics. 2017 May 15;33(10):1581-1582. doi: [10.1093/bioinformatics/btx011](http://dx.doi.org/10.1093/bioinformatics/btx011). PMID: [28093408](https://pubmed.ncbi.nlm.nih.gov/28093408/); PMCID: [PMC5423453](https://pmc.ncbi.nlm.nih.gov/articles/PMC5423453/).

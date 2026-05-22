@@ -8,7 +8,6 @@ RUN micromamba install -n vcf-kit -y -c bioconda -c conda-forge -c anaconda \
     "samtools>=1.10" \
     "bcftools>=1.10" \
     "blast>=2.2.31" \
-    "muscle>=3.8.31" \
     "primer3>=2.5.0" \
     setuptools
 
@@ -23,7 +22,8 @@ RUN micromamba install -n vcf-kit -y -c bioconda -c conda-forge -c anaconda \
 
 RUN micromamba install -n vcf-kit -y -c bioconda -c conda-forge -c anaconda \
     logzero \
-    "pomegranate<1.0" \
+    biotite \
+    hmmlearn \
     clint \
     requests \
     networkx \
