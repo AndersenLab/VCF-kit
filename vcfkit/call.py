@@ -14,7 +14,6 @@ from collections import defaultdict
 from signal import SIG_DFL, SIGPIPE, signal
 
 from Bio import SeqIO
-from Bio.Blast.Applications import NcbiblastxCommandline
 from clint.textui import colored, indent, puts, puts_err
 from docopt import docopt
 from vcfkit.utils.blastn import blast, blast_variant

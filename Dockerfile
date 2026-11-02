@@ -1,7 +1,7 @@
 FROM mambaorg/micromamba:1.5.8-alpine3.20
 
 RUN micromamba create -n vcf-kit -y -c bioconda -c conda-forge -c anaconda \
-    biopython==1.77
+    biopython==1.88
 
 RUN micromamba install -n vcf-kit -y -c bioconda -c conda-forge -c anaconda \
     "bwa>=0.7.17" \

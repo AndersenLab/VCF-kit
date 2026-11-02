@@ -16,10 +16,10 @@ build:
 
 requirements:
   host:
-    - python==3.6
+    - python >=3.9
     - pip
     - awesome-slugify
-    - biopython
+    - biopython ==1.88
     - clint
     - cython
     - cyvcf2
@@ -38,10 +38,10 @@ requirements:
     - pytest
     - pytest-runner
   run:
-    - python>=3.6
+    - python>=3.9
     - pip
     - awesome-slugify
-    - biopython
+    - biopython ==1.88
     - clint
     - cython
     - cyvcf2
